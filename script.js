@@ -172,6 +172,17 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
     const critDamage2_2 = Math.floor(finalDamage2_2 * accuracy2_2 * (1 + crit2_2 * (critMultiplier2_2 - def2CriticalDefense / 100)) + finalDamage2_2 * (1 - accuracy2_2) * 0.5);
     document.getElementById('critDamage2_2').textContent = critDamage2_2;
 
+    // Compare crit damage (percentage difference)
+    const critCompare1 = critDamage1_2 !== 0
+        ? ((critDamage1_2 - critDamage1_1) / critDamage1_1 * 100).toFixed(2) + '%'
+        : '0%';
+    document.getElementById('critCompare1').textContent = critCompare1;
+
+    const critCompare2 = critDamage2_2 !== 0
+        ? ((critDamage2_2 - critDamage2_1) / critDamage2_1 * 100).toFixed(2) + '%'
+        : '0%';
+    document.getElementById('critCompare2').textContent = critCompare2;
+
     // Update sub1
     document.getElementById('remainDefense1_1').textContent = remainDefense1_1;
     document.getElementById('defenseRate1_1').textContent = defenseRate1_1 + '%';
@@ -201,15 +212,9 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
     document.getElementById('actualAccuracyRate2_2').textContent = actualAccuracyRate2_2;
     document.getElementById('actualCritRate2_2').textContent = actualCritRate2_2;
 
-    // Save results to localStorage
-    const resultIds = [
-        'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1', 'critDamage1_1',
-        'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2', 'critDamage1_2',
-        'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1', 'critDamage2_1',
-        'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2', 'critDamage2_2'
-    ];
-    resultIds.forEach(id => {
-        localStorage.setItem(`result-${id}`, document.getElementById(id).textContent);
+    // Save all result table content to localStorage
+    document.querySelectorAll('#results span[id]').forEach(element => {
+        localStorage.setItem(`result-${element.id}`, element.textContent);
     });
 
     // Performance analysis: find the attack property with the highest total value
@@ -246,16 +251,10 @@ inputs.forEach(input => {
 });
 
 // Load saved results
-const resultIds = [
-    'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1', 'critDamage1_1',
-    'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2', 'critDamage1_2',
-    'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1', 'critDamage2_1',
-    'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2', 'critDamage2_2'
-];
-resultIds.forEach(id => {
-    const saved = localStorage.getItem(`result-${id}`);
+document.querySelectorAll('#results span[id]').forEach(element => {
+    const saved = localStorage.getItem(`result-${element.id}`);
     if (saved !== null) {
-        document.getElementById(id).textContent = saved;
+        element.textContent = saved;
     }
 });
 
