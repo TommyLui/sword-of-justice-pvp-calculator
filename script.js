@@ -13,7 +13,7 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
     }
 
     function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
-        const diff = criticalResistance - crit;
+        const diff = crit - criticalResistance;
         let baseRate = 0;
         if (diff > 0) {
             baseRate = (115 * diff - 1230) / (diff + 1548) / 100;
@@ -75,67 +75,127 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
     const def2Total = def2Defense + def2AirShield + def2ElementalResistance + def2PvpResistance + def2BlockResistance + def2CriticalResistance + def2CriticalDefense + def2SkillResistance;
 
     // Calculate sub1 properties for part1 (attack1 vs def1 and def2)
-    // Vs def1
+    // For part1 (def1 vs atk1 and atk2)
+    // def1 Vs atk1
     const remainDefense1_1 = Math.max(0, def1Defense - atk1DefenseBreak);
-    const defenseRate1_1 = ((remainDefense1_1 / (remainDefense1_1 + 10552)) * 100).toFixed(2) + '%';
+    const defenseRate1_1 = ((remainDefense1_1 / (remainDefense1_1 + 10552)) * 100).toFixed(2);
     const remainShield1_1 = calculateRemainShield(atk1ShieldBreak, def1AirShield);
     const elementalResisRate1_1 = (((def1ElementalResistance - atk1ElementalBreak) / ((def1ElementalResistance - atk1ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
     const actualAccuracyRate1_1 = calculateActualAccuracyRate(atk1Accuracy, def1BlockResistance);
     const actualCritRate1_1 = calculateActualCritRate(atk1Crit, atk1ExtraCritRate, def1CriticalResistance);
 
-    // Vs def2
+    // def1 Vs atk2
     const remainDefense1_2 = Math.max(0, def1Defense - atk2DefenseBreak);
-    const defenseRate1_2 = ((remainDefense1_2 / (remainDefense1_2 + 10552)) * 100).toFixed(2) + '%';
+    const defenseRate1_2 = ((remainDefense1_2 / (remainDefense1_2 + 10552)) * 100).toFixed(2);
     const remainShield1_2 = calculateRemainShield(atk2ShieldBreak, def1AirShield);
     const elementalResisRate1_2 = (((def1ElementalResistance - atk2ElementalBreak) / ((def1ElementalResistance - atk2ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
     const actualAccuracyRate1_2 = calculateActualAccuracyRate(atk2Accuracy, def1BlockResistance);
     const actualCritRate1_2 = calculateActualCritRate(atk2Crit, atk2ExtraCritRate, def1CriticalResistance);
 
-    // For part2 (attack2 vs def1 and def2)
-    // Vs def1
+    // For part2 (def2 vs atk1 and atk2)
+    // def2 Vs atk1
     const remainDefense2_1 = Math.max(0, def2Defense - atk1DefenseBreak);
-    const defenseRate2_1 = ((remainDefense2_1 / (remainDefense2_1 + 10552)) * 100).toFixed(2) + '%';
+    const defenseRate2_1 = ((remainDefense2_1 / (remainDefense2_1 + 10552)) * 100).toFixed(2);
     const remainShield2_1 = calculateRemainShield(atk1ShieldBreak, def2AirShield);
     const elementalResisRate2_1 = (((def2ElementalResistance - atk1ElementalBreak) / ((def2ElementalResistance - atk1ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
     const actualAccuracyRate2_1 = calculateActualAccuracyRate(atk1Accuracy, def2BlockResistance);
     const actualCritRate2_1 = calculateActualCritRate(atk1Crit, atk1ExtraCritRate, def2CriticalResistance);
 
-    // Vs def2
+    // def2 Vs atk2
     const remainDefense2_2 = Math.max(0, def2Defense - atk2DefenseBreak);
-    const defenseRate2_2 = ((remainDefense2_2 / (remainDefense2_2 + 10552)) * 100).toFixed(2) + '%';
+    const defenseRate2_2 = ((remainDefense2_2 / (remainDefense2_2 + 10552)) * 100).toFixed(2);
     const remainShield2_2 = calculateRemainShield(atk2ShieldBreak, def2AirShield);
     const elementalResisRate2_2 = (((def2ElementalResistance - atk2ElementalBreak) / ((def2ElementalResistance - atk2ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
     const actualAccuracyRate2_2 = calculateActualAccuracyRate(atk2Accuracy, def2BlockResistance);
     const actualCritRate2_2 = calculateActualCritRate(atk2Crit, atk2ExtraCritRate, def2CriticalResistance);
-    document.getElementById('damage1to1').textContent = 0;
-    document.getElementById('damage1to2').textContent = 0;
-    document.getElementById('damage2to1').textContent = 0;
-    document.getElementById('damage2to2').textContent = 0;
+    document.getElementById('damage1_1').textContent = 0;
+    document.getElementById('damage1_2').textContent = 0;
+    document.getElementById('damage2_1').textContent = 0;
+    document.getElementById('damage2_2').textContent = 0;
+
+    // Calculate base damages using the provided formula
+    // Attack 1 on Defense 1
+    const baseDamage1_1 = ((10000
+        + (atk1Attack + atk1PvpAttack + atk1SkillAttack - def1PvpResistance - remainShield1_1 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_1) / 100)
+        + (atk1ElementalAttack * (1 - parseFloat(elementalResisRate1_1) / 100)))
+        * (1 + atk1PvpAttackRate / 100);
+    const finalDamage1_1 = Math.max(0, baseDamage1_1);
+    document.getElementById('damage1_1').textContent = Math.floor(finalDamage1_1);
+
+    // Attack 2 on Defense 1
+    const baseDamage1_2 = ((10000
+        + (atk2Attack + atk2PvpAttack + atk2SkillAttack - def1PvpResistance - remainShield1_2 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_2) / 100)
+        + (atk2ElementalAttack * (1 - parseFloat(elementalResisRate1_2) / 100)))
+        * (1 + atk2PvpAttackRate / 100);
+    const finalDamage1_2 = Math.max(0, baseDamage1_2);
+    document.getElementById('damage1_2').textContent = Math.floor(finalDamage1_2);
+
+    // Attack 1 on Defense 2
+    const baseDamage2_1 = ((10000
+        + (atk1Attack + atk1PvpAttack + atk1SkillAttack - def2PvpResistance - remainShield2_1 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_1) / 100)
+        + (atk1ElementalAttack * (1 - parseFloat(elementalResisRate2_1) / 100)))
+        * (1 + atk1PvpAttackRate / 100);
+    const finalDamage2_1 = Math.max(0, baseDamage2_1);
+    document.getElementById('damage2_1').textContent = Math.floor(finalDamage2_1);
+
+    // Attack 2 on Defense 2
+    const baseDamage2_2 = ((10000
+        + (atk2Attack + atk2PvpAttack + atk2SkillAttack - def2PvpResistance - remainShield2_2 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_2) / 100)
+        + (atk2ElementalAttack * (1 - parseFloat(elementalResisRate2_2) / 100)))
+        * (1 + atk2PvpAttackRate / 100);
+    const finalDamage2_2 = Math.max(0, baseDamage2_2);
+    document.getElementById('damage2_2').textContent = Math.floor(finalDamage2_2);
+    
+
+    // Calculate crit damages (expected damage including accuracy and crit)
+    const accuracy1_1 = parseFloat(actualAccuracyRate1_1) / 100;
+    const crit1_1 = parseFloat(actualCritRate1_1) / 100;
+    const critMultiplier1 = atk1CritDamage / 100;
+    const critDamage1_1 = Math.floor(finalDamage1_1 * accuracy1_1 * (1 + crit1_1 * (critMultiplier1 - def1CriticalDefense / 100)) + finalDamage1_1 * (1 - accuracy1_1) * 0.5);
+    document.getElementById('critDamage1_1').textContent = critDamage1_1;
+
+    const accuracy1_2 = parseFloat(actualAccuracyRate1_2) / 100;
+    const crit1_2 = parseFloat(actualCritRate1_2) / 100;
+    const critMultiplier1_2 = atk1CritDamage / 100;
+    const critDamage1_2 = Math.floor(finalDamage1_2 * accuracy1_2 * (1 + crit1_2 * (critMultiplier1_2 - def1CriticalDefense / 100)) + finalDamage1_2 * (1 - accuracy1_2) * 0.5);
+    document.getElementById('critDamage1_2').textContent = critDamage1_2;
+
+    const accuracy2_1 = parseFloat(actualAccuracyRate2_1) / 100;
+    const crit2_1 = parseFloat(actualCritRate2_1) / 100;
+    const critMultiplier2 = atk2CritDamage / 100;
+    const critDamage2_1 = Math.floor(finalDamage2_1 * accuracy2_1 * (1 + crit2_1 * (critMultiplier2 - def2CriticalDefense / 100)) + finalDamage2_1 * (1 - accuracy2_1) * 0.5);
+    document.getElementById('critDamage2_1').textContent = critDamage2_1;
+
+    const accuracy2_2 = parseFloat(actualAccuracyRate2_2) / 100;
+    const crit2_2 = parseFloat(actualCritRate2_2) / 100;
+    const critMultiplier2_2 = atk2CritDamage / 100;
+    const critDamage2_2 = Math.floor(finalDamage2_2 * accuracy2_2 * (1 + crit2_2 * (critMultiplier2_2 - def2CriticalDefense / 100)) + finalDamage2_2 * (1 - accuracy2_2) * 0.5);
+    document.getElementById('critDamage2_2').textContent = critDamage2_2;
 
     // Update sub1
     document.getElementById('remainDefense1_1').textContent = remainDefense1_1;
-    document.getElementById('defenseRate1_1').textContent = defenseRate1_1;
+    document.getElementById('defenseRate1_1').textContent = defenseRate1_1 + '%';
     document.getElementById('remainShield1_1').textContent = remainShield1_1;
     document.getElementById('elementalResisRate1_1').textContent = elementalResisRate1_1;
     document.getElementById('actualAccuracyRate1_1').textContent = actualAccuracyRate1_1;
     document.getElementById('actualCritRate1_1').textContent = actualCritRate1_1;
 
     document.getElementById('remainDefense1_2').textContent = remainDefense1_2;
-    document.getElementById('defenseRate1_2').textContent = defenseRate1_2;
+    document.getElementById('defenseRate1_2').textContent = defenseRate1_2 + '%';
     document.getElementById('remainShield1_2').textContent = remainShield1_2;
     document.getElementById('elementalResisRate1_2').textContent = elementalResisRate1_2;
     document.getElementById('actualAccuracyRate1_2').textContent = actualAccuracyRate1_2;
     document.getElementById('actualCritRate1_2').textContent = actualCritRate1_2;
 
     document.getElementById('remainDefense2_1').textContent = remainDefense2_1;
-    document.getElementById('defenseRate2_1').textContent = defenseRate2_1;
+    document.getElementById('defenseRate2_1').textContent = defenseRate2_1 + '%';
     document.getElementById('remainShield2_1').textContent = remainShield2_1;
     document.getElementById('elementalResisRate2_1').textContent = elementalResisRate2_1;
     document.getElementById('actualAccuracyRate2_1').textContent = actualAccuracyRate2_1;
     document.getElementById('actualCritRate2_1').textContent = actualCritRate2_1;
 
     document.getElementById('remainDefense2_2').textContent = remainDefense2_2;
-    document.getElementById('defenseRate2_2').textContent = defenseRate2_2;
+    document.getElementById('defenseRate2_2').textContent = defenseRate2_2 + '%';
     document.getElementById('remainShield2_2').textContent = remainShield2_2;
     document.getElementById('elementalResisRate2_2').textContent = elementalResisRate2_2;
     document.getElementById('actualAccuracyRate2_2').textContent = actualAccuracyRate2_2;
@@ -143,10 +203,10 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
 
     // Save results to localStorage
     const resultIds = [
-        'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1',
-        'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2',
-        'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1',
-        'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2'
+        'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1', 'critDamage1_1',
+        'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2', 'critDamage1_2',
+        'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1', 'critDamage2_1',
+        'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2', 'critDamage2_2'
     ];
     resultIds.forEach(id => {
         localStorage.setItem(`result-${id}`, document.getElementById(id).textContent);
@@ -187,10 +247,10 @@ inputs.forEach(input => {
 
 // Load saved results
 const resultIds = [
-    'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1',
-    'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2',
-    'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1',
-    'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2'
+    'remainDefense1_1', 'defenseRate1_1', 'remainShield1_1', 'elementalResisRate1_1', 'actualAccuracyRate1_1', 'actualCritRate1_1', 'damage1to1', 'critDamage1_1',
+    'remainDefense1_2', 'defenseRate1_2', 'remainShield1_2', 'elementalResisRate1_2', 'actualAccuracyRate1_2', 'actualCritRate1_2', 'damage1to2', 'critDamage1_2',
+    'remainDefense2_1', 'defenseRate2_1', 'remainShield2_1', 'elementalResisRate2_1', 'actualAccuracyRate2_1', 'actualCritRate2_1', 'damage2to1', 'critDamage2_1',
+    'remainDefense2_2', 'defenseRate2_2', 'remainShield2_2', 'elementalResisRate2_2', 'actualAccuracyRate2_2', 'actualCritRate2_2', 'damage2to2', 'critDamage2_2'
 ];
 resultIds.forEach(id => {
     const saved = localStorage.getItem(`result-${id}`);
