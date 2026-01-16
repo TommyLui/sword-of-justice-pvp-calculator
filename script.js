@@ -216,24 +216,6 @@ function calculateResults() {
     document.querySelectorAll('#results span[id]').forEach(element => {
         localStorage.setItem(`result-${element.id}`, element.textContent);
     });
-
-    // Performance analysis: find the attack property with the highest total value
-    const properties = [
-        { name: '攻擊', value: atk1Attack + atk2Attack },
-        { name: '元素攻擊', value: atk1ElementalAttack + atk2ElementalAttack },
-        { name: '破防', value: atk1DefenseBreak + atk2DefenseBreak },
-        { name: '破盾', value: atk1ShieldBreak + atk2ShieldBreak },
-        { name: '流派克制', value: atk1PvpAttack + atk2PvpAttack },
-        { name: '命中', value: atk1Accuracy + atk2Accuracy },
-        { name: '會心', value: atk1Crit + atk2Crit },
-        { name: '會傷-100%', value: atk1CritDamage + atk2CritDamage },
-        { name: '額外會心率', value: atk1ExtraCritRate + atk2ExtraCritRate },
-        { name: '克制百分比', value: atk1PvpAttackRate + atk2PvpAttackRate },
-        { name: '忽視元抗', value: atk1ElementalBreak + atk2ElementalBreak },
-        { name: '技能增強', value: atk1SkillAttack + atk2SkillAttack }
-    ];
-    const best = properties.reduce((prev, curr) => (prev.value > curr.value) ? prev : curr);
-    document.getElementById('performance').textContent = `The highest performing attack property is ${best.name} with total ${best.value}.`;
 }
 
 // Auto-save inputs to localStorage and auto-calculate
@@ -279,4 +261,167 @@ document.getElementById('copy-def-btn').addEventListener('click', () => {
         document.getElementById(`def2-${prop}`).value = val;
         localStorage.setItem(`def2-${prop}`, val);
     });
+});
+
+// Dark Mode Toggle
+document.getElementById('dark-mode-btn').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    const isDarkMode = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+    document.getElementById('dark-mode-btn').textContent = isDarkMode ? '日間模式' : '夜間模式';
+});
+
+// Load dark mode preference
+if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('dark-mode-btn').textContent = '日間模式';
+}
+
+// Export Function
+document.getElementById('export-btn').addEventListener('click', () => {
+    // Collect all attack data
+    const atk1Data = {
+        attack: document.getElementById('atk1-attack').value,
+        elementalAttack: document.getElementById('atk1-elementalAttack').value,
+        defenseBreak: document.getElementById('atk1-defenseBreak').value,
+        shieldBreak: document.getElementById('atk1-shieldBreak').value,
+        pvpAttack: document.getElementById('atk1-pvpAttack').value,
+        accuracy: document.getElementById('atk1-accuracy').value,
+        crit: document.getElementById('atk1-crit').value,
+        critDamage: document.getElementById('atk1-critDamage').value,
+        extraCritRate: document.getElementById('atk1-extraCritRate').value,
+        pvpAttackRate: document.getElementById('atk1-pvpAttackRate').value,
+        elementalBreak: document.getElementById('atk1-elementalBreak').value,
+        skillAttack: document.getElementById('atk1-skillAttack').value
+    };
+
+    const atk2Data = {
+        attack: document.getElementById('atk2-attack').value,
+        elementalAttack: document.getElementById('atk2-elementalAttack').value,
+        defenseBreak: document.getElementById('atk2-defenseBreak').value,
+        shieldBreak: document.getElementById('atk2-shieldBreak').value,
+        pvpAttack: document.getElementById('atk2-pvpAttack').value,
+        accuracy: document.getElementById('atk2-accuracy').value,
+        crit: document.getElementById('atk2-crit').value,
+        critDamage: document.getElementById('atk2-critDamage').value,
+        extraCritRate: document.getElementById('atk2-extraCritRate').value,
+        pvpAttackRate: document.getElementById('atk2-pvpAttackRate').value,
+        elementalBreak: document.getElementById('atk2-elementalBreak').value,
+        skillAttack: document.getElementById('atk2-skillAttack').value
+    };
+
+    // Collect all defense data
+    const def1Data = {
+        defense: document.getElementById('def1-defense').value,
+        airShield: document.getElementById('def1-airShield').value,
+        elementalResistance: document.getElementById('def1-elementalResistance').value,
+        pvpResistance: document.getElementById('def1-pvpResistance').value,
+        blockResistance: document.getElementById('def1-blockResistance').value,
+        criticalResistance: document.getElementById('def1-criticalResistance').value,
+        criticalDefense: document.getElementById('def1-criticalDefense').value,
+        skillResistance: document.getElementById('def1-skillResistance').value
+    };
+
+    const def2Data = {
+        defense: document.getElementById('def2-defense').value,
+        airShield: document.getElementById('def2-airShield').value,
+        elementalResistance: document.getElementById('def2-elementalResistance').value,
+        pvpResistance: document.getElementById('def2-pvpResistance').value,
+        blockResistance: document.getElementById('def2-blockResistance').value,
+        criticalResistance: document.getElementById('def2-criticalResistance').value,
+        criticalDefense: document.getElementById('def2-criticalDefense').value,
+        skillResistance: document.getElementById('def2-skillResistance').value
+    };
+
+    const exportData = {
+        attack1: atk1Data,
+        attack2: atk2Data,
+        defense1: def1Data,
+        defense2: def2Data
+    };
+
+    // Create JSON string
+    const jsonString = JSON.stringify(exportData, null, 2);
+
+    // Create a blob and download link
+    const blob = new Blob([jsonString], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pvp-calculator-data-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// Import Function
+document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-file').click();
+});
+
+document.getElementById('import-file').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            // Import attack1 data
+            if (data.attack1) {
+                Object.keys(data.attack1).forEach(key => {
+                    const element = document.getElementById(`atk1-${key}`);
+                    if (element) {
+                        element.value = data.attack1[key];
+                        localStorage.setItem(`atk1-${key}`, data.attack1[key]);
+                    }
+                });
+            }
+
+            // Import attack2 data
+            if (data.attack2) {
+                Object.keys(data.attack2).forEach(key => {
+                    const element = document.getElementById(`atk2-${key}`);
+                    if (element) {
+                        element.value = data.attack2[key];
+                        localStorage.setItem(`atk2-${key}`, data.attack2[key]);
+                    }
+                });
+            }
+
+            // Import defense1 data
+            if (data.defense1) {
+                Object.keys(data.defense1).forEach(key => {
+                    const element = document.getElementById(`def1-${key}`);
+                    if (element) {
+                        element.value = data.defense1[key];
+                        localStorage.setItem(`def1-${key}`, data.defense1[key]);
+                    }
+                });
+            }
+
+            // Import defense2 data
+            if (data.defense2) {
+                Object.keys(data.defense2).forEach(key => {
+                    const element = document.getElementById(`def2-${key}`);
+                    if (element) {
+                        element.value = data.defense2[key];
+                        localStorage.setItem(`def2-${key}`, data.defense2[key]);
+                    }
+                });
+            }
+
+            // Recalculate after import
+            calculateResults();
+            alert('Data imported successfully!');
+        } catch (error) {
+            alert('Error importing file: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so the same file can be imported again
+    event.target.value = '';
 });

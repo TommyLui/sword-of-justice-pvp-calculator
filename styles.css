@@ -3,6 +3,48 @@ body {
     margin: 0;
     padding: 20px;
     background-color: #f4f4f4;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+body.dark-mode section {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+
+body.dark-mode table td {
+    border-color: #444;
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .results-row > div {
+    background-color: #333;
+}
+
+body.dark-mode #part1-sub1 .compare-box,
+body.dark-mode #part2-sub1 .compare-box {
+    background-color: #2a2a2a;
+    border-color: #444;
+}
+
+body.dark-mode input {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+}
+
+body.dark-mode button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+body.dark-mode button:hover {
+    background-color: #45a049;
 }
 
 header {
@@ -11,6 +53,17 @@ header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.header-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    margin: 0;
 }
 
 section {
