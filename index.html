@@ -1,75 +1,312 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sword of Justice PVP Calculator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <header>
-        <h1>Sword of Justice PVP Calculator</h1>
+        <h1>逆水寒 PVP 計算機</h1>
     </header>
 
     <section id="results">
-        <h2>Calculation Results</h2>
-        <div id="result-display">
-            <p>Total Attack: <span id="total-attack">0</span></p>
-            <p>Total Defense: <span id="total-defense">0</span></p>
-            <p>Damage Dealt: <span id="damage">0</span></p>
+        <div class="results-row">
+            <div id="part1">
+                <h3>防禦數值 1</h3>
+                <div id="part1-sub1">
+                    <table>
+                        <tr>
+                            <td colspan="2">vs 進攻數值 1</td>
+                        </tr>
+                        <tr>
+                            <td>剩餘防禦</td>
+                            <td><span id="remainDefense1_1">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>防禦減免率</td>
+                            <td><span id="defenseRate1_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>剩餘氣盾</td>
+                            <td><span id="remainShield1_1">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>元抗減免率</td>
+                            <td><span id="elementalResisRate1_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際命中率</td>
+                            <td><span id="actualAccuracyRate1_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際會心率</td>
+                            <td><span id="actualCritRate1_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>傷害</td>
+                            <td><span id="damage1to1">0</span></td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <td colspan="2">vs 進攻數值 2</td>
+                        </tr>
+                        <tr>
+                            <td>剩餘防禦</td>
+                            <td><span id="remainDefense1_2">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>防禦減免率</td>
+                            <td><span id="defenseRate1_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>剩餘氣盾</td>
+                            <td><span id="remainShield1_2">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>元抗減免率</td>
+                            <td><span id="elementalResisRate1_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際命中率</td>
+                            <td><span id="actualAccuracyRate1_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際會心率</td>
+                            <td><span id="actualCritRate1_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>傷害</td>
+                            <td><span id="damage1to2">0</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="part2">
+                <h3>防禦數值 2</h3>
+                <div id="part2-sub1">
+                    <table>
+                        <tr>
+                            <td colspan="2">vs 進攻數值 1</td>
+                        </tr>
+                        <tr>
+                            <td>剩餘防禦</td>
+                            <td><span id="remainDefense2_1">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>防禦減免率</td>
+                            <td><span id="defenseRate2_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>剩餘氣盾</td>
+                            <td><span id="remainShield2_1">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>元抗減免率</td>
+                            <td><span id="elementalResisRate2_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際命中率</td>
+                            <td><span id="actualAccuracyRate2_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際會心率</td>
+                            <td><span id="actualCritRate2_1">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>傷害</td>
+                            <td><span id="damage2to1">0</span></td>
+                        </tr>
+                    </table>
+                    <table>
+                        <tr>
+                            <td colspan="2">vs 進攻數值 2</td>
+                        </tr>
+                        <tr>
+                            <td>剩餘防禦</td>
+                            <td><span id="remainDefense2_2">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>防禦減免率</td>
+                            <td><span id="defenseRate2_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>剩餘氣盾</td>
+                            <td><span id="remainShield2_2">0</span></td>
+                        </tr>
+                        <tr>
+                            <td>元抗減免率</td>
+                            <td><span id="elementalResisRate2_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際命中率</td>
+                            <td><span id="actualAccuracyRate2_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>實際會心率</td>
+                            <td><span id="actualCritRate2_2">0%</span></td>
+                        </tr>
+                        <tr>
+                            <td>傷害</td>
+                            <td><span id="damage2to2">0</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section id="attacking-item-1">
-        <h2>Attacking Item 1</h2>
-        <label for="atk1-name">Name:</label>
-        <input type="text" id="atk1-name" placeholder="Item Name"><br>
-        <label for="atk1-attack">Attack:</label>
-        <input type="number" id="atk1-attack" value="0"><br>
-        <label for="atk1-defense">Defense:</label>
-        <input type="number" id="atk1-defense" value="0"><br>
-        <label for="atk1-health">Health:</label>
-        <input type="number" id="atk1-health" value="0"><br>
-    </section>
+    <button id="calculate-btn">計算</button>
 
-    <section id="attacking-item-2">
-        <h2>Attacking Item 2</h2>
-        <label for="atk2-name">Name:</label>
-        <input type="text" id="atk2-name" placeholder="Item Name"><br>
-        <label for="atk2-attack">Attack:</label>
-        <input type="number" id="atk2-attack" value="0"><br>
-        <label for="atk2-defense">Defense:</label>
-        <input type="number" id="atk2-defense" value="0"><br>
-        <label for="atk2-health">Health:</label>
-        <input type="number" id="atk2-health" value="0"><br>
-    </section>
+    <div class="input-container">
+        <section id="attacking-item-1">
+            <h2>進攻數值1</h2>
+            <div class="input-row">
+                <label for="atk1-attack">攻擊:</label>
+                <input type="number" id="atk1-attack" value="0">
+                <label for="atk1-elementalAttack">元素攻擊:</label>
+                <input type="number" id="atk1-elementalAttack" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk1-defenseBreak">破防:</label>
+                <input type="number" id="atk1-defenseBreak" value="0">
+                <label for="atk1-shieldBreak">破盾:</label>
+                <input type="number" id="atk1-shieldBreak" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk1-pvpAttack">流派克制:</label>
+                <input type="number" id="atk1-pvpAttack" value="0">
+                <label for="atk1-accuracy">命中:</label>
+                <input type="number" id="atk1-accuracy" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk1-crit">會心:</label>
+                <input type="number" id="atk1-crit" value="0">
+                <label for="atk1-critDamage">會傷-100%:</label>
+                <input type="number" id="atk1-critDamage" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk1-extraCritRate">額外會心率:</label>
+                <input type="number" id="atk1-extraCritRate" value="0">
+                <label for="atk1-pvpAttackRate">克制百分比:</label>
+                <input type="number" id="atk1-pvpAttackRate" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk1-elementalBreak">忽視元抗:</label>
+                <input type="number" id="atk1-elementalBreak" value="0">
+                <label for="atk1-skillAttack">技能增強:</label>
+                <input type="number" id="atk1-skillAttack" value="0">
+            </div>
+        </section>
 
-    <section id="defending-item-1">
-        <h2>Defending Item 1</h2>
-        <label for="def1-name">Name:</label>
-        <input type="text" id="def1-name" placeholder="Item Name"><br>
-        <label for="def1-attack">Attack:</label>
-        <input type="number" id="def1-attack" value="0"><br>
-        <label for="def1-defense">Defense:</label>
-        <input type="number" id="def1-defense" value="0"><br>
-        <label for="def1-health">Health:</label>
-        <input type="number" id="def1-health" value="0"><br>
-    </section>
+        <section id="defending-item-1">
+            <h2>防禦數值1</h2>
+            <div class="input-row">
+                <label for="def1-defense">防禦:</label>
+                <input type="number" id="def1-defense" value="0">
+                <label for="def1-airShield">氣盾:</label>
+                <input type="number" id="def1-airShield" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def1-elementalResistance">元素抗性:</label>
+                <input type="number" id="def1-elementalResistance" value="0">
+                <label for="def1-pvpResistance">流派抵禦:</label>
+                <input type="number" id="def1-pvpResistance" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def1-blockResistance">格擋:</label>
+                <input type="number" id="def1-blockResistance" value="0">
+                <label for="def1-criticalResistance">會心抵抗:</label>
+                <input type="number" id="def1-criticalResistance" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def1-criticalDefense">會心防禦:</label>
+                <input type="number" id="def1-criticalDefense" value="0">
+                <label for="def1-skillResistance">技能抵禦:</label>
+                <input type="number" id="def1-skillResistance" value="0">
+            </div>
+        </section>
 
-    <section id="defending-item-2">
-        <h2>Defending Item 2</h2>
-        <label for="def2-name">Name:</label>
-        <input type="text" id="def2-name" placeholder="Item Name"><br>
-        <label for="def2-attack">Attack:</label>
-        <input type="number" id="def2-attack" value="0"><br>
-        <label for="def2-defense">Defense:</label>
-        <input type="number" id="def2-defense" value="0"><br>
-        <label for="def2-health">Health:</label>
-        <input type="number" id="def2-health" value="0"><br>
-    </section>
+        <section id="attacking-item-2">
+            <div class="section-header">
+                <h2>進攻數值2</h2>
+                <button id="copy-atk-btn">從上複製</button>
+            </div>
+            <div class="input-row">
+                <label for="atk2-attack">攻擊:</label>
+                <input type="number" id="atk2-attack" value="0">
+                <label for="atk2-elementalAttack">元素攻擊:</label>
+                <input type="number" id="atk2-elementalAttack" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk2-defenseBreak">破防:</label>
+                <input type="number" id="atk2-defenseBreak" value="0">
+                <label for="atk2-shieldBreak">破盾:</label>
+                <input type="number" id="atk2-shieldBreak" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk2-pvpAttack">流派克制:</label>
+                <input type="number" id="atk2-pvpAttack" value="0">
+                <label for="atk2-accuracy">命中:</label>
+                <input type="number" id="atk2-accuracy" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk2-crit">會心:</label>
+                <input type="number" id="atk2-crit" value="0">
+                <label for="atk2-critDamage">會傷-100%:</label>
+                <input type="number" id="atk2-critDamage" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk2-extraCritRate">額外會心率:</label>
+                <input type="number" id="atk2-extraCritRate" value="0">
+                <label for="atk2-pvpAttackRate">克制百分比:</label>
+                <input type="number" id="atk2-pvpAttackRate" value="0">
+            </div>
+            <div class="input-row">
+                <label for="atk2-elementalBreak">忽視元抗:</label>
+                <input type="number" id="atk2-elementalBreak" value="0">
+                <label for="atk2-skillAttack">技能增強:</label>
+                <input type="number" id="atk2-skillAttack" value="0">
+            </div>
+        </section>
 
-    <button id="calculate-btn">Calculate</button>
+        <section id="defending-item-2">
+            <div class="section-header">
+                <h2>防禦數值2</h2>
+                <button id="copy-def-btn">從上複製</button>
+            </div>
+            <div class="input-row">
+                <label for="def2-defense">防禦:</label>
+                <input type="number" id="def2-defense" value="0">
+                <label for="def2-airShield">氣盾:</label>
+                <input type="number" id="def2-airShield" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def2-elementalResistance">元素抗性:</label>
+                <input type="number" id="def2-elementalResistance" value="0">
+                <label for="def2-pvpResistance">流派抵禦:</label>
+                <input type="number" id="def2-pvpResistance" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def2-blockResistance">格擋:</label>
+                <input type="number" id="def2-blockResistance" value="0">
+                <label for="def2-criticalResistance">會心抵抗:</label>
+                <input type="number" id="def2-criticalResistance" value="0">
+            </div>
+            <div class="input-row">
+                <label for="def2-criticalDefense">會心防禦:</label>
+                <input type="number" id="def2-criticalDefense" value="0">
+                <label for="def2-skillResistance">技能抵禦:</label>
+                <input type="number" id="def2-skillResistance" value="0">
+            </div>
+        </section>
+    </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
