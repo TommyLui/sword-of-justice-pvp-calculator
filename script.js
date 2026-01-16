@@ -415,9 +415,9 @@ document.getElementById('import-file').addEventListener('change', (event) => {
 
             // Recalculate after import
             calculateResults();
-            alert('Data imported successfully!');
+            alert('數據匯入成功!');
         } catch (error) {
-            alert('Error importing file: ' + error.message);
+            alert('數據匯入錯誤: ' + error.message);
         }
     };
     reader.readAsText(file);
