@@ -1,4 +1,4 @@
-document.getElementById('calculate-btn').addEventListener('click', function () {
+function calculateResults() {
     // Helper functions
     function calculateRemainShield(shieldBreak, airShield) {
         if (shieldBreak >= airShield) return 0;
@@ -234,9 +234,9 @@ document.getElementById('calculate-btn').addEventListener('click', function () {
     ];
     const best = properties.reduce((prev, curr) => (prev.value > curr.value) ? prev : curr);
     document.getElementById('performance').textContent = `The highest performing attack property is ${best.name} with total ${best.value}.`;
-});
+}
 
-// Auto-save inputs to localStorage
+// Auto-save inputs to localStorage and auto-calculate
 const inputs = document.querySelectorAll('input[type="number"]');
 inputs.forEach(input => {
     // Load saved value
@@ -244,11 +244,15 @@ inputs.forEach(input => {
     if (saved !== null) {
         input.value = saved;
     }
-    // Save on change
+    // Save on change and recalculate
     input.addEventListener('input', () => {
         localStorage.setItem(input.id, input.value);
+        calculateResults();
     });
 });
+
+// Initial calculation on load
+calculateResults();
 
 // Load saved results
 document.querySelectorAll('#results span[id]').forEach(element => {

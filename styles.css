@@ -122,6 +122,14 @@ button:hover {
     box-sizing: border-box;
 }
 
+.basic-damage td {
+    font-weight: 500;
+}
+
+.crit-damage td {
+    font-weight: 500;
+}
+
 .compare-box label {
     font-size: 16px;
     font-weight: 600;
