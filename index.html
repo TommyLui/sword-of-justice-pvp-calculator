@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sword of Justice PVP Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Sword of Justice PVP Calculator</h1>
+    </header>
+
+    <section id="results">
+        <h2>Calculation Results</h2>
+        <div id="result-display">
+            <p>Total Attack: <span id="total-attack">0</span></p>
+            <p>Total Defense: <span id="total-defense">0</span></p>
+            <p>Damage Dealt: <span id="damage">0</span></p>
+        </div>
+    </section>
+
+    <section id="attacking-item-1">
+        <h2>Attacking Item 1</h2>
+        <label for="atk1-name">Name:</label>
+        <input type="text" id="atk1-name" placeholder="Item Name"><br>
+        <label for="atk1-attack">Attack:</label>
+        <input type="number" id="atk1-attack" value="0"><br>
+        <label for="atk1-defense">Defense:</label>
+        <input type="number" id="atk1-defense" value="0"><br>
+        <label for="atk1-health">Health:</label>
+        <input type="number" id="atk1-health" value="0"><br>
+    </section>
+
+    <section id="attacking-item-2">
+        <h2>Attacking Item 2</h2>
+        <label for="atk2-name">Name:</label>
+        <input type="text" id="atk2-name" placeholder="Item Name"><br>
+        <label for="atk2-attack">Attack:</label>
+        <input type="number" id="atk2-attack" value="0"><br>
+        <label for="atk2-defense">Defense:</label>
+        <input type="number" id="atk2-defense" value="0"><br>
+        <label for="atk2-health">Health:</label>
+        <input type="number" id="atk2-health" value="0"><br>
+    </section>
+
+    <section id="defending-item-1">
+        <h2>Defending Item 1</h2>
+        <label for="def1-name">Name:</label>
+        <input type="text" id="def1-name" placeholder="Item Name"><br>
+        <label for="def1-attack">Attack:</label>
+        <input type="number" id="def1-attack" value="0"><br>
+        <label for="def1-defense">Defense:</label>
+        <input type="number" id="def1-defense" value="0"><br>
+        <label for="def1-health">Health:</label>
+        <input type="number" id="def1-health" value="0"><br>
+    </section>
+
+    <section id="defending-item-2">
+        <h2>Defending Item 2</h2>
+        <label for="def2-name">Name:</label>
+        <input type="text" id="def2-name" placeholder="Item Name"><br>
+        <label for="def2-attack">Attack:</label>
+        <input type="number" id="def2-attack" value="0"><br>
+        <label for="def2-defense">Defense:</label>
+        <input type="number" id="def2-defense" value="0"><br>
+        <label for="def2-health">Health:</label>
+        <input type="number" id="def2-health" value="0"><br>
+    </section>
+
+    <button id="calculate-btn">Calculate</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
