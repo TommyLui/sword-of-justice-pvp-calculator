@@ -114,38 +114,36 @@ function calculateResults() {
     document.getElementById('damage2_2').textContent = 0;
 
     // Calculate base damages using the provided formula
+    const skillBase = 125000;
+    const skillMultiplier = 7.37;
     // Attack 1 on Defense 1
-    const baseDamage1_1 = ((10000
-        + (atk1Attack + atk1PvpAttack + atk1SkillAttack - def1PvpResistance - remainShield1_1 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_1) / 100)
-        + (atk1ElementalAttack * (1 - parseFloat(elementalResisRate1_1) / 100)))
+    const baseDamage1_1 = ((skillBase + skillMultiplier * (atk1Attack + atk1PvpAttack + atk1SkillAttack - def1PvpResistance - remainShield1_1 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_1) / 100)
+        + (atk1ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate1_1) / 100)))
         * (1 + atk1PvpAttackRate / 100);
     const finalDamage1_1 = Math.max(0, baseDamage1_1);
     document.getElementById('damage1_1').textContent = Math.floor(finalDamage1_1);
 
     // Attack 2 on Defense 1
-    const baseDamage1_2 = ((10000
-        + (atk2Attack + atk2PvpAttack + atk2SkillAttack - def1PvpResistance - remainShield1_2 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_2) / 100)
-        + (atk2ElementalAttack * (1 - parseFloat(elementalResisRate1_2) / 100)))
+    const baseDamage1_2 = ((skillBase + skillMultiplier * (atk2Attack + atk2PvpAttack + atk2SkillAttack - def1PvpResistance - remainShield1_2 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_2) / 100)
+        + (atk2ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate1_2) / 100)))
         * (1 + atk2PvpAttackRate / 100);
     const finalDamage1_2 = Math.max(0, baseDamage1_2);
     document.getElementById('damage1_2').textContent = Math.floor(finalDamage1_2);
 
     // Attack 1 on Defense 2
-    const baseDamage2_1 = ((10000
-        + (atk1Attack + atk1PvpAttack + atk1SkillAttack - def2PvpResistance - remainShield2_1 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_1) / 100)
-        + (atk1ElementalAttack * (1 - parseFloat(elementalResisRate2_1) / 100)))
+    const baseDamage2_1 = ((skillBase + skillMultiplier * (atk1Attack + atk1PvpAttack + atk1SkillAttack - def2PvpResistance - remainShield2_1 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_1) / 100)
+        + (atk1ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate2_1) / 100)))
         * (1 + atk1PvpAttackRate / 100);
     const finalDamage2_1 = Math.max(0, baseDamage2_1);
     document.getElementById('damage2_1').textContent = Math.floor(finalDamage2_1);
 
     // Attack 2 on Defense 2
-    const baseDamage2_2 = ((10000
-        + (atk2Attack + atk2PvpAttack + atk2SkillAttack - def2PvpResistance - remainShield2_2 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_2) / 100)
-        + (atk2ElementalAttack * (1 - parseFloat(elementalResisRate2_2) / 100)))
+    const baseDamage2_2 = ((skillBase + skillMultiplier * (atk2Attack + atk2PvpAttack + atk2SkillAttack - def2PvpResistance - remainShield2_2 - def2SkillResistance)) * (1 - parseFloat(defenseRate2_2) / 100)
+        + (atk2ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate2_2) / 100)))
         * (1 + atk2PvpAttackRate / 100);
     const finalDamage2_2 = Math.max(0, baseDamage2_2);
     document.getElementById('damage2_2').textContent = Math.floor(finalDamage2_2);
-    
+
 
     // Calculate crit damages (expected damage including accuracy and crit)
     const accuracy1_1 = parseFloat(actualAccuracyRate1_1) / 100;
