@@ -66,6 +66,13 @@ header {
     margin: 0;
 }
 
+.header-icon {
+    height: 32px;
+    width: 32px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 section {
     background-color: white;
     margin: 10px 0;
