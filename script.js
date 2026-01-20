@@ -35,7 +35,6 @@ function calculateResults() {
     const atk1PvpAttackRate = parseInt(document.getElementById('atk1-pvpAttackRate').value) || 0;
     const atk1ElementalBreak = parseInt(document.getElementById('atk1-elementalBreak').value) || 0;
     const atk1SkillAttack = parseInt(document.getElementById('atk1-skillAttack').value) || 0;
-    const atk1Total = atk1Attack + atk1ElementalAttack + atk1DefenseBreak + atk1ShieldBreak + atk1PvpAttack + atk1Accuracy + atk1Crit + atk1CritDamage + atk1ExtraCritRate + atk1PvpAttackRate + atk1ElementalBreak + atk1SkillAttack;
 
     const atk2Attack = parseInt(document.getElementById('atk2-attack').value) || 0;
     const atk2ElementalAttack = parseInt(document.getElementById('atk2-elementalAttack').value) || 0;
@@ -49,9 +48,6 @@ function calculateResults() {
     const atk2PvpAttackRate = parseInt(document.getElementById('atk2-pvpAttackRate').value) || 0;
     const atk2ElementalBreak = parseInt(document.getElementById('atk2-elementalBreak').value) || 0;
     const atk2SkillAttack = parseInt(document.getElementById('atk2-skillAttack').value) || 0;
-    const atk2Total = atk2Attack + atk2ElementalAttack + atk2DefenseBreak + atk2ShieldBreak + atk2PvpAttack + atk2Accuracy + atk2Crit + atk2CritDamage + atk2ExtraCritRate + atk2PvpAttackRate + atk2ElementalBreak + atk2SkillAttack;
-
-    const totalAttack = atk1Total + atk2Total;
 
     // Calculate defense totals
     const def1Defense = parseInt(document.getElementById('def1-defense').value) || 0;
@@ -146,24 +142,28 @@ function calculateResults() {
 
 
     // Calculate crit damages (expected damage including accuracy and crit)
+    // Attack 1 on Defense 1
     const accuracy1_1 = parseFloat(actualAccuracyRate1_1) / 100;
     const crit1_1 = parseFloat(actualCritRate1_1) / 100;
     const critMultiplier1 = atk1CritDamage / 100;
     const critDamage1_1 = Math.floor(finalDamage1_1 * accuracy1_1 * (1 + crit1_1 * (critMultiplier1 - def1CriticalDefense / 100)) + finalDamage1_1 * (1 - accuracy1_1) * 0.5);
     document.getElementById('critDamage1_1').textContent = critDamage1_1;
 
+    // Attack 2 on Defense 1
     const accuracy1_2 = parseFloat(actualAccuracyRate1_2) / 100;
     const crit1_2 = parseFloat(actualCritRate1_2) / 100;
-    const critMultiplier1_2 = atk1CritDamage / 100;
+    const critMultiplier1_2 = atk2CritDamage / 100;
     const critDamage1_2 = Math.floor(finalDamage1_2 * accuracy1_2 * (1 + crit1_2 * (critMultiplier1_2 - def1CriticalDefense / 100)) + finalDamage1_2 * (1 - accuracy1_2) * 0.5);
     document.getElementById('critDamage1_2').textContent = critDamage1_2;
 
+    // Attack 1 on Defense 2
     const accuracy2_1 = parseFloat(actualAccuracyRate2_1) / 100;
     const crit2_1 = parseFloat(actualCritRate2_1) / 100;
-    const critMultiplier2 = atk2CritDamage / 100;
+    const critMultiplier2 = atk1CritDamage / 100;
     const critDamage2_1 = Math.floor(finalDamage2_1 * accuracy2_1 * (1 + crit2_1 * (critMultiplier2 - def2CriticalDefense / 100)) + finalDamage2_1 * (1 - accuracy2_1) * 0.5);
     document.getElementById('critDamage2_1').textContent = critDamage2_1;
 
+    // Attack 2 on Defense 2
     const accuracy2_2 = parseFloat(actualAccuracyRate2_2) / 100;
     const crit2_2 = parseFloat(actualCritRate2_2) / 100;
     const critMultiplier2_2 = atk2CritDamage / 100;
