@@ -243,7 +243,8 @@ document.querySelectorAll('#results span[id]').forEach(element => {
 });
 
 // Copy buttons
-document.getElementById('copy-atk-btn').addEventListener('click', () => {
+// Copy atk data from atk 1 to atk 2
+document.getElementById('copy-left-atk-btn').addEventListener('click', () => {
     const properties = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'pvpAttack', 'accuracy', 'crit', 'critDamage', 'extraCritRate', 'pvpAttackRate', 'elementalBreak', 'skillAttack'];
     properties.forEach(prop => {
         const val = document.getElementById(`atk1-${prop}`).value;
@@ -252,12 +253,33 @@ document.getElementById('copy-atk-btn').addEventListener('click', () => {
     });
 });
 
-document.getElementById('copy-def-btn').addEventListener('click', () => {
+// Copy atk data from atk 2 to atk 1
+document.getElementById('copy-right-atk-btn').addEventListener('click', () => {
+    const properties = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'pvpAttack', 'accuracy', 'crit', 'critDamage', 'extraCritRate', 'pvpAttackRate', 'elementalBreak', 'skillAttack'];
+    properties.forEach(prop => {
+        const val = document.getElementById(`atk2-${prop}`).value;
+        document.getElementById(`atk1-${prop}`).value = val;
+        localStorage.setItem(`atk1-${prop}`, val);
+    });
+});
+
+// Copy def data from def 1 to def 2
+document.getElementById('copy-left-def-btn').addEventListener('click', () => {
     const properties = ['defense', 'airShield', 'elementalResistance', 'pvpResistance', 'blockResistance', 'criticalResistance', 'criticalDefense', 'skillResistance'];
     properties.forEach(prop => {
         const val = document.getElementById(`def1-${prop}`).value;
         document.getElementById(`def2-${prop}`).value = val;
         localStorage.setItem(`def2-${prop}`, val);
+    });
+});
+
+// Copy def data from def 2 to def 1
+document.getElementById('copy-right-def-btn').addEventListener('click', () => {
+    const properties = ['defense', 'airShield', 'elementalResistance', 'pvpResistance', 'blockResistance', 'criticalResistance', 'criticalDefense', 'skillResistance'];
+    properties.forEach(prop => {
+        const val = document.getElementById(`def2-${prop}`).value;
+        document.getElementById(`def1-${prop}`).value = val;
+        localStorage.setItem(`def1-${prop}`, val);
     });
 });
 
