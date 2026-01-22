@@ -1,24 +1,36 @@
 function calculateResults() {
     // Helper functions
+    function calculateRemainDefense(defense, defenseBreak) {
+        return Math.max(0, defense - defenseBreak);
+    }
+
+    function calculateDefenseRate(remainDefense) {
+        const rate = (remainDefense / (remainDefense + 10552)) * 100;
+        return rate.toFixed(2) + '%';
+    }
+
     function calculateRemainShield(shieldBreak, airShield) {
         if (shieldBreak >= airShield) return 0;
         else if (shieldBreak >= airShield / 3) return 0.5 * (airShield - shieldBreak);
         else return airShield - 2 * shieldBreak;
     }
 
+    function calculateElementalResisRate(elementalResistance, elementalBreak) {
+        const diff = Math.max(0, elementalResistance - elementalBreak);
+        const rate = (diff / (diff + 1965)) * 100;
+        return rate.toFixed(2) + '%';
+    }
+
     function calculateActualAccuracyRate(accuracy, blockResistance) {
-        const diff = accuracy - blockResistance;
+        const diff = Math.max(0, accuracy - blockResistance);
         const rate = Math.min((143 * diff) / (diff + 5950) / 100 + 0.95, 1);
         return (rate * 100).toFixed(2) + '%';
     }
 
     function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
-        const diff = crit - criticalResistance;
-        let baseRate = 0;
-        if (diff > 0) {
-            baseRate = (115 * diff - 1230) / (diff + 1548) / 100;
-        }
-        const totalRate = baseRate + (extraCritRate / 100);
+        const diff = Math.max(0, crit - criticalResistance);
+        let baseRate  = Math.max(0, (115 * diff - 1230) / (diff + 1548) / 100);
+        const totalRate = Math.min(baseRate + (extraCritRate / 100), 1);
         return (totalRate * 100).toFixed(2) + '%';
     }
 
@@ -73,37 +85,39 @@ function calculateResults() {
     // Calculate sub1 properties for part1 (attack1 vs def1 and def2)
     // For part1 (def1 vs atk1 and atk2)
     // def1 Vs atk1
-    const remainDefense1_1 = Math.max(0, def1Defense - atk1DefenseBreak);
-    const defenseRate1_1 = ((remainDefense1_1 / (remainDefense1_1 + 10552)) * 100).toFixed(2);
+    const remainDefense1_1 = calculateRemainDefense(def1Defense, atk1DefenseBreak);
+    const defenseRate1_1 = calculateDefenseRate(remainDefense1_1);
     const remainShield1_1 = calculateRemainShield(atk1ShieldBreak, def1AirShield);
-    const elementalResisRate1_1 = (((def1ElementalResistance - atk1ElementalBreak) / ((def1ElementalResistance - atk1ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
+    const elementalResisRate1_1 = calculateElementalResisRate(def1ElementalResistance, atk1ElementalBreak);
     const actualAccuracyRate1_1 = calculateActualAccuracyRate(atk1Accuracy, def1BlockResistance);
     const actualCritRate1_1 = calculateActualCritRate(atk1Crit, atk1ExtraCritRate, def1CriticalResistance);
 
     // def1 Vs atk2
-    const remainDefense1_2 = Math.max(0, def1Defense - atk2DefenseBreak);
-    const defenseRate1_2 = ((remainDefense1_2 / (remainDefense1_2 + 10552)) * 100).toFixed(2);
+    const remainDefense1_2 = calculateRemainDefense(def1Defense, atk2DefenseBreak);
+    const defenseRate1_2 = calculateDefenseRate(remainDefense1_2);
     const remainShield1_2 = calculateRemainShield(atk2ShieldBreak, def1AirShield);
-    const elementalResisRate1_2 = (((def1ElementalResistance - atk2ElementalBreak) / ((def1ElementalResistance - atk2ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
+    const elementalResisRate1_2 = calculateElementalResisRate(def1ElementalResistance, atk2ElementalBreak);
     const actualAccuracyRate1_2 = calculateActualAccuracyRate(atk2Accuracy, def1BlockResistance);
     const actualCritRate1_2 = calculateActualCritRate(atk2Crit, atk2ExtraCritRate, def1CriticalResistance);
 
     // For part2 (def2 vs atk1 and atk2)
     // def2 Vs atk1
-    const remainDefense2_1 = Math.max(0, def2Defense - atk1DefenseBreak);
-    const defenseRate2_1 = ((remainDefense2_1 / (remainDefense2_1 + 10552)) * 100).toFixed(2);
+    const remainDefense2_1 = calculateRemainDefense(def2Defense, atk1DefenseBreak);
+    const defenseRate2_1 = calculateDefenseRate(remainDefense2_1);
     const remainShield2_1 = calculateRemainShield(atk1ShieldBreak, def2AirShield);
-    const elementalResisRate2_1 = (((def2ElementalResistance - atk1ElementalBreak) / ((def2ElementalResistance - atk1ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
+    const elementalResisRate2_1 = calculateElementalResisRate(def2ElementalResistance, atk1ElementalBreak);
     const actualAccuracyRate2_1 = calculateActualAccuracyRate(atk1Accuracy, def2BlockResistance);
     const actualCritRate2_1 = calculateActualCritRate(atk1Crit, atk1ExtraCritRate, def2CriticalResistance);
 
     // def2 Vs atk2
-    const remainDefense2_2 = Math.max(0, def2Defense - atk2DefenseBreak);
-    const defenseRate2_2 = ((remainDefense2_2 / (remainDefense2_2 + 10552)) * 100).toFixed(2);
+    const remainDefense2_2 = calculateRemainDefense(def2Defense, atk2DefenseBreak);
+    const defenseRate2_2 = calculateDefenseRate(remainDefense2_2);
     const remainShield2_2 = calculateRemainShield(atk2ShieldBreak, def2AirShield);
-    const elementalResisRate2_2 = (((def2ElementalResistance - atk2ElementalBreak) / ((def2ElementalResistance - atk2ElementalBreak) + 1965)) * 100).toFixed(2) + '%';
+    const elementalResisRate2_2 = calculateElementalResisRate(def2ElementalResistance, atk2ElementalBreak);
     const actualAccuracyRate2_2 = calculateActualAccuracyRate(atk2Accuracy, def2BlockResistance);
     const actualCritRate2_2 = calculateActualCritRate(atk2Crit, atk2ExtraCritRate, def2CriticalResistance);
+
+    // Reset damage outputs
     document.getElementById('damage1_1').textContent = 0;
     document.getElementById('damage1_2').textContent = 0;
     document.getElementById('damage2_1').textContent = 0;
@@ -183,28 +197,28 @@ function calculateResults() {
 
     // Update sub1
     document.getElementById('remainDefense1_1').textContent = remainDefense1_1;
-    document.getElementById('defenseRate1_1').textContent = defenseRate1_1 + '%';
+    document.getElementById('defenseRate1_1').textContent = defenseRate1_1;
     document.getElementById('remainShield1_1').textContent = remainShield1_1;
     document.getElementById('elementalResisRate1_1').textContent = elementalResisRate1_1;
     document.getElementById('actualAccuracyRate1_1').textContent = actualAccuracyRate1_1;
     document.getElementById('actualCritRate1_1').textContent = actualCritRate1_1;
 
     document.getElementById('remainDefense1_2').textContent = remainDefense1_2;
-    document.getElementById('defenseRate1_2').textContent = defenseRate1_2 + '%';
+    document.getElementById('defenseRate1_2').textContent = defenseRate1_2;
     document.getElementById('remainShield1_2').textContent = remainShield1_2;
     document.getElementById('elementalResisRate1_2').textContent = elementalResisRate1_2;
     document.getElementById('actualAccuracyRate1_2').textContent = actualAccuracyRate1_2;
     document.getElementById('actualCritRate1_2').textContent = actualCritRate1_2;
 
     document.getElementById('remainDefense2_1').textContent = remainDefense2_1;
-    document.getElementById('defenseRate2_1').textContent = defenseRate2_1 + '%';
+    document.getElementById('defenseRate2_1').textContent = defenseRate2_1;
     document.getElementById('remainShield2_1').textContent = remainShield2_1;
     document.getElementById('elementalResisRate2_1').textContent = elementalResisRate2_1;
     document.getElementById('actualAccuracyRate2_1').textContent = actualAccuracyRate2_1;
     document.getElementById('actualCritRate2_1').textContent = actualCritRate2_1;
 
     document.getElementById('remainDefense2_2').textContent = remainDefense2_2;
-    document.getElementById('defenseRate2_2').textContent = defenseRate2_2 + '%';
+    document.getElementById('defenseRate2_2').textContent = defenseRate2_2;
     document.getElementById('remainShield2_2').textContent = remainShield2_2;
     document.getElementById('elementalResisRate2_2').textContent = elementalResisRate2_2;
     document.getElementById('actualAccuracyRate2_2').textContent = actualAccuracyRate2_2;
