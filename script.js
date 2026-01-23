@@ -265,6 +265,7 @@ document.getElementById('copy-left-atk-btn').addEventListener('click', () => {
         document.getElementById(`atk2-${prop}`).value = val;
         localStorage.setItem(`atk2-${prop}`, val);
     });
+    calculateResults();
 });
 
 // Copy atk data from atk 2 to atk 1
@@ -275,6 +276,7 @@ document.getElementById('copy-right-atk-btn').addEventListener('click', () => {
         document.getElementById(`atk1-${prop}`).value = val;
         localStorage.setItem(`atk1-${prop}`, val);
     });
+    calculateResults();
 });
 
 // Copy def data from def 1 to def 2
@@ -285,6 +287,7 @@ document.getElementById('copy-left-def-btn').addEventListener('click', () => {
         document.getElementById(`def2-${prop}`).value = val;
         localStorage.setItem(`def2-${prop}`, val);
     });
+    calculateResults();
 });
 
 // Copy def data from def 2 to def 1
@@ -295,6 +298,7 @@ document.getElementById('copy-right-def-btn').addEventListener('click', () => {
         document.getElementById(`def1-${prop}`).value = val;
         localStorage.setItem(`def1-${prop}`, val);
     });
+    calculateResults();
 });
 
 // Dark Mode Toggle
