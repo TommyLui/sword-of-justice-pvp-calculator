@@ -124,8 +124,8 @@ function calculateResults() {
     document.getElementById('damage2_2').textContent = 0;
 
     // Calculate base damages using the provided formula
-    const skillBase = 125000;
-    const skillMultiplier = 7.37;
+    const skillBase = 100000;
+    const skillMultiplier = 6.05;
     // Attack 1 on Defense 1
     const baseDamage1_1 = ((skillBase + skillMultiplier * (atk1Attack + atk1PvpAttack + atk1SkillAttack - def1PvpResistance - remainShield1_1 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_1) / 100)
         + (atk1ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate1_1) / 100)))
