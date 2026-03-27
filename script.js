@@ -5,7 +5,7 @@ function calculateResults() {
     }
 
     function calculateDefenseRate(remainDefense) {
-        const rate = (remainDefense / (remainDefense + 10552)) * 100;
+        const rate = Math.max(0.1, ((remainDefense / (remainDefense + 19032)) * 100));
         return rate.toFixed(2) + '%';
     }
 
