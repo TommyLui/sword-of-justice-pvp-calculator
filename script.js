@@ -5,7 +5,7 @@ function calculateResults() {
     }
 
     function calculateDefenseRate(remainDefense) {
-        const rate = Math.max(0.1, ((remainDefense / (remainDefense + 19032)) * 100));
+        const rate = Math.max(10, ((remainDefense / (remainDefense + 19032)) * 100) + 10);
         return rate.toFixed(2) + '%';
     }
 
@@ -17,19 +17,19 @@ function calculateResults() {
 
     function calculateElementalResisRate(elementalResistance, elementalBreak) {
         const diff = Math.max(0, elementalResistance - elementalBreak);
-        const rate = (diff / (diff + 1965)) * 100;
+        const rate = (diff / (diff + 4762)) * 100;
         return rate.toFixed(2) + '%';
     }
 
     function calculateActualAccuracyRate(accuracy, blockResistance) {
         const diff = Math.max(0, accuracy - blockResistance);
-        const rate = Math.min((143 * diff) / (diff + 5950) / 100 + 0.95, 1);
+        const rate = Math.min(((143 * diff) / (diff + 10688) + 95) / 100, 1);
         return (rate * 100).toFixed(2) + '%';
     }
 
     function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
         const diff = Math.max(0, crit - criticalResistance);
-        let baseRate  = Math.max(0, (115 * diff - 1230) / (diff + 1548) / 100);
+        let baseRate  = Math.max(0, (115 * diff - 200) / (diff + 2666) / 100);
         const totalRate = Math.min(baseRate + (extraCritRate / 100), 1);
         return (totalRate * 100).toFixed(2) + '%';
     }
