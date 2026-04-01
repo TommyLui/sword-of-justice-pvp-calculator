@@ -1,7 +1,7 @@
 # AGENTS.md - Agentic Coding Guidelines
 
 ## Project Overview
-Simple static HTML/CSS/JS PVP damage calculator for "Sword of Justice" game. Deployed to GitHub Pages.
+Simple static HTML/CSS/JS PVP damage calculator for "Sword of Justice" (逆水寒) game. Deployed to GitHub Pages.
 
 ## Build/Deploy Commands
 
@@ -19,10 +19,14 @@ python -m http.server 8000
 ## Project Structure
 
 ```
-├── index.html          # Main page (Chinese UI)
+├── index.html          # Main page (Chinese UI) - Current version S2.2
 ├── script.js           # Calculator logic + localStorage
 ├── styles.css          # Styling with dark mode support
 ├── icon.jpg            # App icon
+├── 2.1/                # Archive: Previous season 2.1 version
+│   ├── index.html
+│   ├── script.js
+│   └── styles.css
 └── .github/workflows/
     └── deploy.yml      # GitHub Pages deployment
 ```
@@ -50,7 +54,7 @@ const skillBase = 58000;
 
 ### CSS (`styles.css`)
 - **Naming**: Use `kebab-case` for class names
-- **Organization**: Group related styles together
+- **Organization**: Group related styles together (base → components → dark mode)
 - **Dark mode**: Use `body.dark-mode` prefix for dark theme overrides
 - **Indentation**: 4 spaces
 - **Colors**: Prefer hex codes (`#4CAF50` for primary green)
@@ -75,7 +79,7 @@ body.dark-mode input {
 - **Structure**: Semantic HTML5
 - **IDs**: Use `kebab-case`
 - **Indentation**: 4 spaces
-- **Script cache-busting**: Use `?version` suffix when updating (e.g., `script.js?241225`)
+- **Script cache-busting**: Use `?version` suffix when updating (e.g., `script.js?250327`)
 
 ## Key Patterns
 
@@ -85,10 +89,17 @@ All input values auto-save to localStorage with element ID as key:
 localStorage.setItem(input.id, input.value);
 ```
 
+Results are saved with `result-` prefix:
+```javascript
+localStorage.setItem(`result-${element.id}`, element.textContent);
+```
+
 ### Calculator Formula Constants
-When updating game formulas, update these constants in `calculateResults()`:
-- `skillBase` - Base skill damage value
-- `skillMultiplier` - Skill damage multiplier
+When updating game formulas for new seasons, update these constants in `calculateResults()`:
+- `skillBase` - Base skill damage value (currently 58000)
+- `skillMultiplier` - Skill damage multiplier (currently 3.38)
+
+Previous season (2.1) values: `skillBase = 58000`, `skillMultiplier = 3.38`
 
 ### Copy Button Pattern
 Properties array + loop for copying between sections:
@@ -100,6 +111,15 @@ properties.forEach(prop => {
     localStorage.setItem(`atk2-${prop}`, val);
 });
 ```
+
+## Season Updates
+
+When a new game season releases:
+1. Archive current version to a version folder (e.g., `2.1/`)
+2. Update formula constants (`skillBase`, `skillMultiplier`) in `calculateResults()`
+3. Update the TODO comment in `script.js` with new values
+4. Update version in `index.html` title (e.g., "S2.2")
+5. Bump script cache-busting version in HTML (`script.js?YYMMDD`)
 
 ## Error Handling
 - Parse integers safely: `parseInt(value) || 0`
@@ -119,10 +139,11 @@ properties.forEach(prop => {
 - Commit to `main` or `master` triggers auto-deployment
 - No pull request required for simple changes
 - Bump script version query param when modifying `script.js` to bust cache
+- Preserve archived versions in version folders (e.g., `2.1/`)
 
 ## Language
 UI text is in **Traditional Chinese (zh-TW)**. Maintain Chinese for:
-- Button labels
-- Alert messages
-- Table headers
-- Section titles
+- Button labels (e.g., `夜間模式`, `匯入`, `匯出`)
+- Alert messages (e.g., `數據匯入成功!`)
+- Table headers (e.g., `剩餘防禦`, `實際命中率`)
+- Section titles (e.g., `進攻數值1`, `防禦數值1`)

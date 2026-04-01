@@ -1,347 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>逆水寒 PVP 計算機 - S2.2</title>
+    <meta name="app-version" content="S2.2">
+    <title>逆水寒 PVP 指揮中心 - S2.2</title>
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        :root { --bg: #0B1220; --bg-2: #101A2E; --panel: #141F33; --panel-2: #18243B; --text: #E8EEF9; --muted: #93A4C7; --accent: #D6A84A; --accent-2: #F2D38A; --border: rgba(214, 168, 74, 0.18); --shadow: 0 18px 40px rgba(0, 0, 0, 0.35); }
+        body.dark-mode { --bg: #08111d; --bg-2: #0d1626; --panel: #101a2d; --panel-2: #15213a; --text: #ecf2ff; --muted: #96a5c8; --accent: #d6a84a; --accent-2: #f2d38a; --border: rgba(214, 168, 74, 0.22); --shadow: 0 18px 40px rgba(0, 0, 0, 0.5); background: radial-gradient(circle at top, #101a2d 0%, var(--bg) 50%); }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: radial-gradient(circle at top, #13213b 0%, var(--bg) 50%); color: var(--text); }
+        .app { min-height: 100vh; display: flex; }
+        .sidebar { width: 280px; background: rgba(10, 18, 32, 0.96); border-right: 1px solid var(--border); padding: 24px 16px; position: sticky; top: 0; height: 100vh; backdrop-filter: blur(10px); display: flex; flex-direction: column; }
+        .brand { display:flex; gap:12px; align-items:center; margin-bottom: 28px; }
+        .brand img { width: 44px; height: 44px; border-radius: 12px; }
+        .brand h1 { margin:0; font-size: 18px; }
+        .brand p { margin:4px 0 0; color: var(--muted); font-size: 13px; }
+        .nav { display:flex; flex-direction:column; gap:10px; }
+        .nav a, .nav button { text-decoration:none; color:var(--text); background: transparent; border:1px solid transparent; display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; cursor:pointer; transition: all .25s ease; }
+        .nav a:hover, .nav button:hover, .nav a.active { background: rgba(214, 168, 74, 0.12); border-color: var(--border); transform: translateX(4px); }
+        .sidebar-footer { margin-top: auto; padding-top: 18px; color: var(--muted); font-size: 12px; }
+        .main { flex:1; padding: 28px; }
+        .topbar { display:none; }
+        .hero, .section, .card, .quick-start li { background: linear-gradient(180deg, rgba(20,31,51,.95), rgba(16,26,46,.95)); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 20px; }
+        .hero { padding: 40px; margin-bottom: 22px; }
+        .hero h2 { margin:0 0 10px; font-size: clamp(30px, 4vw, 54px); }
+        .hero p { color: var(--muted); font-size: 18px; max-width: 760px; }
+        .cta { display:inline-block; margin-top: 14px; background: var(--accent); color:#111; padding: 12px 22px; border-radius: 999px; text-decoration:none; font-weight:700; }
+        .grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+        .card { padding: 18px; transition: transform .25s ease, border-color .25s ease; }
+        .card:hover { border-color: rgba(214,168,74,.45); }
+        .card .icon { font-size: 24px; }
+        .card h3 { margin: 10px 0 6px; }
+        .card p { margin: 0; color: var(--muted); }
+        .section { padding: 22px 24px; margin-bottom: 16px; }
+        .section h3 { margin-top:0; }
+        .quick-start { padding-left: 18px; color: var(--text); }
+        .quick-start li { margin-bottom: 10px; padding: 14px 16px; }
+        .footer { text-align:center; color: var(--muted); padding: 18px 0 90px; }
+        .mobile-nav-toggle { display:none; }
+        .disabled { opacity: 0.5; pointer-events: none; }
+        .bottom-nav { display: none; }
+        .view[hidden] { display: none !important; }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, rgba(20, 31, 51, 0.98), rgba(16, 26, 46, 0.98));
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            color: var(--text);
+            font-size: 14px;
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            max-width: 320px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .notification.show { transform: translateX(0); }
+        .notification.success { border-color: rgba(76, 175, 80, 0.5); }
+        .notification.error { border-color: rgba(244, 67, 54, 0.5); }
+        .notification-icon { font-size: 20px; }
+        .notification-content { flex: 1; }
+        .notification-title { font-weight: 700; margin-bottom: 4px; }
+        .notification-message { color: var(--muted); font-size: 13px; }
+        .notification-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 18px;
+            line-height: 1;
+        }
+        .notification-close:hover { color: var(--text); }
+        @media (max-width: 900px) { .app { display:block; } .sidebar { position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%); transition: transform .25s ease; z-index: 30; } body.sidebar-open .sidebar { transform: translateX(0); } .main { padding: 18px 16px 90px; } .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; } .mobile-nav-toggle { display:inline-flex; border:1px solid var(--border); background: rgba(20,31,51,.95); color:var(--text); border-radius: 12px; padding: 10px 12px; } .grid { grid-template-columns: 1fr; } .bottom-nav { position: fixed; left: 0; right: 0; bottom: 0; display:grid; grid-template-columns: repeat(5, 1fr); background: rgba(10,18,32,.98); border-top: 1px solid var(--border); z-index: 40; } .bottom-nav a { color: var(--text); text-decoration:none; padding: 10px 6px; text-align:center; font-size: 12px; } .bottom-nav span { display:block; font-size: 18px; margin-bottom: 3px; } }
+    </style>
 </head>
-
 <body>
-    <header>
-        <h1><img src="icon.jpg" alt="icon" class="header-icon"> 頂樓風好大 幫派使用 PVP 計算機 S2.2</h1>
-        <div class="header-buttons">
-            <button id="dark-mode-btn" class="header-btn">夜間模式</button>
-            <button id="import-btn" class="header-btn">匯入</button>
-            <button id="export-btn" class="header-btn">匯出</button>
-            <input type="file" id="import-file" accept=".txt" style="display: none;">
-        </div>
-    </header>
-
-    <section id="results">
-        <div class="results-row">
-            <div id="part1">
-                <h3>防禦數值 1</h3>
-                <div id="part1-sub1">
-                    <table>
-                        <tr>
-                            <td colspan="2">vs 進攻數值 1</td>
-                        </tr>
-                        <tr>
-                            <td>剩餘防禦</td>
-                            <td><span id="remainDefense1_1">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>防禦減免率</td>
-                            <td><span id="defenseRate1_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>剩餘氣盾</td>
-                            <td><span id="remainShield1_1">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>元抗減免率</td>
-                            <td><span id="elementalResisRate1_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際命中率</td>
-                            <td><span id="actualAccuracyRate1_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際會心率</td>
-                            <td><span id="actualCritRate1_1">0%</span></td>
-                        </tr>
-                        <tr class="basic-damage">
-                            <td>傷害(未會心)</td>
-                            <td><span id="damage1_1">0</span></td>
-                        </tr>
-                        <tr class="crit-damage">
-                            <td>傷害(包含命中會心)</td>
-                            <td><span id="critDamage1_1">0</span></td>
-                        </tr>
-                    </table>
-                    <table>
-                        <tr>
-                            <td colspan="2">vs 進攻數值 2</td>
-                        </tr>
-                        <tr>
-                            <td>剩餘防禦</td>
-                            <td><span id="remainDefense1_2">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>防禦減免率</td>
-                            <td><span id="defenseRate1_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>剩餘氣盾</td>
-                            <td><span id="remainShield1_2">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>元抗減免率</td>
-                            <td><span id="elementalResisRate1_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際命中率</td>
-                            <td><span id="actualAccuracyRate1_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際會心率</td>
-                            <td><span id="actualCritRate1_2">0%</span></td>
-                        </tr>
-                        <tr class="basic-damage">
-                            <td>傷害(未會心)</td>
-                            <td><span id="damage1_2">0</span></td>
-                        </tr>
-                        <tr class="crit-damage">
-                            <td>傷害(包含命中會心)</td>
-                            <td><span id="critDamage1_2">0</span></td>
-                        </tr>
-                    </table>
-                    <div class="compare-box">
-                        <label>傷害差距:</label>
-                        <span id="critCompare1" class="compare-value">0%</span>
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="brand"><img src="icon.jpg" alt="Logo"><div><h1>逆水寒 PVP 工具箱</h1><p>S2.2版本</p></div></div>
+            <nav class="nav">
+                <a class="active" href="#/" data-route="">🏠 首頁</a>
+                <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📈 屬性規劃</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📁 Build收藏</a>
+            </nav>
+            <div class="sidebar-footer">by頂樓風很大幫會</div>
+        </aside>
+        <main class="main">
+            <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button><button class="mobile-nav-toggle" id="darkToggle">🌙 夜間模式</button></div>
+            <div id="view-home" class="view">
+                <section class="hero"><h2>逆水寒 PVP 指揮中心</h2><p>整合傷害試算、配裝規劃與實戰決策的戰術中樞，讓每一次出手都更有把握。</p><a class="cta" href="#/calculator" data-route="calculator">開始使用</a></section>
+                <section class="section"><h3>工具預覽</h3><div class="grid"><div class="card"><div class="icon">⚔️</div><h3>傷害計算器</h3><p>快速比較雙方輸出與防禦結果。</p></div><div class="card"><div class="icon">🛡️</div><h3>配裝比較器</h3><p>比較兩套配裝的實戰效益。</p></div><div class="card"><div class="icon">📈</div><h3>屬性門檻規劃器</h3><p>掌握命中、會心與減免門檻。</p></div><div class="card"><div class="icon">📁</div><h3>Build收藏</h3><p>保存常用配置與戰術方案。</p></div></div></section>
+                <section class="section"><h3>快速開始</h3><ol class="quick-start"><li>先從左側選擇需要的工具。</li><li>進入傷害計算器輸入雙方數值。</li><li>依據結果調整配裝與屬性。</li></ol></section>
+                <div class="footer">版本 S2.2</div>
+            </div>
+            <div id="view-calculator" class="view" hidden>
+                <div class="calc-toolbar" style="display: flex; gap: 10px; margin-bottom: 14px; justify-content: flex-end;">
+                    <button id="import-btn">📥 匯入</button>
+                    <button id="export-btn">📤 匯出</button>
+                    <input type="file" id="import-file" accept=".txt" style="display: none;">
+                </div>
+                <section id="results">
+                    <div class="results-row">
+                        <div id="part1"><h3>防禦數值 1</h3><div id="part1-sub1"><table><tr><td colspan="2">vs 進攻數值 1</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense1_1">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate1_1">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield1_1">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate1_1">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate1_1">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate1_1">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage1_1">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage1_1">0</span></td></tr></table><table><tr><td colspan="2">vs 進攻數值 2</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense1_2">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate1_2">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield1_2">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate1_2">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate1_2">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate1_2">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage1_2">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage1_2">0</span></td></tr></table><div class="compare-box"><label>傷害差距:</label><span id="critCompare1" class="compare-value">0%</span></div></div></div>
+                        <div id="part2"><h3>防禦數值 2</h3><div id="part2-sub1"><table><tr><td colspan="2">vs 進攻數值 1</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense2_1">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate2_1">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield2_1">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate2_1">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate2_1">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate2_1">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage2_1">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage2_1">0</span></td></tr></table><table><tr><td colspan="2">vs 進攻數值 2</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense2_2">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate2_2">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield2_2">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate2_2">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate2_2">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate2_2">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage2_2">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage2_2">0</span></td></tr></table><div class="compare-box"><label>傷害差距:</label><span id="critCompare2" class="compare-value">0%</span></div></div></div>
                     </div>
+                </section>
+                <div class="input-container">
+                    <section id="attacking-item-1"><div class="section-header"><h2>進攻數值1</h2><button id="copy-right-atk-btn">從進攻數值2複製</button></div><div class="input-row"><label for="atk1-attack">攻擊:</label><input type="number" id="atk1-attack" value="0"><label for="atk1-defenseBreak">破防:</label><input type="number" id="atk1-defenseBreak" value="0"></div><div class="input-row"><label for="atk1-shieldBreak">破盾:</label><input type="number" id="atk1-shieldBreak" value="0"><label for="atk1-elementalAttack">元素攻擊:</label><input type="number" id="atk1-elementalAttack" value="0"></div><div class="input-row"><label for="atk1-pvpAttack">流派克制:</label><input type="number" id="atk1-pvpAttack" value="0"><label for="atk1-accuracy">命中:</label><input type="number" id="atk1-accuracy" value="0"></div><div class="input-row"><label for="atk1-crit">會心:</label><input type="number" id="atk1-crit" value="0"><label for="atk1-critDamage">會傷-100%:</label><input type="number" id="atk1-critDamage" value="0"></div><div class="input-row"><label for="atk1-extraCritRate">額外會心率:</label><input type="number" id="atk1-extraCritRate" value="0"><label for="atk1-pvpAttackRate">克制百分比:</label><input type="number" id="atk1-pvpAttackRate" value="0"></div><div class="input-row"><label for="atk1-elementalBreak">忽視元抗:</label><input type="number" id="atk1-elementalBreak" value="0"><label for="atk1-skillAttack">技能增強:</label><input type="number" id="atk1-skillAttack" value="0"></div></section>
+                    <section id="attacking-item-2"><div class="section-header"><h2>進攻數值2</h2><button id="copy-left-atk-btn">從進攻數值1複製</button></div><div class="input-row"><label for="atk2-attack">攻擊:</label><input type="number" id="atk2-attack" value="0"><label for="atk2-defenseBreak">破防:</label><input type="number" id="atk2-defenseBreak" value="0"></div><div class="input-row"><label for="atk2-shieldBreak">破盾:</label><input type="number" id="atk2-shieldBreak" value="0"><label for="atk2-elementalAttack">元素攻擊:</label><input type="number" id="atk2-elementalAttack" value="0"></div><div class="input-row"><label for="atk2-pvpAttack">流派克制:</label><input type="number" id="atk2-pvpAttack" value="0"><label for="atk2-accuracy">命中:</label><input type="number" id="atk2-accuracy" value="0"></div><div class="input-row"><label for="atk2-crit">會心:</label><input type="number" id="atk2-crit" value="0"><label for="atk2-critDamage">會傷-100%:</label><input type="number" id="atk2-critDamage" value="0"></div><div class="input-row"><label for="atk2-extraCritRate">額外會心率:</label><input type="number" id="atk2-extraCritRate" value="0"><label for="atk2-pvpAttackRate">克制百分比:</label><input type="number" id="atk2-pvpAttackRate" value="0"></div><div class="input-row"><label for="atk2-elementalBreak">忽視元抗:</label><input type="number" id="atk2-elementalBreak" value="0"><label for="atk2-skillAttack">技能增強:</label><input type="number" id="atk2-skillAttack" value="0"></div></section>
+                    <section id="defending-item-1"><div class="section-header"><h2>防禦數值1</h2><button id="copy-right-def-btn">從防禦數值2複製</button></div><div class="input-row"><label for="def1-defense">防禦:</label><input type="number" id="def1-defense" value="0"><label for="def1-airShield">氣盾:</label><input type="number" id="def1-airShield" value="0"></div><div class="input-row"><label for="def1-elementalResistance">元素抗性:</label><input type="number" id="def1-elementalResistance" value="0"><label for="def1-pvpResistance">流派抵禦:</label><input type="number" id="def1-pvpResistance" value="0"></div><div class="input-row"><label for="def1-blockResistance">格擋:</label><input type="number" id="def1-blockResistance" value="0"><label for="def1-skillResistance">技能抵禦:</label><input type="number" id="def1-skillResistance" value="0"></div><div class="input-row"><label for="def1-criticalDefense">會心防禦:</label><input type="number" id="def1-criticalDefense" value="0"><label for="def1-criticalResistance">會心抵抗:</label><input type="number" id="def1-criticalResistance" value="0"></div></section>
+                    <section id="defending-item-2"><div class="section-header"><h2>防禦數值2</h2><button id="copy-left-def-btn">從防禦數值1複製</button></div><div class="input-row"><label for="def2-defense">防禦:</label><input type="number" id="def2-defense" value="0"><label for="def2-airShield">氣盾:</label><input type="number" id="def2-airShield" value="0"></div><div class="input-row"><label for="def2-elementalResistance">元素抗性:</label><input type="number" id="def2-elementalResistance" value="0"><label for="def2-pvpResistance">流派抵禦:</label><input type="number" id="def2-pvpResistance" value="0"></div><div class="input-row"><label for="def2-blockResistance">格擋:</label><input type="number" id="def2-blockResistance" value="0"><label for="def2-skillResistance">技能抵禦:</label><input type="number" id="def2-skillResistance" value="0"></div><div class="input-row"><label for="def2-criticalDefense">會心防禦:</label><input type="number" id="def2-criticalDefense" value="0"><label for="def2-criticalResistance">會心抵抗:</label><input type="number" id="def2-criticalResistance" value="0"></div></section>
                 </div>
             </div>
-            <div id="part2">
-                <h3>防禦數值 2</h3>
-                <div id="part2-sub1">
-                    <table>
-                        <tr>
-                            <td colspan="2">vs 進攻數值 1</td>
-                        </tr>
-                        <tr>
-                            <td>剩餘防禦</td>
-                            <td><span id="remainDefense2_1">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>防禦減免率</td>
-                            <td><span id="defenseRate2_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>剩餘氣盾</td>
-                            <td><span id="remainShield2_1">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>元抗減免率</td>
-                            <td><span id="elementalResisRate2_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際命中率</td>
-                            <td><span id="actualAccuracyRate2_1">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際會心率</td>
-                            <td><span id="actualCritRate2_1">0%</span></td>
-                        </tr>
-                        <tr class="basic-damage">
-                            <td>傷害(未會心)</td>
-                            <td><span id="damage2_1">0</span></td>
-                        </tr>
-                        <tr class="crit-damage">
-                            <td>傷害(包含命中會心)</td>
-                            <td><span id="critDamage2_1">0</span></td>
-                        </tr>
-                    </table>
-                    <table>
-                        <tr>
-                            <td colspan="2">vs 進攻數值 2</td>
-                        </tr>
-                        <tr>
-                            <td>剩餘防禦</td>
-                            <td><span id="remainDefense2_2">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>防禦減免率</td>
-                            <td><span id="defenseRate2_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>剩餘氣盾</td>
-                            <td><span id="remainShield2_2">0</span></td>
-                        </tr>
-                        <tr>
-                            <td>元抗減免率</td>
-                            <td><span id="elementalResisRate2_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際命中率</td>
-                            <td><span id="actualAccuracyRate2_2">0%</span></td>
-                        </tr>
-                        <tr>
-                            <td>實際會心率</td>
-                            <td><span id="actualCritRate2_2">0%</span></td>
-                        </tr>
-                        <tr class="basic-damage">
-                            <td>傷害(未會心)</td>
-                            <td><span id="damage2_2">0</span></td>
-                        </tr>
-                        <tr class="crit-damage">
-                            <td>傷害(包含命中會心)</td>
-                            <td><span id="critDamage2_2">0</span></td>
-                        </tr>
-                    </table>
-                    <div class="compare-box">
-                        <label>傷害差距:</label>
-                        <span id="critCompare2" class="compare-value">0%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <div class="input-container">
-        <section id="attacking-item-1">
-            <div class="section-header">
-                <h2>進攻數值1</h2>
-                <button id="copy-right-atk-btn">從右複製</button>
-            </div>
-            <div class="input-row">
-                <label for="atk1-attack">攻擊:</label>
-                <input type="number" id="atk1-attack" value="0">
-                <label for="atk1-defenseBreak">破防:</label>
-                <input type="number" id="atk1-defenseBreak" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk1-shieldBreak">破盾:</label>
-                <input type="number" id="atk1-shieldBreak" value="0">
-                <label for="atk1-elementalAttack">元素攻擊:</label>
-                <input type="number" id="atk1-elementalAttack" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk1-pvpAttack">流派克制:</label>
-                <input type="number" id="atk1-pvpAttack" value="0">
-                <label for="atk1-accuracy">命中:</label>
-                <input type="number" id="atk1-accuracy" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk1-crit">會心:</label>
-                <input type="number" id="atk1-crit" value="0">
-                <label for="atk1-critDamage">會傷-100%:</label>
-                <input type="number" id="atk1-critDamage" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk1-extraCritRate">額外會心率:</label>
-                <input type="number" id="atk1-extraCritRate" value="0">
-                <label for="atk1-pvpAttackRate">克制百分比:</label>
-                <input type="number" id="atk1-pvpAttackRate" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk1-elementalBreak">忽視元抗:</label>
-                <input type="number" id="atk1-elementalBreak" value="0">
-                <label for="atk1-skillAttack">技能增強:</label>
-                <input type="number" id="atk1-skillAttack" value="0">
-            </div>
-        </section>
-
-        <section id="attacking-item-2">
-            <div class="section-header">
-                <h2>進攻數值2</h2>
-                <button id="copy-left-atk-btn">從左複製</button>
-            </div>
-            <div class="input-row">
-                <label for="atk2-attack">攻擊:</label>
-                <input type="number" id="atk2-attack" value="0">
-                <label for="atk2-defenseBreak">破防:</label>
-                <input type="number" id="atk2-defenseBreak" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk2-shieldBreak">破盾:</label>
-                <input type="number" id="atk2-shieldBreak" value="0">
-                <label for="atk2-elementalAttack">元素攻擊:</label>
-                <input type="number" id="atk2-elementalAttack" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk2-pvpAttack">流派克制:</label>
-                <input type="number" id="atk2-pvpAttack" value="0">
-                <label for="atk2-accuracy">命中:</label>
-                <input type="number" id="atk2-accuracy" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk2-crit">會心:</label>
-                <input type="number" id="atk2-crit" value="0">
-                <label for="atk2-critDamage">會傷-100%:</label>
-                <input type="number" id="atk2-critDamage" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk2-extraCritRate">額外會心率:</label>
-                <input type="number" id="atk2-extraCritRate" value="0">
-                <label for="atk2-pvpAttackRate">克制百分比:</label>
-                <input type="number" id="atk2-pvpAttackRate" value="0">
-            </div>
-            <div class="input-row">
-                <label for="atk2-elementalBreak">忽視元抗:</label>
-                <input type="number" id="atk2-elementalBreak" value="0">
-                <label for="atk2-skillAttack">技能增強:</label>
-                <input type="number" id="atk2-skillAttack" value="0">
-            </div>
-        </section>
-
-        <section id="defending-item-1">
-            <div class="section-header">
-                <h2>防禦數值1</h2>
-                <button id="copy-right-def-btn">從右複製</button>
-            </div>
-            <div class="input-row">
-                <label for="def1-defense">防禦:</label>
-                <input type="number" id="def1-defense" value="0">
-                <label for="def1-airShield">氣盾:</label>
-                <input type="number" id="def1-airShield" value="0">
-            </div>
-            <div class="input-row">
-                <label for="def1-elementalResistance">元素抗性:</label>
-                <input type="number" id="def1-elementalResistance" value="0">
-                <label for="def1-pvpResistance">流派抵禦:</label>
-                <input type="number" id="def1-pvpResistance" value="0">
-            </div>
-            <div class="input-row">
-                <label for="def1-blockResistance">格擋:</label>
-                <input type="number" id="def1-blockResistance" value="0">
-                <label for="def1-skillResistance">技能抵禦:</label>
-                <input type="number" id="def1-skillResistance" value="0">            
-            </div>
-            <div class="input-row">
-                <label for="def1-criticalDefense">會心防禦:</label>
-                <input type="number" id="def1-criticalDefense" value="0">
-                <label for="def1-criticalResistance">會心抵抗:</label>
-                <input type="number" id="def1-criticalResistance" value="0">
-            </div>
-        </section>
-
-        <section id="defending-item-2">
-            <div class="section-header">
-                <h2>防禦數值2</h2>
-                <button id="copy-left-def-btn">從左複製</button>
-            </div>
-            <div class="input-row">
-                <label for="def2-defense">防禦:</label>
-                <input type="number" id="def2-defense" value="0">
-                <label for="def2-airShield">氣盾:</label>
-                <input type="number" id="def2-airShield" value="0">
-            </div>
-            <div class="input-row">
-                <label for="def2-elementalResistance">元素抗性:</label>
-                <input type="number" id="def2-elementalResistance" value="0">
-                <label for="def2-pvpResistance">流派抵禦:</label>
-                <input type="number" id="def2-pvpResistance" value="0">
-            </div>
-            <div class="input-row">
-                <label for="def2-blockResistance">格擋:</label>
-                <input type="number" id="def2-blockResistance" value="0">
-                <label for="def2-skillResistance">技能抵禦:</label>
-                <input type="number" id="def2-skillResistance" value="0">
-            </div>
-            <div class="input-row">
-                <label for="def2-criticalDefense">會心防禦:</label>
-                <input type="number" id="def2-criticalDefense" value="0">
-                <label for="def2-criticalResistance">會心抵抗:</label>
-                <input type="number" id="def2-criticalResistance" value="0">
-            </div>
-        </section>
+        </main>
     </div>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📈</span>規劃</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📁</span>收藏</a></nav>
+    <div id="notification-container"></div>
+    <script src="tools/calculator.js"></script>
+    <script>
+        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator' };
+        function navigate(hash) {
+            const route = hash.replace(/^#\/?/, '') || '';
+            const viewId = ROUTES[route] || 'view-home';
+            document.querySelectorAll('.view').forEach(v => v.hidden = true);
+            document.getElementById(viewId).hidden = false;
+            document.querySelectorAll('.nav a, .bottom-nav a').forEach(a => a.classList.toggle('active', a.dataset.route === route));
+            if (route === 'calculator') {
+                initCalculator();
+            }
+        }
+        window.addEventListener('hashchange', () => navigate(location.hash));
+        const navToggle = document.getElementById('navToggle');
+        const darkToggle = document.getElementById('darkToggle');
+        navToggle?.addEventListener('click', () => {
+            const isOpen = document.body.classList.toggle('sidebar-open');
+            navToggle.setAttribute('aria-expanded', String(isOpen));
+        });
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        darkToggle?.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+        });
+        document.querySelectorAll('.nav a, .bottom-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.body.classList.remove('sidebar-open');
+                navToggle?.setAttribute('aria-expanded', 'false');
+            });
+        });
+        navigate(location.hash);
 
-    <script src="script.js?250327"></script>
+        window.showNotification = function(options) {
+            const { type = 'success', title, message, duration = 3000 } = options;
+            const container = document.getElementById('notification-container');
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            const titles = { success: '成功', error: '錯誤', info: '提示' };
+
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.innerHTML = `
+                <span class="notification-icon">${icons[type]}</span>
+                <div class="notification-content">
+                    <div class="notification-title">${title || titles[type]}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+                <button class="notification-close">&times;</button>
+            `;
+
+            container.appendChild(notif);
+            notif.querySelector('.notification-close').addEventListener('click', () => {
+                notif.classList.remove('show');
+                setTimeout(() => notif.remove(), 300);
+            });
+
+            requestAnimationFrame(() => notif.classList.add('show'));
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    notif.classList.remove('show');
+                    setTimeout(() => notif.remove(), 300);
+                }, duration);
+            }
+        };
+    </script>
 </body>
-
 </html>

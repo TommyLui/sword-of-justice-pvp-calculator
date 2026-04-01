@@ -5,7 +5,7 @@ function calculateResults() {
     }
 
     function calculateDefenseRate(remainDefense) {
-        const rate = (remainDefense / (remainDefense + 10552)) * 100;
+        const rate = Math.max(10, ((remainDefense / (remainDefense + 19032)) * 100) + 10);
         return rate.toFixed(2) + '%';
     }
 
@@ -17,19 +17,19 @@ function calculateResults() {
 
     function calculateElementalResisRate(elementalResistance, elementalBreak) {
         const diff = Math.max(0, elementalResistance - elementalBreak);
-        const rate = (diff / (diff + 1965)) * 100;
+        const rate = (diff / (diff + 4762)) * 100;
         return rate.toFixed(2) + '%';
     }
 
     function calculateActualAccuracyRate(accuracy, blockResistance) {
         const diff = Math.max(0, accuracy - blockResistance);
-        const rate = Math.min((143 * diff) / (diff + 5950) / 100 + 0.95, 1);
+        const rate = Math.min(((143 * diff) / (diff + 10688) + 95) / 100, 1);
         return (rate * 100).toFixed(2) + '%';
     }
 
     function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
         const diff = Math.max(0, crit - criticalResistance);
-        let baseRate  = Math.max(0, (115 * diff - 1230) / (diff + 1548) / 100);
+        let baseRate  = Math.max(0, (115 * diff - 200) / (diff + 2666) / 100);
         const totalRate = Math.min(baseRate + (extraCritRate / 100), 1);
         return (totalRate * 100).toFixed(2) + '%';
     }
@@ -70,8 +70,6 @@ function calculateResults() {
     const def1CriticalResistance = parseInt(document.getElementById('def1-criticalResistance').value) || 0;
     const def1CriticalDefense = parseInt(document.getElementById('def1-criticalDefense').value) || 0;
     const def1SkillResistance = parseInt(document.getElementById('def1-skillResistance').value) || 0;
-    const def1Total = def1Defense + def1AirShield + def1ElementalResistance + def1PvpResistance + def1BlockResistance + def1CriticalResistance + def1CriticalDefense + def1SkillResistance;
-
     const def2Defense = parseInt(document.getElementById('def2-defense').value) || 0;
     const def2AirShield = parseInt(document.getElementById('def2-airShield').value) || 0;
     const def2ElementalResistance = parseInt(document.getElementById('def2-elementalResistance').value) || 0;
@@ -80,8 +78,6 @@ function calculateResults() {
     const def2CriticalResistance = parseInt(document.getElementById('def2-criticalResistance').value) || 0;
     const def2CriticalDefense = parseInt(document.getElementById('def2-criticalDefense').value) || 0;
     const def2SkillResistance = parseInt(document.getElementById('def2-skillResistance').value) || 0;
-    const def2Total = def2Defense + def2AirShield + def2ElementalResistance + def2PvpResistance + def2BlockResistance + def2CriticalResistance + def2CriticalDefense + def2SkillResistance;
-
     // Calculate sub1 properties for part1 (attack1 vs def1 and def2)
     // For part1 (def1 vs atk1 and atk2)
     // def1 Vs atk1
@@ -124,10 +120,10 @@ function calculateResults() {
     document.getElementById('damage2_2').textContent = 0;
 
     // Calculate base damages using the provided formula
-    // const skillBase = 100000;
-    // const skillMultiplier = 6.05;
-    const skillBase = 58000;
-    const skillMultiplier = 3.38;
+    // TODO: Update these values for the new season (2.2)
+    // Previous season (2.1) values: skillBase = 58000, skillMultiplier = 3.38
+    const skillBase = 58000;  // UPDATE THIS for new season
+    const skillMultiplier = 3.38;  // UPDATE THIS for new season
     // Attack 1 on Defense 1
     const baseDamage1_1 = ((skillBase + skillMultiplier * (atk1Attack + atk1PvpAttack + atk1SkillAttack - def1PvpResistance - remainShield1_1 - def1SkillResistance)) * (1 - parseFloat(defenseRate1_1) / 100)
         + (atk1ElementalAttack * skillMultiplier * (1 - parseFloat(elementalResisRate1_1) / 100)))
@@ -187,12 +183,12 @@ function calculateResults() {
     document.getElementById('critDamage2_2').textContent = critDamage2_2;
 
     // Compare crit damage (percentage difference)
-    const critCompare1 = critDamage1_2 !== 0
+    const critCompare1 = critDamage1_1 !== 0
         ? ((critDamage1_2 - critDamage1_1) / critDamage1_1 * 100).toFixed(2) + '%'
         : '0%';
     document.getElementById('critCompare1').textContent = critCompare1;
 
-    const critCompare2 = critDamage2_2 !== 0
+    const critCompare2 = critDamage2_1 !== 0
         ? ((critDamage2_2 - critDamage2_1) / critDamage2_1 * 100).toFixed(2) + '%'
         : '0%';
     document.getElementById('critCompare2').textContent = critCompare2;
