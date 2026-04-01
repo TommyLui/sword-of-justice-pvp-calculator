@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="app-version" content="S2.2">
-    <title>逆水寒 PVP 指揮中心 - S2.2</title>
+    <title>逆水寒 PVP 工具箱 - S2.2</title>
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -90,18 +90,22 @@
             <nav class="nav">
                 <a class="active" href="#/" data-route="">🏠 首頁</a>
                 <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📊 聯賽數據分析</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出">🗂️ 裝備數據庫</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">📈 屬性規劃</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📁 Build收藏</a>
             </nav>
-            <div class="sidebar-footer">by頂樓風很大幫會</div>
+            <div class="sidebar-footer">頂樓風很大幫會內部使用</div>
         </aside>
         <main class="main">
             <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button><button class="mobile-nav-toggle" id="darkToggle">🌙 夜間模式</button></div>
             <div id="view-home" class="view">
-                <section class="hero"><h2>逆水寒 PVP 指揮中心</h2><p>整合傷害試算、配裝規劃與實戰決策的戰術中樞，讓每一次出手都更有把握。</p><a class="cta" href="#/calculator" data-route="calculator">開始使用</a></section>
-                <section class="section"><h3>工具預覽</h3><div class="grid"><div class="card"><div class="icon">⚔️</div><h3>傷害計算器</h3><p>快速比較雙方輸出與防禦結果。</p></div><div class="card"><div class="icon">🛡️</div><h3>配裝比較器</h3><p>比較兩套配裝的實戰效益。</p></div><div class="card"><div class="icon">📈</div><h3>屬性門檻規劃器</h3><p>掌握命中、會心與減免門檻。</p></div><div class="card"><div class="icon">📁</div><h3>Build收藏</h3><p>保存常用配置與戰術方案。</p></div></div></section>
-                <section class="section"><h3>快速開始</h3><ol class="quick-start"><li>先從左側選擇需要的工具。</li><li>進入傷害計算器輸入雙方數值。</li><li>依據結果調整配裝與屬性。</li></ol></section>
+                <section class="hero"><h2>逆水寒 PVP 工具箱</h2></section>
+                <section class="section">
+                    <div class="patch-image">
+                        <img src="https://r.res.easebar.com/pic/20260327/f5d9f947-6e36-409e-bcce-10c13ebba03f.jpg" alt="S2.2 版本更新" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
+                    </div>
+                </section>
                 <div class="footer">版本 S2.2</div>
             </div>
             <div id="view-calculator" class="view" hidden>
@@ -125,7 +129,7 @@
             </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📈</span>規劃</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📁</span>收藏</a></nav>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📊</span>聯賽</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🗂️</span>裝備</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
     <div id="notification-container"></div>
     <script src="tools/calculator.js"></script>
     <script>
