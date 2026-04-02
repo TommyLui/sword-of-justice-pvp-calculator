@@ -641,3 +641,344 @@
         align-items: stretch;
     }
 }
+
+/* ===== Crafting View ===== */
+#view-crafting {
+    color: var(--text);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    padding: 20px 0 8px;
+}
+
+#view-crafting,
+#view-crafting * {
+    box-sizing: border-box;
+}
+
+#view-crafting .crafting-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#view-crafting .crafting-search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 14px;
+    background: #1D2A3D;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#view-crafting .crafting-search-input::placeholder {
+    color: rgba(147, 164, 199, 0.7);
+}
+
+#view-crafting .crafting-search-input:hover {
+    border-color: rgba(214, 168, 74, 0.36);
+}
+
+#view-crafting .crafting-search-input:focus {
+    border-color: rgba(214, 168, 74, 0.7);
+    box-shadow: 0 0 0 3px rgba(214, 168, 74, 0.14);
+}
+
+#view-crafting .crafting-filter-select {
+    padding: 10px 14px;
+    background: #1D2A3D;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#view-crafting .crafting-filter-select:hover {
+    border-color: rgba(214, 168, 74, 0.36);
+}
+
+#view-crafting .crafting-filter-select:focus {
+    border-color: rgba(214, 168, 74, 0.7);
+}
+
+#view-crafting .crafting-reset-btn {
+    padding: 10px 16px;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+    border: 1px solid rgba(242, 211, 138, 0.32);
+    border-radius: 999px;
+    color: #111;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#view-crafting .crafting-reset-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+#view-crafting .crafting-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    min-height: 500px;
+}
+
+#view-crafting .crafting-list-section {
+    background: linear-gradient(180deg, rgba(20, 31, 51, 0.95), rgba(16, 26, 46, 0.95));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#view-crafting .crafting-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+#view-crafting .crafting-list-header h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 16px;
+}
+
+#view-crafting .crafting-count {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+#view-crafting .crafting-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#view-crafting .crafting-list::-webkit-scrollbar {
+    width: 10px;
+}
+
+#view-crafting .crafting-list::-webkit-scrollbar-track {
+    background: rgba(8, 17, 29, 0.55);
+    border-radius: 999px;
+}
+
+#view-crafting .crafting-list::-webkit-scrollbar-thumb {
+    background: rgba(214, 168, 74, 0.35);
+    border-radius: 999px;
+    border: 2px solid rgba(8, 17, 29, 0.55);
+}
+
+#view-crafting .crafting-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(214, 168, 74, 0.5);
+}
+
+#view-crafting .crafting-item {
+    padding: 12px 14px;
+    background: rgba(8, 17, 29, 0.35);
+    border: 1px solid rgba(214, 168, 74, 0.12);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#view-crafting .crafting-item:hover {
+    background: rgba(8, 17, 29, 0.55);
+    border-color: rgba(214, 168, 74, 0.25);
+    transform: translateX(4px);
+}
+
+#view-crafting .crafting-item.active {
+    background: rgba(214, 168, 74, 0.15);
+    border-color: rgba(214, 168, 74, 0.5);
+}
+
+#view-crafting .crafting-item-name {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: var(--text);
+}
+
+#view-crafting .crafting-item-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+#view-crafting .crafting-item-slot {
+    padding: 2px 8px;
+    background: rgba(214, 168, 74, 0.15);
+    border-radius: 6px;
+    color: var(--accent-2);
+}
+
+#view-crafting .crafting-item-source {
+    font-size: 12px;
+    color: var(--muted);
+    opacity: 0.8;
+}
+
+#view-crafting .crafting-item-tag {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 10px;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: 999px;
+    font-size: 11px;
+    color: #81C784;
+}
+
+#view-crafting .crafting-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#view-crafting .crafting-loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#view-crafting .crafting-detail-section {
+    background: linear-gradient(180deg, rgba(20, 31, 51, 0.95), rgba(16, 26, 46, 0.95));
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 70vh;
+}
+
+@media (min-width: 1101px) {
+    #view-crafting .crafting-detail-section {
+        max-height: calc(100vh - 200px);
+    }
+}
+
+#view-crafting .crafting-detail-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#view-crafting .crafting-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+#view-crafting .crafting-detail-title {
+    margin: 0;
+    font-size: 20px;
+    color: var(--text);
+}
+
+#view-crafting .crafting-detail-tag {
+    padding: 4px 12px;
+    background: rgba(76, 175, 80, 0.15);
+    border-radius: 999px;
+    font-size: 12px;
+    color: #81C784;
+}
+
+#view-crafting .crafting-detail-meta {
+    margin-bottom: 18px;
+}
+
+#view-crafting .crafting-detail-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(214, 168, 74, 0.08);
+}
+
+#view-crafting .crafting-detail-row:last-child {
+    border-bottom: none;
+}
+
+#view-crafting .crafting-detail-label {
+    width: 80px;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#view-crafting .crafting-detail-value {
+    flex: 1;
+    color: var(--text);
+    font-size: 14px;
+}
+
+#view-crafting .crafting-detail-effect {
+    background: rgba(8, 17, 29, 0.4);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+#view-crafting .crafting-detail-effect-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent-2);
+    margin-bottom: 10px;
+}
+
+#view-crafting .crafting-detail-effect-text {
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 1100px) {
+    #view-crafting .crafting-content {
+        grid-template-columns: 1fr;
+    }
+
+    #view-crafting .crafting-detail-section {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 720px) {
+    #view-crafting {
+        padding: 16px 0 4px;
+    }
+
+    #view-crafting .crafting-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #view-crafting .crafting-search-input {
+        min-width: 100%;
+    }
+
+    #view-crafting .crafting-filter-select {
+        width: 100%;
+    }
+
+    #view-crafting .crafting-reset-btn {
+        width: 100%;
+    }
+}

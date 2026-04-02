@@ -91,7 +91,7 @@
                 <a class="active" href="#/" data-route="">🏠 首頁</a>
                 <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
                 <a href="#/league" data-route="league">📊 聯賽數據分析</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">🗂️ 裝備數據庫</a>
+                <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">📈 屬性規劃</a>
             </nav>
@@ -190,15 +190,41 @@
                     </div>
                 </div>
             </div>
+            <div id="view-crafting" class="view" hidden>
+                <div class="crafting-toolbar">
+                    <input type="text" id="crafting-search" placeholder="搜尋特技名稱、標籤、來源..." class="crafting-search-input">
+                    <select id="crafting-season-filter" class="crafting-filter-select"></select>
+                    <select id="crafting-slot-filter" class="crafting-filter-select"></select>
+                    <select id="crafting-tag-filter" class="crafting-filter-select"></select>
+                    <select id="crafting-sort" class="crafting-filter-select">
+                        <option value="season-desc">賽季 (新→舊)</option>
+                        <option value="season-asc">賽季 (舊→新)</option>
+                        <option value="skill-asc">名稱 (A→Z)</option>
+                        <option value="skill-desc">名稱 (Z→A)</option>
+                    </select>
+                    <button id="crafting-reset" class="crafting-reset-btn">重置</button>
+                </div>
+                <div class="crafting-content">
+                    <div class="crafting-list-section">
+                        <div class="crafting-list-header">
+                            <h3>特技列表</h3>
+                            <span class="crafting-count">共 <span id="crafting-count">0</span> 筆</span>
+                        </div>
+                        <div id="crafting-list" class="crafting-list"></div>
+                    </div>
+                    <div id="crafting-detail" class="crafting-detail-section"></div>
+                </div>
+            </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🗂️</span>裝備</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
     <div id="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="tools/calculator.js"></script>
     <script src="tools/league.js"></script>
+    <script src="tools/crafting.js"></script>
     <script>
-        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league' };
+        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league', 'crafting': 'view-crafting' };
         function navigate(hash) {
             const route = hash.replace(/^#\/?/, '') || '';
             const viewId = ROUTES[route] || 'view-home';
@@ -210,6 +236,9 @@
             }
             if (route === 'league') {
                 initLeague();
+            }
+            if (route === 'crafting') {
+                initCrafting();
             }
         }
         window.addEventListener('hashchange', () => navigate(location.hash));
