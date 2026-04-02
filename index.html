@@ -21,7 +21,7 @@
         .nav { display:flex; flex-direction:column; gap:10px; }
         .nav a, .nav button { text-decoration:none; color:var(--text); background: transparent; border:1px solid transparent; display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; cursor:pointer; transition: all .25s ease; }
         .nav a:hover, .nav button:hover, .nav a.active { background: rgba(214, 168, 74, 0.12); border-color: var(--border); transform: translateX(4px); }
-        .sidebar-footer { margin-top: auto; padding-top: 18px; color: var(--muted); font-size: 12px; }
+        .sidebar-footer { margin-top: auto; padding-top: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
         .main { flex:1; padding: 28px; }
         .topbar { display:none; }
         .hero, .section, .card, .quick-start li { background: linear-gradient(180deg, rgba(20,31,51,.95), rgba(16,26,46,.95)); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 20px; }
@@ -90,12 +90,12 @@
             <nav class="nav">
                 <a class="active" href="#/" data-route="">🏠 首頁</a>
                 <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📊 聯賽數據分析</a>
+                <a href="#/league" data-route="league">📊 聯賽數據分析</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🗂️ 裝備數據庫</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">📈 屬性規劃</a>
             </nav>
-            <div class="sidebar-footer">頂樓風很大幫會內部使用</div>
+            <div class="sidebar-footer">頂樓風很大<br>幫會內部使用</div>
         </aside>
         <main class="main">
             <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button><button class="mobile-nav-toggle" id="darkToggle">🌙 夜間模式</button></div>
@@ -127,13 +127,78 @@
                     <section id="defending-item-2"><div class="section-header"><h2>防禦數值2</h2><button id="copy-left-def-btn">從防禦數值1複製</button></div><div class="input-row"><label for="def2-defense">防禦:</label><input type="number" id="def2-defense" value="0"><label for="def2-airShield">氣盾:</label><input type="number" id="def2-airShield" value="0"></div><div class="input-row"><label for="def2-elementalResistance">元素抗性:</label><input type="number" id="def2-elementalResistance" value="0"><label for="def2-pvpResistance">流派抵禦:</label><input type="number" id="def2-pvpResistance" value="0"></div><div class="input-row"><label for="def2-blockResistance">格擋:</label><input type="number" id="def2-blockResistance" value="0"><label for="def2-skillResistance">技能抵禦:</label><input type="number" id="def2-skillResistance" value="0"></div><div class="input-row"><label for="def2-criticalDefense">會心防禦:</label><input type="number" id="def2-criticalDefense" value="0"><label for="def2-criticalResistance">會心抵抗:</label><input type="number" id="def2-criticalResistance" value="0"></div></section>
                 </div>
             </div>
+            <div id="view-league" class="view" hidden>
+                <div id="league-upload-section">
+                    <div class="league-upload-box">
+                        <div class="league-upload-icon">📊</div>
+                        <h3>上傳聯賽數據</h3>
+                        <p>請選擇CSV格式的聯賽數據文件</p>
+                        <input type="file" id="league-file" accept=".csv" style="display: none;">
+                        <button id="league-upload-btn" class="league-btn">選擇文件</button>
+                    </div>
+                </div>
+                <div class="league-upload-bar" id="league-upload-bar" hidden>
+                    <span>📄 <span id="league-filename"></span></span>
+                    <button id="league-reupload-btn" class="league-btn-sm">重新上傳</button>
+                </div>
+                <div id="league-content" hidden>
+                    <div class="league-summary">
+                        <div class="league-card" id="summary-kills"><div class="league-card-icon">⚔️</div><div class="league-card-title">總擊敗</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card" id="summary-damage"><div class="league-card-icon">💥</div><div class="league-card-title">總對玩家傷害</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card" id="summary-healing"><div class="league-card-icon">💚</div><div class="league-card-title">總治療值</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card" id="summary-deaths"><div class="league-card-icon">💀</div><div class="league-card-title">總重傷</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card" id="summary-revive"><div class="league-card-icon">✨</div><div class="league-card-title">總化羽/清泉</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card" id="summary-burn"><div class="league-card-icon">🔥</div><div class="league-card-title">總焚骨</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                    </div>
+                    <div class="league-tabs" id="league-tabs"></div>
+                    <div class="league-table-section">
+                        <div class="league-table-header">
+                            <h3 id="league-table-title">玩家數據</h3>
+                            <select id="league-class-filter" class="league-filter-select">
+                                <option value="">全部職業</option>
+                            </select>
+                        </div>
+                        <div class="league-table-wrap">
+                            <table id="league-table">
+                                <thead><tr>
+                                    <th data-col="name">玩家名字</th>
+                                    <th data-col="role">職業</th>
+                                    <th data-col="kills">擊敗</th>
+                                    <th data-col="assists">助攻</th>
+                                    <th data-col="resources">資源</th>
+                                    <th data-col="playerDamage">對玩家傷害(萬/億)</th>
+                                    <th data-col="buildingDamage">對建築傷害(萬/億)</th>
+                                    <th data-col="healing">治療值(萬/億)</th>
+                                    <th data-col="damageTaken">承受傷害(萬/億)</th>
+                                    <th data-col="deaths">重傷</th>
+                                    <th data-col="revive">化羽/清泉</th>
+                                    <th data-col="burn">焚骨</th>
+                                </tr></thead>
+                                <tbody id="league-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="league-charts-row" id="league-charts-row">
+                        <div class="league-section" id="league-comparison-section">
+                            <h3>公會比較</h3>
+                            <div class="league-chart-wrap"><canvas id="league-comparison-chart"></canvas></div>
+                        </div>
+                        <div class="league-section" id="league-class-section">
+                            <h3>職業分佈</h3>
+                            <div class="league-chart-wrap"><canvas id="league-class-chart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>📊</span>聯賽</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🗂️</span>裝備</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🗂️</span>裝備</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
     <div id="notification-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="tools/calculator.js"></script>
+    <script src="tools/league.js"></script>
     <script>
-        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator' };
+        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league' };
         function navigate(hash) {
             const route = hash.replace(/^#\/?/, '') || '';
             const viewId = ROUTES[route] || 'view-home';
@@ -142,6 +207,9 @@
             document.querySelectorAll('.nav a, .bottom-nav a').forEach(a => a.classList.toggle('active', a.dataset.route === route));
             if (route === 'calculator') {
                 initCalculator();
+            }
+            if (route === 'league') {
+                initLeague();
             }
         }
         window.addEventListener('hashchange', () => navigate(location.hash));
@@ -174,14 +242,30 @@
 
             const notif = document.createElement('div');
             notif.className = `notification ${type}`;
-            notif.innerHTML = `
-                <span class="notification-icon">${icons[type]}</span>
-                <div class="notification-content">
-                    <div class="notification-title">${title || titles[type]}</div>
-                    <div class="notification-message">${message}</div>
-                </div>
-                <button class="notification-close">&times;</button>
-            `;
+            const iconEl = document.createElement('span');
+            iconEl.className = 'notification-icon';
+            iconEl.textContent = icons[type] || icons.info;
+
+            const contentEl = document.createElement('div');
+            contentEl.className = 'notification-content';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'notification-title';
+            titleEl.textContent = title || titles[type] || titles.info;
+
+            const messageEl = document.createElement('div');
+            messageEl.className = 'notification-message';
+            messageEl.textContent = message || '';
+
+            const closeEl = document.createElement('button');
+            closeEl.className = 'notification-close';
+            closeEl.textContent = '×';
+
+            contentEl.appendChild(titleEl);
+            contentEl.appendChild(messageEl);
+            notif.appendChild(iconEl);
+            notif.appendChild(contentEl);
+            notif.appendChild(closeEl);
 
             container.appendChild(notif);
             notif.querySelector('.notification-close').addEventListener('click', () => {
