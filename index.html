@@ -92,8 +92,8 @@
                 <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
                 <a href="#/league" data-route="league">📊 聯賽數據分析</a>
                 <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
+                <a href="#/attribute-planner" data-route="attribute-planner">📈 屬性規劃</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">📈 屬性規劃</a>
             </nav>
             <div class="sidebar-footer">頂樓風很大<br>幫會內部使用</div>
         </aside>
@@ -215,16 +215,99 @@
                     <div id="crafting-detail" class="crafting-detail-section"></div>
                 </div>
             </div>
+            <div id="view-attribute-planner" class="view" hidden>
+                <div class="attribute-planner-header">
+                    <h2>屬性規劃</h2>
+                    <div class="attribute-planner-kpi">
+                        預估有效傷害提升：<strong id="planner-kpi">+0.00%</strong>
+                    </div>
+                </div>
+
+                <div id="planner-loading" class="planner-loading">資料載入中...</div>
+
+                <div id="planner-app" class="planner-app" hidden>
+                    <div class="planner-steps" role="tablist" aria-label="屬性規劃步驟">
+                        <button type="button" class="planner-step active" data-step="1">1. 模板</button>
+                        <button type="button" class="planner-step" data-step="2">2. 基準</button>
+                        <button type="button" class="planner-step" data-step="3">3. 目標</button>
+                        <button type="button" class="planner-step" data-step="4">4. 結果</button>
+                        <button type="button" class="planner-step" data-step="5">5. 確認</button>
+                    </div>
+
+                    <div class="planner-panels">
+                        <section class="planner-panel active" data-step-panel="1">
+                            <h3>選擇模板</h3>
+                            <p>請先選擇你的規劃模板。</p>
+                            <div id="planner-template-list" class="planner-template-list"></div>
+                        </section>
+
+                        <section class="planner-panel" data-step-panel="2" hidden>
+                            <h3>設定 Baseline（目前面板）</h3>
+                            <p>輸入你現在的屬性。</p>
+                            <div id="planner-baseline-fields" class="planner-fields"></div>
+                        </section>
+
+                        <section class="planner-panel" data-step-panel="3" hidden>
+                            <h3>調整 Candidate（目標面板）</h3>
+                            <p>調整你預計達成的屬性。</p>
+                            <div id="planner-candidate-fields" class="planner-fields"></div>
+                        </section>
+
+                        <section class="planner-panel" data-step-panel="4" hidden>
+                            <h3>結果分析</h3>
+                            <div class="planner-result-cards">
+                                <div class="planner-result-card">
+                                    <div class="planner-result-label">總提升</div>
+                                    <div id="planner-result-total" class="planner-result-value">+0.00%</div>
+                                </div>
+                                <div class="planner-result-card">
+                                    <div class="planner-result-label">Top 3 貢獻</div>
+                                    <ul id="planner-top3" class="planner-top3"></ul>
+                                </div>
+                            </div>
+                            <div class="planner-contrib-wrap">
+                                <table class="planner-contrib-table">
+                                    <thead>
+                                        <tr>
+                                            <th>屬性</th>
+                                            <th>Baseline</th>
+                                            <th>Candidate</th>
+                                            <th>貢獻</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="planner-contrib-body"></tbody>
+                                </table>
+                            </div>
+                            <div id="planner-notes" class="planner-notes"></div>
+                        </section>
+
+                        <section class="planner-panel" data-step-panel="5" hidden>
+                            <h3>確認與重置</h3>
+                            <p>你可以重置目標值，或回到前面繼續調整。</p>
+                            <div class="planner-confirm-actions">
+                                <button id="planner-reset-candidate" type="button" class="planner-secondary-btn">重置目標 = 基準</button>
+                                <button id="planner-reselect-template" type="button" class="planner-secondary-btn">重新選模板</button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="planner-nav">
+                        <button type="button" id="planner-prev" class="planner-secondary-btn">上一步</button>
+                        <button type="button" id="planner-next" class="planner-primary-btn">下一步</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#" class="disabled" aria-disabled="true" title="即將推出"><span>🛡️</span>配裝</a></nav>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#/attribute-planner" data-route="attribute-planner"><span>📈</span>規劃</a></nav>
     <div id="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="tools/calculator.js"></script>
     <script src="tools/league.js"></script>
     <script src="tools/crafting.js"></script>
+    <script src="tools/attribute-planner.js"></script>
     <script>
-        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league', 'crafting': 'view-crafting' };
+        const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league', 'crafting': 'view-crafting', 'attribute-planner': 'view-attribute-planner' };
         function navigate(hash) {
             const route = hash.replace(/^#\/?/, '') || '';
             const viewId = ROUTES[route] || 'view-home';
@@ -239,6 +322,9 @@
             }
             if (route === 'crafting') {
                 initCrafting();
+            }
+            if (route === 'attribute-planner') {
+                initAttributePlanner();
             }
         }
         window.addEventListener('hashchange', () => navigate(location.hash));
