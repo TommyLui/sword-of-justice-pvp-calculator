@@ -30,6 +30,74 @@
     background: linear-gradient(180deg, rgba(20, 31, 51, 0.98), rgba(13, 22, 38, 0.98));
 }
 
+#view-calculator .calc-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+#view-calculator .calc-dialog[hidden] {
+    display: none !important;
+}
+
+#view-calculator .calc-dialog-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 12, 22, 0.72);
+    backdrop-filter: blur(2px);
+}
+
+#view-calculator .calc-dialog-panel {
+    position: relative;
+    width: min(460px, calc(100vw - 32px));
+    background: linear-gradient(180deg, rgba(20, 31, 51, 0.98), rgba(16, 26, 46, 0.98));
+    border: 1px solid rgba(214, 168, 74, 0.22);
+    border-radius: 14px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+    padding: 18px;
+}
+
+#view-calculator .calc-dialog-panel h3 {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: 18px;
+}
+
+#view-calculator .calc-dialog-panel p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+#view-calculator .calc-dialog-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+#view-calculator .calc-dialog-actions button {
+    min-height: 40px;
+    border-radius: 999px;
+    border: 1px solid rgba(214, 168, 74, 0.26);
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+#view-calculator #calculator-reset-cancel {
+    color: var(--text);
+    background: rgba(20, 31, 51, 0.9);
+}
+
+#view-calculator #calculator-reset-confirm {
+    color: #111;
+    background: linear-gradient(180deg, var(--accent-2), var(--accent));
+}
+
 #view-calculator .results-row {
     display: flex;
     gap: 16px;
@@ -1045,7 +1113,7 @@
 
 #view-attribute-planner .planner-steps {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 10px;
     margin-bottom: 4px;
 }
@@ -1113,51 +1181,23 @@
     color: var(--text);
 }
 
+#view-attribute-planner .planner-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+#view-attribute-planner .planner-panel-head h3 {
+    margin: 0;
+}
+
 #view-attribute-planner .planner-panel p {
     color: var(--muted);
     margin: 0 0 18px;
     font-size: 14px;
     line-height: 1.5;
-}
-
-#view-attribute-planner .planner-template-list {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-}
-
-#view-attribute-planner .planner-template-btn {
-    text-align: left;
-    border: 1px solid rgba(214, 168, 74, 0.15);
-    background: linear-gradient(180deg, rgba(8, 17, 29, 0.4), rgba(8, 17, 29, 0.25));
-    color: var(--text);
-    border-radius: 14px;
-    padding: 16px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#view-attribute-planner .planner-template-btn:hover {
-    border-color: rgba(214, 168, 74, 0.35);
-    background: linear-gradient(180deg, rgba(8, 17, 29, 0.55), rgba(8, 17, 29, 0.35));
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-}
-
-#view-attribute-planner .planner-template-btn.active {
-    border-color: rgba(214, 168, 74, 0.8);
-    background: linear-gradient(180deg, rgba(214, 168, 74, 0.15), rgba(214, 168, 74, 0.06));
-    box-shadow: 0 4px 16px rgba(214, 168, 74, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-#view-attribute-planner .planner-template-title {
-    font-weight: 700;
-    margin-bottom: 6px;
-}
-
-#view-attribute-planner .planner-template-preview {
-    font-size: 12px;
-    color: var(--muted);
 }
 
 #view-attribute-planner .planner-fields {
@@ -1388,6 +1428,11 @@
     flex-wrap: wrap;
 }
 
+#view-attribute-planner .planner-confirm-actions-inline {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
 #view-attribute-planner .planner-nav {
     display: flex;
     justify-content: space-between;
@@ -1436,7 +1481,6 @@
 }
 
 @media (max-width: 1100px) {
-    #view-attribute-planner .planner-template-list,
     #view-attribute-planner .planner-fields,
     #view-attribute-planner .planner-result-cards {
         grid-template-columns: 1fr;
@@ -1487,6 +1531,17 @@
         padding: 18px;
     }
 
+    #view-attribute-planner .planner-panel-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    #view-attribute-planner .planner-confirm-actions-inline {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
     #view-attribute-planner .planner-field {
         padding: 14px;
     }
@@ -1512,10 +1567,6 @@
         flex: 1;
         padding: 14px 18px;
         font-size: 15px;
-    }
-
-    #view-attribute-planner .planner-template-btn {
-        padding: 14px;
     }
 
     #view-attribute-planner .planner-contrib-table th,

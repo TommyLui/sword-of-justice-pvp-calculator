@@ -19,11 +19,14 @@ function initAttributePlanner() {
         lastResult: null
     };
 
+    const SYNC_SOURCE = 'attribute-planner';
+    let isApplyingSync = false;
+    let hasBoundBaselineSyncInputs = false;
+
     const diffElementsByAttr = {};
 
     const loadingEl = document.getElementById('planner-loading');
     const appEl = document.getElementById('planner-app');
-    const templateListEl = document.getElementById('planner-template-list');
     const baselineFieldsEl = document.getElementById('planner-baseline-fields');
     const candidateFieldsEl = document.getElementById('planner-candidate-fields');
     const contribBodyEl = document.getElementById('planner-contrib-body');
@@ -36,7 +39,6 @@ function initAttributePlanner() {
     const prevBtn = document.getElementById('planner-prev');
     const nextBtn = document.getElementById('planner-next');
     const resetCandidateBtn = document.getElementById('planner-reset-candidate');
-    const reselectTemplateBtn = document.getElementById('planner-reselect-template');
 
     function toNumber(value, fallback = 0) {
         const n = Number(value);
@@ -64,13 +66,27 @@ function initAttributePlanner() {
             return { gain: 0, clamped: false };
         }
 
+        if (curve.length === 1) {
+            return { gain: curve[0].gain, clamped: x !== curve[0].x };
+        }
+
+        const clampGain = (value) => Math.max(-0.95, value);
+
         if (x <= curve[0].x) {
-            return { gain: curve[0].gain, clamped: x < curve[0].x };
+            const left = curve[0];
+            const right = curve[1];
+            const ratio = (x - left.x) / (right.x - left.x);
+            const gain = left.gain + (right.gain - left.gain) * ratio;
+            return { gain: clampGain(gain), clamped: x < curve[0].x };
         }
 
         const last = curve[curve.length - 1];
         if (x >= last.x) {
-            return { gain: last.gain, clamped: x > last.x };
+            const left = curve[curve.length - 2];
+            const right = last;
+            const ratio = (x - left.x) / (right.x - left.x);
+            const gain = left.gain + (right.gain - left.gain) * ratio;
+            return { gain: clampGain(gain), clamped: x > last.x };
         }
 
         for (let i = 1; i < curve.length; i++) {
@@ -206,6 +222,60 @@ function initAttributePlanner() {
         });
     }
 
+    function pushBaselineToBridge() {
+        if (!window.pvpSyncBridge?.setBaselineAtk1 || isApplyingSync) return;
+        window.pvpSyncBridge.setBaselineAtk1({
+            attack: state.baseline.attack ?? 0,
+            elementalAttack: state.baseline.elementalAttack ?? 0,
+            defenseBreak: state.baseline.defenseBreak ?? 0,
+            accuracy: state.baseline.accuracy ?? 0,
+            crit: state.baseline.crit ?? 0
+        }, { source: SYNC_SOURCE });
+    }
+
+    function applyBaselineFromBridge(payload) {
+        if (!payload || payload.source === SYNC_SOURCE || !payload.baselineAtk1) return;
+        isApplyingSync = true;
+        const incoming = payload.baselineAtk1;
+        const baselineKeys = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
+        baselineKeys.forEach(key => {
+            state.baseline[key] = toNumber(incoming[key], 0);
+            const baselineInput = document.getElementById(`planner-baseline-${key}`);
+            if (baselineInput) {
+                baselineInput.value = String(state.baseline[key]);
+            }
+        });
+
+        refreshAllDiffLabels();
+        renderResults();
+        isApplyingSync = false;
+    }
+
+    function bindBaselineSyncInputs() {
+        if (hasBoundBaselineSyncInputs) return;
+        const baselineKeys = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
+        baselineKeys.forEach(key => {
+            const input = document.getElementById(`planner-baseline-${key}`);
+            if (!input) return;
+
+            input.addEventListener('change', () => {
+                pushBaselineToBridge();
+            });
+
+            input.addEventListener('blur', () => {
+                pushBaselineToBridge();
+            });
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    input.blur();
+                }
+            });
+        });
+        hasBoundBaselineSyncInputs = true;
+    }
+
     function createInputField(attr, mode) {
         const wrap = document.createElement('div');
         wrap.className = 'planner-field';
@@ -276,6 +346,8 @@ function initAttributePlanner() {
             delete diffElementsByAttr[key];
         });
 
+        hasBoundBaselineSyncInputs = false;
+
         baselineFieldsEl.innerHTML = '';
         candidateFieldsEl.innerHTML = '';
 
@@ -290,51 +362,25 @@ function initAttributePlanner() {
         baselineFieldsEl.appendChild(baselineFrag);
         candidateFieldsEl.appendChild(candidateFrag);
         refreshAllDiffLabels();
+        bindBaselineSyncInputs();
     }
 
-    function applyTemplate(templateId) {
+    function applyTemplate(templateId, options = {}) {
+        const { pushToBridge = true } = options;
         const template = state.db.templates.find(t => t.id === templateId) || state.db.templates[0];
         state.selectedTemplateId = template.id;
         state.baseline = { ...template.baseline };
         state.candidate = { ...template.baseline };
 
-        renderTemplates();
         renderFields();
         renderResults();
-    }
-
-    function renderTemplates() {
-        templateListEl.innerHTML = '';
-
-        const fragment = document.createDocumentFragment();
-        state.db.templates.forEach(template => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'planner-template-btn' + (template.id === state.selectedTemplateId ? ' active' : '');
-
-            const title = document.createElement('div');
-            title.className = 'planner-template-title';
-            title.textContent = template.name;
-            button.appendChild(title);
-
-            const preview = document.createElement('div');
-            preview.className = 'planner-template-preview';
-            const atk = template.baseline.attack || 0;
-            const ele = template.baseline.elementalAttack || 0;
-            const def = template.baseline.defenseBreak || 0;
-            preview.textContent = `攻擊 ${atk}｜元素 ${ele}｜破防 ${def}`;
-            button.appendChild(preview);
-
-            button.addEventListener('click', () => applyTemplate(template.id));
-
-            fragment.appendChild(button);
-        });
-
-        templateListEl.appendChild(fragment);
+        if (pushToBridge) {
+            pushBaselineToBridge();
+        }
     }
 
     function setStep(nextStep) {
-        state.step = Math.min(5, Math.max(1, nextStep));
+        state.step = Math.min(3, Math.max(1, nextStep));
 
         stepButtons.forEach(btn => {
             const step = Number(btn.dataset.step);
@@ -349,7 +395,7 @@ function initAttributePlanner() {
         });
 
         prevBtn.disabled = state.step === 1;
-        nextBtn.textContent = state.step === 5 ? '完成' : '下一步';
+        nextBtn.textContent = state.step === 3 ? '完成' : '下一步';
     }
 
     function bindEvents() {
@@ -362,7 +408,7 @@ function initAttributePlanner() {
 
         prevBtn?.addEventListener('click', () => setStep(state.step - 1));
         nextBtn?.addEventListener('click', () => {
-            if (state.step < 5) {
+            if (state.step < 3) {
                 setStep(state.step + 1);
                 return;
             }
@@ -376,9 +422,9 @@ function initAttributePlanner() {
             notify({ type: 'success', title: '已重置', message: '目標屬性已重置為基準值', duration: 2500 });
         });
 
-        reselectTemplateBtn?.addEventListener('click', () => {
-            setStep(1);
-        });
+        if (window.pvpSyncBridge?.subscribe) {
+            window.pvpSyncBridge.subscribe(applyBaselineFromBridge);
+        }
     }
 
     async function loadDb() {
@@ -413,7 +459,24 @@ function initAttributePlanner() {
             appEl.hidden = true;
 
             state.db = await loadDb();
-            applyTemplate(state.db.templates[0].id);
+            applyTemplate(state.db.templates[0].id, { pushToBridge: false });
+
+            const existing = window.pvpSyncBridge?.getBaselineAtk1?.();
+            if (existing?._meta?.hasValue) {
+                applyBaselineFromBridge({
+                    baselineAtk1: {
+                        attack: existing.attack,
+                        elementalAttack: existing.elementalAttack,
+                        defenseBreak: existing.defenseBreak,
+                        accuracy: existing.accuracy,
+                        crit: existing.crit
+                    },
+                    source: existing._meta.source || 'bridge'
+                });
+            } else {
+                pushBaselineToBridge();
+            }
+
             setStep(1);
             bindEvents();
 

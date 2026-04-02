@@ -90,9 +90,9 @@
             <nav class="nav">
                 <a class="active" href="#/" data-route="">🏠 首頁</a>
                 <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
-                <a href="#/league" data-route="league">📊 聯賽數據分析</a>
-                <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
                 <a href="#/attribute-planner" data-route="attribute-planner">📈 屬性規劃</a>
+                <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
+                <a href="#/league" data-route="league">📊 聯賽數據分析</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
             </nav>
             <div class="sidebar-footer">頂樓風很大<br>幫會內部使用</div>
@@ -110,9 +110,21 @@
             </div>
             <div id="view-calculator" class="view" hidden>
                 <div class="calc-toolbar" style="display: flex; gap: 10px; margin-bottom: 14px; justify-content: flex-end;">
+                    <button id="reset-data-btn">🗑️ 重置資料</button>
                     <button id="import-btn">📥 匯入</button>
                     <button id="export-btn">📤 匯出</button>
                     <input type="file" id="import-file" accept=".txt" style="display: none;">
+                </div>
+                <div id="calculator-reset-dialog" class="calc-dialog" hidden>
+                    <div class="calc-dialog-backdrop" data-close-dialog="true"></div>
+                    <div class="calc-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="calc-dialog-title" aria-describedby="calc-dialog-desc">
+                        <h3 id="calc-dialog-title">確認重置資料</h3>
+                        <p id="calc-dialog-desc">此操作會清空目前輸入與結果，且無法復原。要繼續嗎？</p>
+                        <div class="calc-dialog-actions">
+                            <button id="calculator-reset-cancel" type="button">取消</button>
+                            <button id="calculator-reset-confirm" type="button">確認重置</button>
+                        </div>
+                    </div>
                 </div>
                 <section id="results">
                     <div class="results-row">
@@ -227,33 +239,30 @@
 
                 <div id="planner-app" class="planner-app" hidden>
                     <div class="planner-steps" role="tablist" aria-label="屬性規劃步驟">
-                        <button type="button" class="planner-step active" data-step="1">1. 模板</button>
-                        <button type="button" class="planner-step" data-step="2">2. 基準</button>
-                        <button type="button" class="planner-step" data-step="3">3. 目標</button>
-                        <button type="button" class="planner-step" data-step="4">4. 結果</button>
-                        <button type="button" class="planner-step" data-step="5">5. 確認</button>
+                        <button type="button" class="planner-step active" data-step="1">1. 基準</button>
+                        <button type="button" class="planner-step" data-step="2">2. 目標</button>
+                        <button type="button" class="planner-step" data-step="3">3. 結果</button>
                     </div>
 
                     <div class="planner-panels">
                         <section class="planner-panel active" data-step-panel="1">
-                            <h3>選擇模板</h3>
-                            <p>請先選擇你的規劃模板。</p>
-                            <div id="planner-template-list" class="planner-template-list"></div>
-                        </section>
-
-                        <section class="planner-panel" data-step-panel="2" hidden>
-                            <h3>設定 Baseline（目前面板）</h3>
-                            <p>輸入你現在的屬性。</p>
+                            <h3>設定基準（目前面板）</h3>
+                            <p>輸入你現在的屬性。基準值會與傷害計算器的進攻數值1雙向同步。</p>
                             <div id="planner-baseline-fields" class="planner-fields"></div>
                         </section>
 
-                        <section class="planner-panel" data-step-panel="3" hidden>
-                            <h3>調整 Candidate（目標面板）</h3>
+                        <section class="planner-panel" data-step-panel="2" hidden>
+                            <div class="planner-panel-head">
+                                <h3>調整目標（目標面板）</h3>
+                                <div class="planner-confirm-actions planner-confirm-actions-inline">
+                                    <button id="planner-reset-candidate" type="button" class="planner-secondary-btn">重置目標 = 基準</button>
+                                </div>
+                            </div>
                             <p>調整你預計達成的屬性。</p>
                             <div id="planner-candidate-fields" class="planner-fields"></div>
                         </section>
 
-                        <section class="planner-panel" data-step-panel="4" hidden>
+                        <section class="planner-panel" data-step-panel="3" hidden>
                             <h3>結果分析</h3>
                             <div class="planner-result-cards">
                                 <div class="planner-result-card">
@@ -261,7 +270,7 @@
                                     <div id="planner-result-total" class="planner-result-value">+0.00%</div>
                                 </div>
                                 <div class="planner-result-card">
-                                    <div class="planner-result-label">Top 3 貢獻</div>
+                                    <div class="planner-result-label">前 3 大貢獻</div>
                                     <ul id="planner-top3" class="planner-top3"></ul>
                                 </div>
                             </div>
@@ -270,8 +279,8 @@
                                     <thead>
                                         <tr>
                                             <th>屬性</th>
-                                            <th>Baseline</th>
-                                            <th>Candidate</th>
+                                            <th>基準</th>
+                                            <th>目標</th>
                                             <th>貢獻</th>
                                         </tr>
                                     </thead>
@@ -279,15 +288,6 @@
                                 </table>
                             </div>
                             <div id="planner-notes" class="planner-notes"></div>
-                        </section>
-
-                        <section class="planner-panel" data-step-panel="5" hidden>
-                            <h3>確認與重置</h3>
-                            <p>你可以重置目標值，或回到前面繼續調整。</p>
-                            <div class="planner-confirm-actions">
-                                <button id="planner-reset-candidate" type="button" class="planner-secondary-btn">重置目標 = 基準</button>
-                                <button id="planner-reselect-template" type="button" class="planner-secondary-btn">重新選模板</button>
-                            </div>
                         </section>
                     </div>
 
@@ -299,12 +299,13 @@
             </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#/attribute-planner" data-route="attribute-planner"><span>📈</span>規劃</a></nav>
+    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/attribute-planner" data-route="attribute-planner"><span>📈</span>規劃</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a></nav>
     <div id="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="tools/calculator.js"></script>
     <script src="tools/league.js"></script>
     <script src="tools/crafting.js"></script>
+    <script src="tools/sync-bridge.js"></script>
     <script src="tools/attribute-planner.js"></script>
     <script>
         const ROUTES = { '': 'view-home', 'calculator': 'view-calculator', 'league': 'view-league', 'crafting': 'view-crafting', 'attribute-planner': 'view-attribute-planner' };

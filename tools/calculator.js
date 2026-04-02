@@ -10,6 +10,22 @@ function initCalculator() {
         }
     };
 
+    document.getElementById('calculator-reset-dialog')?.setAttribute('hidden', 'hidden');
+
+    // Bridge field mapping for atk1 fields
+    const bridgeFieldMap = {
+        'attack': 'atk1-attack',
+        'elementalAttack': 'atk1-elementalAttack',
+        'defenseBreak': 'atk1-defenseBreak',
+        'accuracy': 'atk1-accuracy',
+        'crit': 'atk1-crit'
+    };
+
+    const SYNC_SOURCE = 'calculator';
+
+    // Guard flag to prevent sync loops
+    let isApplyingBridgeUpdate = false;
+
     function calculateRemainDefense(defense, defenseBreak) {
         return Math.max(0, defense - defenseBreak);
     }
@@ -200,10 +216,86 @@ function initCalculator() {
         });
     });
 
+    function readAtk1SyncData() {
+        const data = {};
+        Object.keys(bridgeFieldMap).forEach(bridgeKey => {
+            const inputId = bridgeFieldMap[bridgeKey];
+            const input = document.getElementById(inputId);
+            data[bridgeKey] = input ? (parseInt(input.value) || 0) : 0;
+        });
+        return data;
+    }
+
     document.querySelectorAll('#results span[id]').forEach(element => {
         const saved = localStorage.getItem(`result-${element.id}`);
         if (saved !== null) element.textContent = saved;
     });
+
+    // Publish atk1 values to bridge
+    const publishToBridge = () => {
+        if (!window.pvpSyncBridge?.setBaselineAtk1 || isApplyingBridgeUpdate) return;
+        const data = readAtk1SyncData();
+        window.pvpSyncBridge.setBaselineAtk1(data, { source: SYNC_SOURCE });
+    };
+
+    // Apply incoming bridge values to atk1 inputs
+    const applyFromBridge = (payload) => {
+        if (!payload || payload.source === SYNC_SOURCE) return;
+        const data = payload.baselineAtk1 || {};
+        isApplyingBridgeUpdate = true;
+        Object.keys(bridgeFieldMap).forEach(bridgeKey => {
+            if (data[bridgeKey] !== undefined) {
+                const inputId = bridgeFieldMap[bridgeKey];
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.value = data[bridgeKey];
+                    localStorage.setItem(inputId, data[bridgeKey]);
+                }
+            }
+        });
+        calculateResults();
+        isApplyingBridgeUpdate = false;
+    };
+
+    // Subscribe to bridge updates
+    if (window.pvpSyncBridge?.subscribe) {
+        window.pvpSyncBridge.subscribe(applyFromBridge);
+    }
+
+    // Add blur/change and Enter listeners for atk1 fields
+    Object.values(bridgeFieldMap).forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('blur', publishToBridge);
+            input.addEventListener('change', publishToBridge);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                }
+            });
+        }
+    });
+
+    // Seed bridge once after localStorage restore (only if bridge empty)
+    if (window.pvpSyncBridge?.setBaselineAtk1) {
+        const seedData = readAtk1SyncData();
+        window.pvpSyncBridge.setBaselineAtk1(seedData, { source: SYNC_SOURCE, onlyIfEmpty: true });
+
+        const existing = window.pvpSyncBridge.getBaselineAtk1?.();
+        if (existing?._meta?.hasValue && existing._meta.source !== SYNC_SOURCE) {
+            applyFromBridge({
+                baselineAtk1: {
+                    attack: existing.attack,
+                    elementalAttack: existing.elementalAttack,
+                    defenseBreak: existing.defenseBreak,
+                    accuracy: existing.accuracy,
+                    crit: existing.crit
+                },
+                source: existing._meta.source
+            });
+        }
+    }
 
     document.getElementById('copy-left-atk-btn')?.addEventListener('click', () => {
         const properties = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'pvpAttack', 'accuracy', 'crit', 'critDamage', 'extraCritRate', 'pvpAttackRate', 'elementalBreak', 'skillAttack'];
@@ -222,6 +314,7 @@ function initCalculator() {
             localStorage.setItem(`atk1-${prop}`, val);
         });
         calculateResults();
+        publishToBridge();
     });
     document.getElementById('copy-left-def-btn')?.addEventListener('click', () => {
         const properties = ['defense', 'airShield', 'elementalResistance', 'pvpResistance', 'blockResistance', 'criticalResistance', 'criticalDefense', 'skillResistance'];
@@ -265,6 +358,74 @@ function initCalculator() {
     });
 
     document.getElementById('import-btn')?.addEventListener('click', () => document.getElementById('import-file').click());
+
+    function openResetDialog() {
+        const dialog = document.getElementById('calculator-reset-dialog');
+        if (!dialog) return;
+        dialog.hidden = false;
+        document.getElementById('calculator-reset-cancel')?.focus();
+    }
+
+    function closeResetDialog() {
+        const dialog = document.getElementById('calculator-reset-dialog');
+        if (!dialog) return;
+        dialog.hidden = true;
+    }
+
+    function resetCalculatorData() {
+        const numberInputs = document.querySelectorAll('#view-calculator input[type="number"]');
+        numberInputs.forEach(input => {
+            input.value = '0';
+            localStorage.setItem(input.id, '0');
+        });
+
+        document.querySelectorAll('#results span[id]').forEach(element => {
+            element.textContent = element.id.includes('Rate') || element.id.includes('Compare') ? '0%' : '0';
+            localStorage.setItem(`result-${element.id}`, element.textContent);
+        });
+
+        calculateResults();
+        publishToBridge();
+
+        notify({
+            type: 'success',
+            title: '重置完成',
+            message: '計算器資料已重置為預設值',
+            duration: 3000
+        });
+    }
+
+    document.getElementById('reset-data-btn')?.addEventListener('click', () => {
+        openResetDialog();
+    });
+
+    document.getElementById('calculator-reset-cancel')?.addEventListener('click', () => {
+        closeResetDialog();
+    });
+
+    document.getElementById('calculator-reset-confirm')?.addEventListener('click', () => {
+        resetCalculatorData();
+        closeResetDialog();
+    });
+
+    document.getElementById('calculator-reset-dialog')?.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.dataset.closeDialog === 'true') {
+            closeResetDialog();
+        }
+    });
+
+    document.getElementById('calculator-reset-dialog')?.addEventListener('keydown', (event) => {
+        const dialog = document.getElementById('calculator-reset-dialog');
+        if (dialog?.hidden) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeResetDialog();
+        }
+    });
+
     document.getElementById('import-file')?.addEventListener('change', event => {
         const file = event.target.files[0];
         if (!file) return;
@@ -276,6 +437,7 @@ function initCalculator() {
                     if (data[group]) Object.keys(data[group]).forEach(key => { const element = document.getElementById(`${prefix}${key}`); if (element) { element.value = data[group][key]; localStorage.setItem(`${prefix}${key}`, data[group][key]); } });
                 });
                 calculateResults();
+                publishToBridge();
                 notify({
                     type: 'success',
                     title: '匯入成功',
