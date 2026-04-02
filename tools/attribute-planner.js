@@ -198,7 +198,7 @@ function initAttributePlanner() {
     function refreshAllDiffLabels() {
         if (!state.db) return;
         state.db.attributes.forEach(attr => {
-            const diffEl = diffElementsByAttr[attr.id];
+            const diffEl = diffElementsByAttr[`candidate-${attr.id}`];
             if (!diffEl) return;
             const delta = toNumber(state.candidate[attr.id], 0) - toNumber(state.baseline[attr.id], 0);
             const sign = delta >= 0 ? '+' : '';
@@ -234,9 +234,12 @@ function initAttributePlanner() {
             renderResults();
         });
 
-        const diff = document.createElement('div');
-        diff.className = 'planner-field-diff';
-        diffElementsByAttr[attr.id] = diff;
+        let diff = null;
+        if (mode === 'candidate') {
+            diff = document.createElement('div');
+            diff.className = 'planner-field-diff';
+            diffElementsByAttr[`candidate-${attr.id}`] = diff;
+        }
 
         wrap.appendChild(label);
         wrap.appendChild(input);
@@ -262,11 +265,17 @@ function initAttributePlanner() {
             wrap.appendChild(quick);
         }
 
-        wrap.appendChild(diff);
+        if (diff) {
+            wrap.appendChild(diff);
+        }
         return wrap;
     }
 
     function renderFields() {
+        Object.keys(diffElementsByAttr).forEach(key => {
+            delete diffElementsByAttr[key];
+        });
+
         baselineFieldsEl.innerHTML = '';
         candidateFieldsEl.innerHTML = '';
 

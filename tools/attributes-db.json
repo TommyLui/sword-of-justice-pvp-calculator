@@ -67,7 +67,7 @@
                 "attack": 17500,
                 "elementalAttack": 6200,
                 "defenseBreak": 13000,
-                "accuracy": 4200,
+                "accuracy": 4400,
                 "crit": 4800
             }
         },
@@ -78,7 +78,7 @@
                 "attack": 17500,
                 "elementalAttack": 6200,
                 "defenseBreak": 13000,
-                "accuracy": 4600,
+                "accuracy": 4400,
                 "crit": 4500
             }
         }
