@@ -102,9 +102,123 @@ function initAttributePlanner() {
         return { gain: last.gain, clamped: true };
     }
 
+    function calculateRemainDefense(defense, defenseBreak) {
+        return Math.max(0, defense - defenseBreak);
+    }
+
+    function calculateDefenseRate(remainDefense) {
+        return Math.max(10, ((remainDefense / (remainDefense + 19032)) * 100) + 10);
+    }
+
+    function calculateRemainShield(shieldBreak, airShield) {
+        if (shieldBreak >= airShield) return 0;
+        if (shieldBreak >= airShield / 3) return 0.5 * (airShield - shieldBreak);
+        return airShield - 2 * shieldBreak;
+    }
+
+    function calculateElementalResisRate(elementalResistance, elementalBreak) {
+        const diff = Math.max(0, elementalResistance - elementalBreak);
+        return (diff / (diff + 4762)) * 100;
+    }
+
+    function calculateActualAccuracyRate(accuracy, blockResistance) {
+        const diff = Math.max(0, accuracy - blockResistance);
+        return Math.min(((143 * diff) / (diff + 10688) + 95) / 100, 1) * 100;
+    }
+
+    function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
+        const diff = Math.max(0, crit - criticalResistance);
+        const baseRate = Math.max(0, (115 * diff - 200) / (diff + 2666) / 100);
+        return Math.min(baseRate + (extraCritRate / 100), 1) * 100;
+    }
+
+    function readCombatScenario() {
+        return {
+            attack: toNumber(document.getElementById('atk1-attack')?.value, 0),
+            elementalAttack: toNumber(document.getElementById('atk1-elementalAttack')?.value, 0),
+            defenseBreak: toNumber(document.getElementById('atk1-defenseBreak')?.value, 0),
+            shieldBreak: toNumber(document.getElementById('atk1-shieldBreak')?.value, 0),
+            pvpAttack: toNumber(document.getElementById('atk1-pvpAttack')?.value, 0),
+            accuracy: toNumber(document.getElementById('atk1-accuracy')?.value, 0),
+            crit: toNumber(document.getElementById('atk1-crit')?.value, 0),
+            critDamage: toNumber(document.getElementById('atk1-critDamage')?.value, 0),
+            extraCritRate: toNumber(document.getElementById('atk1-extraCritRate')?.value, 0),
+            pvpAttackRate: toNumber(document.getElementById('atk1-pvpAttackRate')?.value, 0),
+            elementalBreak: toNumber(document.getElementById('atk1-elementalBreak')?.value, 0),
+            skillAttack: toNumber(document.getElementById('atk1-skillAttack')?.value, 0),
+            defense: toNumber(document.getElementById('def1-defense')?.value, 0),
+            airShield: toNumber(document.getElementById('def1-airShield')?.value, 0),
+            elementalResistance: toNumber(document.getElementById('def1-elementalResistance')?.value, 0),
+            pvpResistance: toNumber(document.getElementById('def1-pvpResistance')?.value, 0),
+            blockResistance: toNumber(document.getElementById('def1-blockResistance')?.value, 0),
+            criticalResistance: toNumber(document.getElementById('def1-criticalResistance')?.value, 0),
+            criticalDefense: toNumber(document.getElementById('def1-criticalDefense')?.value, 0),
+            skillResistance: toNumber(document.getElementById('def1-skillResistance')?.value, 0)
+        };
+    }
+
+    function calculateEffectiveDamage(stats) {
+        const remainDefense = calculateRemainDefense(stats.defense, stats.defenseBreak);
+        const defenseRate = calculateDefenseRate(remainDefense);
+        const remainShield = calculateRemainShield(stats.shieldBreak, stats.airShield);
+        const elementalResisRate = calculateElementalResisRate(stats.elementalResistance, stats.elementalBreak);
+        const actualAccuracyRate = calculateActualAccuracyRate(stats.accuracy, stats.blockResistance);
+        const actualCritRate = calculateActualCritRate(stats.crit, stats.extraCritRate, stats.criticalResistance);
+
+        const skillBase = 58000;
+        const skillMultiplier = 3.38;
+        const baseDamage = ((skillBase + skillMultiplier * (stats.attack + stats.pvpAttack + stats.skillAttack - stats.pvpResistance - remainShield - stats.skillResistance)) * (1 - defenseRate / 100) + (stats.elementalAttack * skillMultiplier * (1 - elementalResisRate / 100))) * (1 + stats.pvpAttackRate / 100);
+        const finalDamage = Math.max(0, baseDamage);
+
+        return Math.floor(finalDamage * (actualAccuracyRate / 100) * (1 + (actualCritRate / 100) * ((stats.critDamage / 100) - stats.criticalDefense / 100)) + finalDamage * (1 - (actualAccuracyRate / 100)) * 0.5);
+    }
+
+    function calculateActualComparison() {
+        const scenario = readCombatScenario();
+        const baselineStats = { ...scenario, ...state.baseline };
+        const candidateStats = { ...scenario, ...state.candidate };
+        const baselineDamage = calculateEffectiveDamage(baselineStats);
+        const candidateDamage = calculateEffectiveDamage(candidateStats);
+
+        if (baselineDamage <= 0) {
+            return null;
+        }
+
+        const contributions = state.db.attributes.map(attr => {
+            const singleAttrCandidate = {
+                ...baselineStats,
+                [attr.id]: normalizeByAttribute(attr, state.candidate[attr.id])
+            };
+            const singleAttrDamage = calculateEffectiveDamage(singleAttrCandidate);
+            const deltaGain = ((singleAttrDamage - baselineDamage) / baselineDamage) || 0;
+
+            return {
+                attrId: attr.id,
+                attrName: attr.name,
+                baselineValue: normalizeByAttribute(attr, state.baseline[attr.id]),
+                candidateValue: normalizeByAttribute(attr, state.candidate[attr.id]),
+                deltaGain
+            };
+        });
+
+        return {
+            improvePercent: (candidateDamage - baselineDamage) / baselineDamage,
+            baselineTotal: 0,
+            candidateTotal: (candidateDamage - baselineDamage) / baselineDamage,
+            contributions,
+            top3: [...contributions].sort((a, b) => b.deltaGain - a.deltaGain).slice(0, 3),
+            notes: ['依目前傷害計算器的「進攻數值1 vs 防禦數值1」公式即時計算。']
+        };
+    }
+
     function calculateEstimate() {
         if (!state.db) {
             return null;
+        }
+
+        const actualComparison = calculateActualComparison();
+        if (actualComparison) {
+            return actualComparison;
         }
 
         let baselineMultiplier = 1;
@@ -153,7 +267,7 @@ function initAttributePlanner() {
             candidateTotal: candidateMultiplier - 1,
             contributions,
             top3,
-            notes: Array.from(notes)
+            notes: ['目前基準傷害為 0，已退回曲線模型估算。'].concat(Array.from(notes))
         };
     }
 
