@@ -1,175 +1,184 @@
-# AGENTS.md - Agentic Coding Guidelines
+# AGENTS.md
 
 ## Project Overview
-Static HTML/CSS/JS SPA — PVP damage calculator for "Sword of Justice" (逆水寒). Vanilla JS, no build tools, deployed to GitHub Pages. Current version: **S2.2**.
+- Static single-page web app for the game "Sword of Justice" (`逆水寒`).
+- Stack: plain HTML, CSS, and vanilla JavaScript. No bundler, no framework, no TypeScript.
+- Deployment target: GitHub Pages via `.github/workflows/deploy.yml`.
+- UI language is Traditional Chinese (`zh-TW`) and new user-facing text should stay in Chinese unless the existing screen is clearly English.
 
-## Build/Deploy Commands
+## Repository Layout
+- `index.html`: SPA shell, route switching, shared notification system, dark mode toggle, script loading.
+- `styles.css`: large shared stylesheet, with calculator styles scoped under `#view-calculator` and additional tool-specific styles further down.
+- `tools/calculator.js`: calculator initialization, formulas, import/export, reset flow, localStorage persistence.
+- `tools/attribute-planner.js`: attribute planning UI, JSON-backed estimation model, sync bridge integration.
+- `tools/crafting.js`: crafting database search/filter/detail UI backed by JSON.
+- `tools/league.js`: CSV upload, parsing, analytics, table sorting/filtering, Chart.js rendering.
+- `tools/sync-bridge.js`: lightweight in-page event bridge for syncing baseline attack values between tools.
+- `tools/attributes-db.json`: attribute planner data.
+- `tools/crafting-db.json`: crafting database snapshot.
+- `2.1/`: archived older season version. Treat as historical unless the task explicitly targets it.
+- `docs/superpowers/specs/`: design notes and feature specs, useful for intent but not executable code.
 
-**No build step.** Open `index.html` in a browser or serve locally:
+## Build, Run, Lint, Test
 
+### Install
+- No project install step exists.
+- There is no `package.json`, lockfile, or declared dev dependency toolchain in this repository.
+
+### Local Run
+- Preferred:
 ```bash
 npx serve .
-# or
+```
+- Alternative:
+```bash
 python -m http.server 8000
 ```
+- Then open the served URL in a browser.
+- Prefer a real local HTTP server over opening `index.html` directly because `crafting.js` and `attribute-planner.js` fetch local JSON files.
 
-**No tests.** Manual verification only (see Testing section below).
+### Build
+- No build command exists.
+- The app is served as static files and deployed as-is.
 
-**Deployment:** Automatic via GitHub Actions on push to `main`/`master`.
+### Lint
+- No lint command or config exists.
+- There is no ESLint, Prettier, Stylelint, or equivalent repo-level formatter configuration.
+- If you need to improve consistency, follow the existing code style rather than introducing new tooling unless the user asks for it.
 
-## Project Structure
+### Tests
+- No automated test suite exists.
+- No Jest, Vitest, Playwright, Cypress, or browser test harness is configured.
 
-```
-├── index.html              # SPA shell: sidebar nav, routing, theming, notifications
-├── styles.css              # Calculator view styles only (scoped to #view-calculator)
-├── icon.jpg                # App icon
-├── tools/
-│   ├── calculator.js       # Calculator logic (initCalculator), localStorage, import/export
-│   └── calculator.html     # Legacy redirect → ../#/calculator
-├── 2.1/                    # Archive: previous season 2.1
-│   ├── index.html
-│   ├── script.js
-│   └── styles.css
-└── .github/workflows/
-    └── deploy.yml          # GitHub Pages deployment
-```
+### Single Test
+- Not applicable: there is no automated test runner and therefore no single-test command.
+- If the user asks to "run one test," explain that only manual verification is available in the current repo.
 
-## Code Style Guidelines
+### Deployment
+- Pushing to `main` or `master` triggers GitHub Pages deployment through `.github/workflows/deploy.yml`.
+- The workflow uploads the repository root directly; there is no build artifact generation step.
+
+## Manual Verification
+- Open the app through a local server.
+- Verify route switching for `#/calculator`, `#/attribute-planner`, `#/crafting`, and `#/league`.
+- Toggle dark mode and reload to confirm `localStorage` persistence.
+- On mobile width, verify sidebar behavior and bottom navigation.
+
+### Calculator Checks
+- Enter values in all major attack/defense fields and confirm results update on input.
+- Test both attack copy buttons and both defense copy buttons.
+- Test reset dialog open, cancel, confirm, and Escape handling.
+- Test export, clear/reset, then import round-trip.
+- Verify bridge behavior between calculator `atk1` fields and attribute planner baseline fields.
+
+### Attribute Planner Checks
+- Confirm `tools/attributes-db.json` loads.
+- Move across all three planner steps.
+- Edit baseline and candidate values and verify KPI, contributions, top 3, and notes update.
+- Verify baseline sync from planner to calculator and vice versa.
+
+### Crafting Checks
+- Confirm crafting data loads from `tools/crafting-db.json`.
+- Test search, season filter, slot filter, tag filter, sort order, reset, and detail panel updates.
+
+### League Checks
+- Upload a representative CSV file.
+- Verify totals, guild tabs, sortable columns, class filter, and both charts.
+- Reload and confirm cached league data still restores from `localStorage`.
+
+## Architecture Notes
+- Routing is hash-based and defined inline in `index.html` via the `ROUTES` object.
+- Each major tool uses a one-time initializer guard such as `window.__calculatorInitialized`.
+- Scripts are loaded globally through `<script>` tags, not ES modules.
+- There is no import/export system inside app code.
+- Cross-tool synchronization uses `window.pvpSyncBridge` plus `CustomEvent` dispatch in `tools/sync-bridge.js`.
+- Notifications should use `window.showNotification(...)` where available; individual tools usually wrap this in a local `notify()` helper.
+- Persistence is local-first: many inputs and derived UI states are stored in `localStorage`.
+
+## Code Style
 
 ### JavaScript
-- **Vanilla ES6+**, no frameworks or modules — all code is in global scope or `initCalculator()` closure
-- **Functions/variables:** `camelCase`
-- **Constants:** `UPPER_SNAKE_CASE` for true constants only
-- **HTML IDs:** `kebab-case` (e.g., `atk1-attack`, `def2-airShield`)
-- **Indentation:** 4 spaces
-- **Quotes:** Single quotes for strings
-- **Semicolons:** Required
-- **Null safety:** Use optional chaining (`?.`) for DOM element event listeners
+- Use vanilla ES6+ syntax that works directly in the browser without transpilation.
+- Use 4-space indentation.
+- Use semicolons.
+- Use single quotes for strings unless the file clearly requires template literals or double quotes.
+- Prefer `const` by default and `let` only when reassignment is needed.
+- Use `camelCase` for variables and functions.
+- Use `UPPER_SNAKE_CASE` for real constants only.
+- Keep functions near the logic they support; the codebase prefers file-local helper functions inside each initializer.
+- Match the current style of plain functions like `function initLeague() { ... }` rather than introducing classes.
 
-```javascript
-// Good — safe DOM access
-document.getElementById('export-btn')?.addEventListener('click', () => { ... });
+### Imports and Modules
+- There are no JS imports in app code.
+- Do not convert files to ES modules or add a bundler unless explicitly requested.
+- External dependencies, if any, are loaded by script tag. Current example: Chart.js CDN in `index.html`.
 
-// Good — safe int parsing
-const value = parseInt(document.getElementById('atk1-attack').value) || 0;
-```
+### Types
+- There is no static type system.
+- Preserve the current runtime-validation style instead of adding TypeScript.
+- Coerce numeric input explicitly with `parseInt(..., 10)` or `Number(...)`, then guard with a fallback.
+- When reading untrusted JSON or CSV data, validate expected shape before use.
 
-### CSS
-- **Class/ID names:** `kebab-case`
-- **Calculator styles** are in `styles.css`, scoped under `#view-calculator`
-- **App shell styles** are inline in `index.html` `<style>` block (CSS variables, sidebar, hero, grid, responsive)
-- **Theming:** CSS custom properties defined in `:root` and `body.dark-mode` (`--bg`, `--accent`, `--border`, etc.)
-- **Indentation:** 4 spaces
-- **Colors:** Hex codes or `rgba()`; accent gold is `#D6A84A`
+### DOM Access
+- Prefer `document.getElementById(...)` for known single elements; that is the dominant pattern.
+- Use optional chaining for event binding when an element may not exist, for example `document.getElementById('x')?.addEventListener(...)`.
+- For repeated elements, use `querySelectorAll(...)` and iterate with `forEach`.
+- Prefer updating existing DOM nodes over replacing large sections of markup unless the feature already renders that way.
 
-### HTML
-- **Language:** `zh-TW` (Traditional Chinese UI)
-- **IDs:** `kebab-case`
-- **Indentation:** 4 spaces
-- **Cache-busting:** No query params currently — script is `<script src="tools/calculator.js">`
+### Naming
+- HTML IDs and CSS classes use `kebab-case`.
+- JavaScript identifiers use `camelCase`.
+- Boolean flags usually read as `is...`, `has...`, or `...Hidden`.
+- Initialization guards use `window.__somethingInitialized`.
+- Local storage keys often mirror element IDs or use a small prefix like `result-...`.
 
-## Key Architecture Patterns
+### Formatting and CSS
+- Keep CSS in `styles.css` unless you are editing app-shell styles already defined inline in `index.html`.
+- Preserve existing CSS variable usage for theming: `--bg`, `--text`, `--accent`, `--border`, etc.
+- Reuse existing gradients, border radii, shadows, and gold accent palette before inventing new styles.
+- Maintain responsive behavior for widths below `900px`.
 
-### SPA Routing (Hash-based)
-Routes defined in `index.html` inline script:
-```javascript
-const ROUTES = { '': 'view-home', 'calculator': 'view-calculator' };
-```
-Views toggle via `hidden` attribute. Calculator initializes lazily via `initCalculator()` when navigating to `#/calculator`.
+### Error Handling
+- Prefer defensive parsing and graceful fallback over throwing for user input.
+- Pattern used throughout the repo: `parseInt(value, 10) || 0` or a helper that returns a numeric fallback.
+- Wrap file import, JSON parsing, async fetch, and CSV processing in `try/catch`.
+- Show user-facing failures through notifications in Chinese.
+- `console.error(...)` is acceptable for developer diagnostics, but pair it with visible UI feedback when a user action failed.
+- Clamp invalid or negative computed damage values with `Math.max(0, value)` where appropriate.
 
-### Calculator Initialization Guard
-`initCalculator()` runs once via flag:
-```javascript
-if (window.__calculatorInitialized) return;
-window.__calculatorInitialized = true;
-```
+### Async and Data Loading
+- `fetch()` is used directly for local JSON files.
+- Existing code often tries multiple relative paths for robustness; preserve that behavior when editing JSON-backed features.
+- Validate response success with `response.ok` before reading JSON.
+- Keep loading and failure states visible in the UI.
 
-### CSS Variable Theming
-Variables defined in `:root` for light theme, overridden in `body.dark-mode` for dark theme. Dark mode toggled by adding/removing class, persisted in localStorage key `darkMode`.
+### State Management
+- Keep state simple and local to each initializer closure.
+- Existing files favor a single `state` object or a small set of local variables rather than abstractions.
+- Avoid introducing global mutable state except for established globals like `window.pvpSyncBridge` and initializer guards.
+- If you add persistence, prefer scoped `localStorage` keys and keep names predictable.
 
-### Notification System
-Use `window.showNotification()` instead of `alert()`:
-```javascript
-showNotification({ type: 'success', title: '匯出成功', message: '數據已保存', duration: 3000 });
-// type: 'success' | 'error' | 'info'
-```
-In `tools/calculator.js`, use the local `notify()` wrapper which falls back to `alert()` if the notification system isn't loaded.
+### Comments
+- Keep comments sparse and practical.
+- Add comments for non-obvious formulas, file-format assumptions, or sync-loop guards.
+- Do not add tutorial-style comments for obvious DOM or assignment operations.
 
-### localStorage Pattern
-All inputs auto-save on change with element ID as key:
-```javascript
-localStorage.setItem(input.id, input.value);
-```
-Results saved with `result-` prefix:
-```javascript
-localStorage.setItem(`result-${element.id}`, element.textContent);
-```
+## Data and Content Rules
+- User-visible copy should remain Traditional Chinese.
+- Keep season/version text consistent across title, meta tag, hero/footer text, and any tool labels when updating versions.
+- Preserve archived version folders instead of overwriting them during season rollovers.
+- Treat JSON data files as source data snapshots; avoid changing structure unless the consuming code is updated in the same change.
 
-### Copy Button Pattern
-Properties array + loop for copying values between sections:
-```javascript
-const properties = ['attack', 'elementalAttack', 'defenseBreak', ...];
-properties.forEach(prop => {
-    const val = document.getElementById(`atk1-${prop}`).value;
-    document.getElementById(`atk2-${prop}`).value = val;
-    localStorage.setItem(`atk2-${prop}`, val);
-});
-```
+## Agent-Specific Guidance
+- Before editing, inspect the relevant route, script, and any related JSON data file.
+- Prefer minimal edits that match existing patterns over large refactors.
+- Do not introduce build tooling, test tooling, or frameworks unless requested.
+- If asked for lint/test commands, state clearly when they do not exist instead of inventing them.
+- If a task touches fetch-backed tools, verify behavior through a local server, not `file://`.
+- If working on calculator/planner sync, test both directions of the bridge.
 
-### Import/Export
-- **Export:** Collects all inputs into JSON object, downloads as `.txt` file
-- **Import:** Reads `.txt` JSON file, populates inputs, calls `calculateResults()`
-- Uses try-catch with user-facing Chinese error messages
-
-## Damage Formulas (S2.2)
-
-Located in `calculateResults()` in `tools/calculator.js`:
-- `skillBase = 58000`
-- `skillMultiplier = 3.38`
-
-Formula constants in helper functions:
-- Defense rate: `remainDefense / (remainDefense + 19032) * 100 + 10`, min `10%`
-- Elemental resist: `diff / (diff + 4762) * 100`
-- Accuracy: `(143 * diff / (diff + 10688) + 95) / 100`, capped at `100%`
-- Crit rate: `(115 * diff - 200) / (diff + 2666) / 100`, plus extra crit, capped at `100%`
-- Shield: piecewise — `0` if break ≥ shield, `0.5 * (shield - break)` if break ≥ shield/3, else `shield - 2 * break`
-
-## Season Updates
-
-When a new game season releases:
-1. Archive current version to a version folder (e.g., `2.2/`)
-2. Update formula constants (`skillBase`, `skillMultiplier`) in `calculateResults()` in `tools/calculator.js`
-3. Update version in `index.html` `<title>` and `<meta name="app-version">` (e.g., "S2.3")
-4. Update version in hero section and sidebar footer
-5. Preserve archived versions in version folders
-
-## Testing
-
-**No automated tests.** Manually verify by:
-1. Opening `index.html` in browser
-2. Navigate to `#/calculator` via sidebar
-3. Enter values in all input fields — results should auto-update
-4. Test copy buttons (進攻數值1↔2, 防禦數值1↔2)
-5. Test export → clear → import round-trip
-6. Toggle dark mode, reload — preference persists
-7. Resize browser to test mobile responsive layout
-8. Test on mobile — bottom nav should appear, sidebar hidden
-
-## Error Handling
-- Safe int parsing: `parseInt(value) || 0`
-- Try-catch for JSON import parsing
-- All notifications in Chinese via `showNotification()`
-- Damage values clamped to `Math.max(0, ...)` before display
-
-## Git Workflow
-- Commit to `main`/`master` triggers auto-deploy to GitHub Pages
-- No PR required for simple changes
-- Preserve archived version folders (e.g., `2.1/`)
-
-## Language
-All UI text is **Traditional Chinese (zh-TW)**. Maintain Chinese for:
-- Button labels: `夜間模式`, `匯入`, `匯出`, `從進攻數值1複製`
-- Notifications: `匯出成功`, `數據匯入成功`, `匯入失敗`
-- Table headers: `剩餘防禦`, `防禦減免率`, `實際命中率`, `傷害(包含命中會心)`
-- Section titles: `進攻數值1`, `防禦數值1`, `傷害差距`
-- Navigation: `首頁`, `傷害計算器`, `選單`
+## Cursor / Copilot Rules
+- No `.cursor/rules/` directory was found.
+- No `.cursorrules` file was found.
+- No `.github/copilot-instructions.md` file was found.
+- If these files are added later, fold their instructions into this document and follow the more specific repository rule when conflicts arise.
