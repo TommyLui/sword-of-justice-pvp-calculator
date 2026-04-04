@@ -10,10 +10,17 @@ function initAttributePlanner() {
         }
     };
 
+    const ATTRIBUTES = [
+        { id: 'attack', name: '攻擊', min: 0, max: 999999, step: 1 },
+        { id: 'elementalAttack', name: '元素攻擊', min: 0, max: 999999, step: 1 },
+        { id: 'defenseBreak', name: '破防', min: 0, max: 999999, step: 1 },
+        { id: 'accuracy', name: '命中', min: 0, max: 999999, step: 1 },
+        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1 }
+    ];
+    const BASELINE_SYNC_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
+
     const state = {
-        db: null,
         step: 1,
-        selectedTemplateId: '',
         baseline: {},
         candidate: {},
         lastResult: null
@@ -61,45 +68,8 @@ function initAttributePlanner() {
         return parsed;
     }
 
-    function lookupCurveGain(curve, x) {
-        if (!Array.isArray(curve) || curve.length === 0) {
-            return { gain: 0, clamped: false };
-        }
-
-        if (curve.length === 1) {
-            return { gain: curve[0].gain, clamped: x !== curve[0].x };
-        }
-
-        const clampGain = (value) => Math.max(-0.95, value);
-
-        if (x <= curve[0].x) {
-            const left = curve[0];
-            const right = curve[1];
-            const ratio = (x - left.x) / (right.x - left.x);
-            const gain = left.gain + (right.gain - left.gain) * ratio;
-            return { gain: clampGain(gain), clamped: x < curve[0].x };
-        }
-
-        const last = curve[curve.length - 1];
-        if (x >= last.x) {
-            const left = curve[curve.length - 2];
-            const right = last;
-            const ratio = (x - left.x) / (right.x - left.x);
-            const gain = left.gain + (right.gain - left.gain) * ratio;
-            return { gain: clampGain(gain), clamped: x > last.x };
-        }
-
-        for (let i = 1; i < curve.length; i++) {
-            const left = curve[i - 1];
-            const right = curve[i];
-            if (x <= right.x) {
-                const ratio = (x - left.x) / (right.x - left.x);
-                const gain = left.gain + (right.gain - left.gain) * ratio;
-                return { gain, clamped: false };
-            }
-        }
-
-        return { gain: last.gain, clamped: true };
+    function createZeroStats() {
+        return Object.fromEntries(ATTRIBUTES.map(attr => [attr.id, 0]));
     }
 
     function calculateRemainDefense(defense, defenseBreak) {
@@ -173,7 +143,26 @@ function initAttributePlanner() {
         return Math.floor(finalDamage * (actualAccuracyRate / 100) * (1 + (actualCritRate / 100) * ((stats.critDamage / 100) - stats.criticalDefense / 100)) + finalDamage * (1 - (actualAccuracyRate / 100)) * 0.5);
     }
 
-    function calculateActualComparison() {
+    function buildZeroResult(note) {
+        const contributions = ATTRIBUTES.map(attr => ({
+            attrId: attr.id,
+            attrName: attr.name,
+            baselineValue: normalizeByAttribute(attr, state.baseline[attr.id]),
+            candidateValue: normalizeByAttribute(attr, state.candidate[attr.id]),
+            deltaGain: 0
+        }));
+
+        return {
+            improvePercent: 0,
+            baselineTotal: 0,
+            candidateTotal: 0,
+            contributions,
+            top3: contributions.slice(0, 3),
+            notes: [note]
+        };
+    }
+
+    function calculateEstimate() {
         const scenario = readCombatScenario();
         const baselineStats = { ...scenario, ...state.baseline };
         const candidateStats = { ...scenario, ...state.candidate };
@@ -181,10 +170,10 @@ function initAttributePlanner() {
         const candidateDamage = calculateEffectiveDamage(candidateStats);
 
         if (baselineDamage <= 0) {
-            return null;
+            return buildZeroResult('目前基準傷害為 0，請先在傷害計算器設定可造成傷害的比較情境。');
         }
 
-        const contributions = state.db.attributes.map(attr => {
+        const contributions = ATTRIBUTES.map(attr => {
             const singleAttrCandidate = {
                 ...baselineStats,
                 [attr.id]: normalizeByAttribute(attr, state.candidate[attr.id])
@@ -208,66 +197,6 @@ function initAttributePlanner() {
             contributions,
             top3: [...contributions].sort((a, b) => b.deltaGain - a.deltaGain).slice(0, 3),
             notes: ['依目前傷害計算器的「進攻數值1 vs 防禦數值1」公式即時計算。']
-        };
-    }
-
-    function calculateEstimate() {
-        if (!state.db) {
-            return null;
-        }
-
-        const actualComparison = calculateActualComparison();
-        if (actualComparison) {
-            return actualComparison;
-        }
-
-        let baselineMultiplier = 1;
-        let candidateMultiplier = 1;
-        const contributions = [];
-        const notes = new Set();
-
-        state.db.attributes.forEach(attr => {
-            const curve = state.db.curves[attr.id] || [];
-            const baselineValue = normalizeByAttribute(attr, state.baseline[attr.id]);
-            const candidateValue = normalizeByAttribute(attr, state.candidate[attr.id]);
-
-            const baselineResult = lookupCurveGain(curve, baselineValue);
-            const candidateResult = lookupCurveGain(curve, candidateValue);
-
-            baselineMultiplier *= (1 + baselineResult.gain);
-            candidateMultiplier *= (1 + candidateResult.gain);
-
-            const deltaGain = candidateResult.gain - baselineResult.gain;
-
-            contributions.push({
-                attrId: attr.id,
-                attrName: attr.name,
-                baselineValue,
-                candidateValue,
-                deltaGain
-            });
-
-            if (baselineResult.clamped || candidateResult.clamped) {
-                notes.add('部分屬性超出模型估算範圍，已使用邊界值估算。');
-            }
-
-            if (attr.id === 'accuracy' && Math.abs(deltaGain) < 1e-10 && candidateValue !== baselineValue) {
-                notes.add('命中目前接近封頂，收益可能為 0。');
-            }
-        });
-
-        const improvePercent = (candidateMultiplier / baselineMultiplier) - 1;
-        const top3 = [...contributions]
-            .sort((a, b) => b.deltaGain - a.deltaGain)
-            .slice(0, 3);
-
-        return {
-            improvePercent,
-            baselineTotal: baselineMultiplier - 1,
-            candidateTotal: candidateMultiplier - 1,
-            contributions,
-            top3,
-            notes: ['目前基準傷害為 0，已退回曲線模型估算。'].concat(Array.from(notes))
         };
     }
 
@@ -326,8 +255,7 @@ function initAttributePlanner() {
     }
 
     function refreshAllDiffLabels() {
-        if (!state.db) return;
-        state.db.attributes.forEach(attr => {
+        ATTRIBUTES.forEach(attr => {
             const diffEl = diffElementsByAttr[`candidate-${attr.id}`];
             if (!diffEl) return;
             const delta = toNumber(state.candidate[attr.id], 0) - toNumber(state.baseline[attr.id], 0);
@@ -351,8 +279,8 @@ function initAttributePlanner() {
         if (!payload || payload.source === SYNC_SOURCE || !payload.baselineAtk1) return;
         isApplyingSync = true;
         const incoming = payload.baselineAtk1;
-        const baselineKeys = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
-        baselineKeys.forEach(key => {
+
+        BASELINE_SYNC_KEYS.forEach(key => {
             state.baseline[key] = toNumber(incoming[key], 0);
             const baselineInput = document.getElementById(`planner-baseline-${key}`);
             if (baselineInput) {
@@ -367,8 +295,8 @@ function initAttributePlanner() {
 
     function bindBaselineSyncInputs() {
         if (hasBoundBaselineSyncInputs) return;
-        const baselineKeys = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
-        baselineKeys.forEach(key => {
+
+        BASELINE_SYNC_KEYS.forEach(key => {
             const input = document.getElementById(`planner-baseline-${key}`);
             if (!input) return;
 
@@ -387,6 +315,7 @@ function initAttributePlanner() {
                 }
             });
         });
+
         hasBoundBaselineSyncInputs = true;
     }
 
@@ -431,7 +360,7 @@ function initAttributePlanner() {
         if (mode === 'candidate') {
             const quick = document.createElement('div');
             quick.className = 'planner-quick-actions';
-            [-100, -50, 50, 100].forEach(delta => {
+            [-1000, -500, -100, 100, 500, 1000].forEach(delta => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'planner-chip-btn';
@@ -468,7 +397,7 @@ function initAttributePlanner() {
         const baselineFrag = document.createDocumentFragment();
         const candidateFrag = document.createDocumentFragment();
 
-        state.db.attributes.forEach(attr => {
+        ATTRIBUTES.forEach(attr => {
             baselineFrag.appendChild(createInputField(attr, 'baseline'));
             candidateFrag.appendChild(createInputField(attr, 'candidate'));
         });
@@ -477,20 +406,6 @@ function initAttributePlanner() {
         candidateFieldsEl.appendChild(candidateFrag);
         refreshAllDiffLabels();
         bindBaselineSyncInputs();
-    }
-
-    function applyTemplate(templateId, options = {}) {
-        const { pushToBridge = true } = options;
-        const template = state.db.templates.find(t => t.id === templateId) || state.db.templates[0];
-        state.selectedTemplateId = template.id;
-        state.baseline = { ...template.baseline };
-        state.candidate = { ...template.baseline };
-
-        renderFields();
-        renderResults();
-        if (pushToBridge) {
-            pushBaselineToBridge();
-        }
     }
 
     function setStep(nextStep) {
@@ -541,70 +456,38 @@ function initAttributePlanner() {
         }
     }
 
-    async function loadDb() {
-        const pathsToTry = ['tools/attributes-db.json', '../tools/attributes-db.json'];
-        let response = null;
+    function bootstrap() {
+        loadingEl.hidden = false;
+        appEl.hidden = true;
 
-        for (const path of pathsToTry) {
-            try {
-                response = await fetch(path);
-                if (response.ok) {
-                    break;
-                }
-            } catch (e) {
-                // continue fallback
-            }
+        state.baseline = createZeroStats();
+        state.candidate = createZeroStats();
+
+        renderFields();
+
+        const existing = window.pvpSyncBridge?.getBaselineAtk1?.();
+        if (existing?._meta?.hasValue) {
+            applyBaselineFromBridge({
+                baselineAtk1: {
+                    attack: existing.attack,
+                    elementalAttack: existing.elementalAttack,
+                    defenseBreak: existing.defenseBreak,
+                    accuracy: existing.accuracy,
+                    crit: existing.crit
+                },
+                source: existing._meta.source || 'bridge'
+            });
+        } else {
+            pushBaselineToBridge();
         }
 
-        if (!response || !response.ok) {
-            throw new Error('Failed to load attributes-db.json');
-        }
+        renderResults();
+        setStep(1);
+        bindEvents();
 
-        const db = await response.json();
-        if (!db || !Array.isArray(db.attributes) || !Array.isArray(db.templates) || !db.curves) {
-            throw new Error('Invalid attributes-db.json');
-        }
-        return db;
+        loadingEl.hidden = true;
+        appEl.hidden = false;
     }
 
-    (async function bootstrap() {
-        try {
-            loadingEl.hidden = false;
-            appEl.hidden = true;
-
-            state.db = await loadDb();
-            applyTemplate(state.db.templates[0].id, { pushToBridge: false });
-
-            const existing = window.pvpSyncBridge?.getBaselineAtk1?.();
-            if (existing?._meta?.hasValue) {
-                applyBaselineFromBridge({
-                    baselineAtk1: {
-                        attack: existing.attack,
-                        elementalAttack: existing.elementalAttack,
-                        defenseBreak: existing.defenseBreak,
-                        accuracy: existing.accuracy,
-                        crit: existing.crit
-                    },
-                    source: existing._meta.source || 'bridge'
-                });
-            } else {
-                pushBaselineToBridge();
-            }
-
-            setStep(1);
-            bindEvents();
-
-            loadingEl.hidden = true;
-            appEl.hidden = false;
-        } catch (error) {
-            console.error('Attribute planner load failed:', error);
-            loadingEl.textContent = '載入失敗，請重新整理頁面';
-            notify({
-                type: 'error',
-                title: '載入失敗',
-                message: '屬性規劃資料載入失敗，請更新資料檔',
-                duration: 5000
-            });
-        }
-    })();
+    bootstrap();
 }

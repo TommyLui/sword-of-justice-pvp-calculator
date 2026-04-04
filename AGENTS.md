@@ -10,11 +10,10 @@
 - `index.html`: SPA shell, route switching, shared notification system, dark mode toggle, script loading.
 - `styles.css`: large shared stylesheet, with calculator styles scoped under `#view-calculator` and additional tool-specific styles further down.
 - `tools/calculator.js`: calculator initialization, formulas, import/export, reset flow, localStorage persistence.
-- `tools/attribute-planner.js`: attribute planning UI, JSON-backed estimation model, sync bridge integration.
+- `tools/attribute-planner.js`: attribute planning UI, calculator-aligned damage comparison, sync bridge integration.
 - `tools/crafting.js`: crafting database search/filter/detail UI backed by JSON.
 - `tools/league.js`: CSV upload, parsing, analytics, table sorting/filtering, Chart.js rendering.
 - `tools/sync-bridge.js`: lightweight in-page event bridge for syncing baseline attack values between tools.
-- `tools/attributes-db.json`: attribute planner data.
 - `tools/crafting-db.json`: crafting database snapshot.
 - `2.1/`: archived older season version. Treat as historical unless the task explicitly targets it.
 - `docs/superpowers/specs/`: design notes and feature specs, useful for intent but not executable code.
@@ -35,7 +34,7 @@ npx serve .
 python -m http.server 8000
 ```
 - Then open the served URL in a browser.
-- Prefer a real local HTTP server over opening `index.html` directly because `crafting.js` and `attribute-planner.js` fetch local JSON files.
+- Prefer a real local HTTP server over opening `index.html` directly because `crafting.js` fetches local JSON files.
 
 ### Build
 - No build command exists.
@@ -74,10 +73,9 @@ python -m http.server 8000
 - Verify bridge behavior between calculator `atk1` fields and attribute planner baseline fields.
 
 ### Attribute Planner Checks
-- In a clean browser state, planner fields now start from `0` via the first template in `tools/attributes-db.json`.
-- Confirm `tools/attributes-db.json` loads.
+- In a clean browser state, planner fields start from `0` before any sync bridge data is applied.
 - Move across all three planner steps.
-- Edit baseline and candidate values and verify KPI, contributions, top 3, and notes update.
+- Edit baseline and candidate values and verify KPI, contributions, top 3, and notes update based on the current calculator `atk1` vs `def1` scenario.
 - Verify baseline sync from planner to calculator and vice versa.
 
 ### Crafting Checks
@@ -95,7 +93,7 @@ python -m http.server 8000
 - Scripts are loaded globally through `<script>` tags, not ES modules.
 - There is no import/export system inside app code.
 - Cross-tool synchronization uses `window.pvpSyncBridge` plus `CustomEvent` dispatch in `tools/sync-bridge.js`.
-- Attribute planner bootstraps from `tools/attributes-db.json` template data and may seed the calculator baseline through the sync bridge on first use.
+- Attribute planner uses inline attribute metadata and compares baseline/candidate values against the current calculator `atk1` vs `def1` damage scenario.
 - Notifications should use `window.showNotification(...)` where available; individual tools usually wrap this in a local `notify()` helper.
 - Persistence is local-first: many inputs and derived UI states are stored in `localStorage`.
 
