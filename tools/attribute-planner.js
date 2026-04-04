@@ -14,10 +14,13 @@ function initAttributePlanner() {
         { id: 'attack', name: '攻擊', min: 0, max: 999999, step: 1 },
         { id: 'elementalAttack', name: '元素攻擊', min: 0, max: 999999, step: 1 },
         { id: 'defenseBreak', name: '破防', min: 0, max: 999999, step: 1 },
+        { id: 'shieldBreak', name: '破盾', min: 0, max: 999999, step: 1 },
         { id: 'accuracy', name: '命中', min: 0, max: 999999, step: 1 },
-        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1 }
+        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1 },
+        { id: 'critDamage', name: '會傷', min: 0, max: 999999, step: 1 },
+        { id: 'elementalBreak', name: '忽視元抗', min: 0, max: 999999, step: 1 }
     ];
-    const BASELINE_SYNC_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
+    const BASELINE_SYNC_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'accuracy', 'crit', 'critDamage', 'elementalBreak'];
 
     const state = {
         step: 1,
@@ -270,8 +273,11 @@ function initAttributePlanner() {
             attack: state.baseline.attack ?? 0,
             elementalAttack: state.baseline.elementalAttack ?? 0,
             defenseBreak: state.baseline.defenseBreak ?? 0,
+            shieldBreak: state.baseline.shieldBreak ?? 0,
             accuracy: state.baseline.accuracy ?? 0,
-            crit: state.baseline.crit ?? 0
+            crit: state.baseline.crit ?? 0,
+            critDamage: state.baseline.critDamage ?? 0,
+            elementalBreak: state.baseline.elementalBreak ?? 0
         }, { source: SYNC_SOURCE });
     }
 
@@ -360,7 +366,7 @@ function initAttributePlanner() {
         if (mode === 'candidate') {
             const quick = document.createElement('div');
             quick.className = 'planner-quick-actions';
-            [-1000, -500, -100, 100, 500, 1000].forEach(delta => {
+            [-500, -100, -10, -1, 1, 10, 100, 500].forEach(delta => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'planner-chip-btn';
@@ -472,8 +478,11 @@ function initAttributePlanner() {
                     attack: existing.attack,
                     elementalAttack: existing.elementalAttack,
                     defenseBreak: existing.defenseBreak,
+                    shieldBreak: existing.shieldBreak,
                     accuracy: existing.accuracy,
-                    crit: existing.crit
+                    crit: existing.crit,
+                    critDamage: existing.critDamage,
+                    elementalBreak: existing.elementalBreak
                 },
                 source: existing._meta.source || 'bridge'
             });

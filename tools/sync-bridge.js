@@ -3,15 +3,18 @@
     window.__pvpSyncBridgeInitialized = true;
 
     const CHANNEL = 'pvp-sync:update';
-    const ATTR_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit'];
+    const ATTR_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'accuracy', 'crit', 'critDamage', 'elementalBreak'];
 
     const state = {
         baselineAtk1: {
             attack: 0,
             elementalAttack: 0,
             defenseBreak: 0,
+            shieldBreak: 0,
             accuracy: 0,
-            crit: 0
+            crit: 0,
+            critDamage: 0,
+            elementalBreak: 0
         },
         hasValue: false,
         updatedAt: 0,

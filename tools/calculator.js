@@ -17,8 +17,11 @@ function initCalculator() {
         'attack': 'atk1-attack',
         'elementalAttack': 'atk1-elementalAttack',
         'defenseBreak': 'atk1-defenseBreak',
+        'shieldBreak': 'atk1-shieldBreak',
         'accuracy': 'atk1-accuracy',
-        'crit': 'atk1-crit'
+        'crit': 'atk1-crit',
+        'critDamage': 'atk1-critDamage',
+        'elementalBreak': 'atk1-elementalBreak'
     };
 
     const SYNC_SOURCE = 'calculator';
@@ -289,8 +292,11 @@ function initCalculator() {
                     attack: existing.attack,
                     elementalAttack: existing.elementalAttack,
                     defenseBreak: existing.defenseBreak,
+                    shieldBreak: existing.shieldBreak,
                     accuracy: existing.accuracy,
-                    crit: existing.crit
+                    crit: existing.crit,
+                    critDamage: existing.critDamage,
+                    elementalBreak: existing.elementalBreak
                 },
                 source: existing._meta.source
             });
