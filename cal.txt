@@ -1,0 +1,50 @@
+{
+  "attack1": {
+    "attack": "17013",
+    "elementalAttack": "1341",
+    "defenseBreak": "10749",
+    "shieldBreak": "1245",
+    "pvpAttack": "7199",
+    "accuracy": "3000",
+    "crit": "5423",
+    "critDamage": "85.9",
+    "extraCritRate": "5",
+    "pvpAttackRate": "20.6",
+    "elementalBreak": "1309",
+    "skillAttack": "3500"
+  },
+  "attack2": {
+    "attack": "17081",
+    "elementalAttack": "3357",
+    "defenseBreak": "10907",
+    "shieldBreak": "902",
+    "pvpAttack": "7199",
+    "accuracy": "3000",
+    "crit": "5423",
+    "critDamage": "85.9",
+    "extraCritRate": "5",
+    "pvpAttackRate": "16.6",
+    "elementalBreak": "1309",
+    "skillAttack": "3596"
+  },
+  "defense1": {
+    "defense": "10500",
+    "airShield": "2000",
+    "elementalResistance": "3100",
+    "pvpResistance": "5000",
+    "blockResistance": "0",
+    "criticalResistance": "3000",
+    "criticalDefense": "20",
+    "skillResistance": "2000"
+  },
+  "defense2": {
+    "defense": "20000",
+    "airShield": "6000",
+    "elementalResistance": "3100",
+    "pvpResistance": "9000",
+    "blockResistance": "0",
+    "criticalResistance": "3000",
+    "criticalDefense": "20",
+    "skillResistance": "2000"
+  }
+}

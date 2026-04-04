@@ -53,33 +53,33 @@
             "id": "balanced",
             "name": "PVP 均衡",
             "baseline": {
-                "attack": 17500,
-                "elementalAttack": 6200,
-                "defenseBreak": 13000,
-                "accuracy": 4400,
-                "crit": 4600
+                "attack": 0,
+                "elementalAttack": 0,
+                "defenseBreak": 0,
+                "accuracy": 0,
+                "crit": 0
             }
         },
         {
             "id": "burst",
             "name": "PVP 爆發",
             "baseline": {
-                "attack": 17500,
-                "elementalAttack": 6200,
-                "defenseBreak": 13000,
-                "accuracy": 4400,
-                "crit": 4800
+                "attack": 0,
+                "elementalAttack": 0,
+                "defenseBreak": 0,
+                "accuracy": 0,
+                "crit": 0
             }
         },
         {
             "id": "stable",
             "name": "PVP 穩定",
             "baseline": {
-                "attack": 17500,
-                "elementalAttack": 6200,
-                "defenseBreak": 13000,
-                "accuracy": 4400,
-                "crit": 4500
+                "attack": 0,
+                "elementalAttack": 0,
+                "defenseBreak": 0,
+                "accuracy": 0,
+                "crit": 0
             }
         }
     ],

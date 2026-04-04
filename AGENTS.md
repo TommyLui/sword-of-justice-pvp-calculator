@@ -65,6 +65,8 @@ python -m http.server 8000
 - On mobile width, verify sidebar behavior and bottom navigation.
 
 ### Calculator Checks
+- Be aware that first-open values are not always blank: calculator inputs can be restored from `localStorage` or populated from the planner sync bridge.
+- In a clean browser state with no prior planner visit, calculator inputs start from the HTML defaults, which are mostly `0`.
 - Enter values in all major attack/defense fields and confirm results update on input.
 - Test both attack copy buttons and both defense copy buttons.
 - Test reset dialog open, cancel, confirm, and Escape handling.
@@ -72,6 +74,7 @@ python -m http.server 8000
 - Verify bridge behavior between calculator `atk1` fields and attribute planner baseline fields.
 
 ### Attribute Planner Checks
+- In a clean browser state, planner fields now start from `0` via the first template in `tools/attributes-db.json`.
 - Confirm `tools/attributes-db.json` loads.
 - Move across all three planner steps.
 - Edit baseline and candidate values and verify KPI, contributions, top 3, and notes update.
@@ -92,6 +95,7 @@ python -m http.server 8000
 - Scripts are loaded globally through `<script>` tags, not ES modules.
 - There is no import/export system inside app code.
 - Cross-tool synchronization uses `window.pvpSyncBridge` plus `CustomEvent` dispatch in `tools/sync-bridge.js`.
+- Attribute planner bootstraps from `tools/attributes-db.json` template data and may seed the calculator baseline through the sync bridge on first use.
 - Notifications should use `window.showNotification(...)` where available; individual tools usually wrap this in a local `notify()` helper.
 - Persistence is local-first: many inputs and derived UI states are stored in `localStorage`.
 
