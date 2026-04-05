@@ -16,7 +16,6 @@
 - `tools/sync-bridge.js`: lightweight in-page event bridge for syncing baseline attack values between tools.
 - `tools/crafting-db.json`: crafting database snapshot.
 - `2.1/`: archived older season version. Treat as historical unless the task explicitly targets it.
-- `docs/superpowers/specs/`: design notes and feature specs, useful for intent but not executable code.
 
 ## Build, Run, Lint, Test
 
