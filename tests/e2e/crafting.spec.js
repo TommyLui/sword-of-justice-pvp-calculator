@@ -2,6 +2,9 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('crafting page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.clear();
+    });
     await page.goto('/#/crafting');
     await expect(page.locator('#view-crafting')).toBeVisible();
   });
