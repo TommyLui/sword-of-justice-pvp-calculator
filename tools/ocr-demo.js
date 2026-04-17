@@ -1199,7 +1199,6 @@
             state.imageUrl = objectUrl;
             state.imageElement = await loadImageElement(objectUrl);
             state.preprocess = { ...DEFAULT_PREPROCESS, ...(preprocessOverrides || {}) };
-            hydrateControls();
             await runOcr();
             return buildRecognitionResult();
         } finally {

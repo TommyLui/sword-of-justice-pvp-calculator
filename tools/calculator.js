@@ -48,9 +48,11 @@ function initCalculator() {
         def1: '防禦數值1',
         def2: '防禦數值2'
     };
+    const OCR_BUTTON_IDS = ['atk1-ocr-btn', 'atk2-ocr-btn', 'def1-ocr-btn', 'def2-ocr-btn'];
 
     let isApplyingBridgeUpdate = false;
     let pendingOcrTarget = '';
+    let isOcrImporting = false;
 
     function applyCompareValueClass(element, value) {
         element.classList.remove('positive', 'negative');
@@ -274,8 +276,17 @@ function initCalculator() {
         notify({
             type: 'success',
             title: 'OCR 匯入成功',
-            message: `${importedLabels} 已匯入 ${OCR_TARGET_LABELS[targetKey] || targetKey}`,
-            duration: 3000
+            message: `${importedLabels} 已匯入 ${OCR_TARGET_LABELS[targetKey] || targetKey}；其餘未辨識欄位保留原值`,
+            duration: 3800
+        });
+    }
+
+    function setOcrButtonsDisabled(disabled) {
+        OCR_BUTTON_IDS.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.disabled = disabled;
+            }
         });
     }
 
@@ -284,6 +295,7 @@ function initCalculator() {
         const targetKey = pendingOcrTarget;
         pendingOcrTarget = '';
         if (!targetKey) return;
+        if (isOcrImporting) return;
 
         const ocrApi = window.pvpOcr;
         if (!ocrApi?.recognizeFromFile) {
@@ -297,20 +309,32 @@ function initCalculator() {
         }
 
         try {
+            isOcrImporting = true;
+            setOcrButtonsDisabled(true);
+            notify({
+                type: 'info',
+                title: 'OCR 辨識中',
+                message: `正在讀取 ${OCR_TARGET_LABELS[targetKey] || targetKey}，首次使用可能需要下載辨識引擎。`,
+                duration: 2500
+            });
             const result = await ocrApi.recognizeFromFile(file, ocrApi.getDefaultPreprocess?.());
             applyOcrToTarget(targetKey, result);
         } catch (error) {
             notify({
                 type: 'error',
                 title: 'OCR 匯入失敗',
-                message: error && error.message ? error.message : '請重新選擇圖片後再試',
+                message: error && error.message ? error.message : `請重新選擇 ${OCR_TARGET_LABELS[targetKey] || targetKey} 的圖片後再試`,
                 duration: 5000
             });
+        } finally {
+            isOcrImporting = false;
+            setOcrButtonsDisabled(false);
         }
     }
 
     function bindOcrButton(buttonId, targetKey) {
         document.getElementById(buttonId)?.addEventListener('click', () => {
+            if (isOcrImporting) return;
             pendingOcrTarget = targetKey;
             document.getElementById('calculator-ocr-file')?.click();
         });
