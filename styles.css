@@ -602,6 +602,17 @@
     font-size: 14px;
 }
 
+#view-ocr-demo .ocr-demo-layout-warning {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: rgba(244, 67, 54, 0.12);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+    color: #ffb4ae;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
 #view-ocr-demo .ocr-demo-preview-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

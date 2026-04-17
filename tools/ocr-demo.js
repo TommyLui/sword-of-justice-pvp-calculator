@@ -23,8 +23,9 @@
         ['技能抵御', '技能抵禦'],
         ['流派克制百分比', '克制百分比']
     ];
+    const CJK_CHAR = '[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]';
     const FIELDS = [
-        { key: 'attack', label: '攻擊', aliases: ['外功攻擊', '內功攻擊', '攻擊'] },
+        { key: 'attack', label: '攻擊', aliases: ['外功攻擊', '內功攻擊'], allowLoose: false },
         { key: 'elementalAttack', label: '元素攻擊', aliases: ['元素攻擊'] },
         { key: 'defenseBreak', label: '破防', aliases: ['破防'] },
         { key: 'shieldBreak', label: '破盾', aliases: ['破盾'] },
@@ -35,7 +36,7 @@
         { key: 'pvpAttack', label: '流派克制', aliases: ['流派克制'] },
         { key: 'pvpAttackRate', label: '克制百分比', aliases: ['克制百分比', '流派克制百分比'] },
         { key: 'skillAttack', label: '技能增強', aliases: ['技能增強'] },
-        { key: 'defense', label: '防禦', aliases: ['外功防禦', '內功防禦', '防禦'] },
+        { key: 'defense', label: '防禦', aliases: ['外功防禦', '內功防禦'], allowLoose: false },
         { key: 'airShield', label: '氣盾', aliases: ['氣盾'] },
         { key: 'elementalResistance', label: '元素抗性', aliases: ['元素抗性'] },
         { key: 'pvpResistance', label: '流派抵禦', aliases: ['流派抵禦'] },
@@ -44,6 +45,16 @@
         { key: 'criticalDefense', label: '會心防禦', aliases: ['會心防禦'] },
         { key: 'criticalResistance', label: '會心抵抗', aliases: ['會心抵抗', '抗外會心', '抗內會心'] },
         { key: 'extraCritRate', label: '額外會心率', aliases: ['額外會心率'] }
+    ];
+    const LAYOUT_SCHEMA = [
+        { left: 'attack', right: 'defenseBreak' },
+        { left: 'elementalAttack', right: 'elementalBreak' },
+        { left: 'accuracy', right: 'crit' },
+        { left: 'skillAttack', right: 'pvpAttack' },
+        { left: 'defense', right: 'defense' },
+        { left: 'blockResistance', right: 'blockResistance' },
+        { left: 'criticalResistance', right: 'criticalResistance' },
+        { left: 'elementalResistance', right: 'pvpResistance' }
     ];
 
     const state = {
@@ -56,6 +67,7 @@
         imageElement: null,
         rawText: '',
         fields: {},
+        layoutWarning: '',
         preprocess: { ...DEFAULT_PREPROCESS },
         progress: 0,
         lastJobId: 0,
@@ -131,14 +143,25 @@
             output = output.replace(new RegExp(escapeRegExp(pair[0]), 'g'), pair[1]);
         });
 
+        output = output.replace(new RegExp('(' + CJK_CHAR + ')\\s+(?=' + CJK_CHAR + ')', 'g'), '$1');
+        output = output.replace(/\s+/g, ' ');
+
         return output;
     }
 
+    function buildAliasPattern(alias) {
+        return alias
+            .split('')
+            .map(char => escapeRegExp(char))
+            .join('\\s*');
+    }
+
     function extractMatchFromText(text, alias) {
+        const aliasPattern = buildAliasPattern(alias);
         const patterns = [
-            new RegExp(escapeRegExp(alias) + '\\s*[:：]?\\s*(-?\\d[\\d,]*)'),
-            new RegExp(escapeRegExp(alias) + '[^\\d-]{0,14}(-?\\d[\\d,]*)'),
-            new RegExp('(-?\\d[\\d,]*)\\s*' + escapeRegExp(alias))
+            new RegExp(aliasPattern + '\\s*[:：]?\\s*(-?\\d[\\d,]*)'),
+            new RegExp(aliasPattern + '[^\\d-]{0,14}(-?\\d[\\d,]*)'),
+            new RegExp('(-?\\d[\\d,]*)\\s*' + aliasPattern)
         ];
 
         for (let i = 0; i < patterns.length; i += 1) {
@@ -161,18 +184,22 @@
         const next = createEmptyFields();
 
         FIELDS.forEach(field => {
-            const aliases = field.aliases.slice().sort((a, b) => b.length - a.length);
+            const aliases = field.aliases.slice();
+            if (field.allowLoose !== false) {
+                aliases.push(field.label);
+            }
+            const dedupedAliases = Array.from(new Set(aliases)).sort((a, b) => b.length - a.length);
             let found = null;
 
-            for (let i = 0; i < aliases.length && !found; i += 1) {
+            for (let i = 0; i < dedupedAliases.length && !found; i += 1) {
                 for (let j = 0; j < lines.length && !found; j += 1) {
-                    found = extractMatchFromText(lines[j], aliases[i]);
+                    found = extractMatchFromText(lines[j], dedupedAliases[i]);
                 }
             }
 
             if (!found) {
-                for (let i = 0; i < aliases.length && !found; i += 1) {
-                    found = extractMatchFromText(normalized, aliases[i]);
+                for (let i = 0; i < dedupedAliases.length && !found; i += 1) {
+                    found = extractMatchFromText(normalized, dedupedAliases[i]);
                 }
             }
 
@@ -180,6 +207,163 @@
         });
 
         return next;
+    }
+
+    function flattenOcrLines(result) {
+        const blocks = Array.isArray(result?.data?.blocks) ? result.data.blocks : [];
+        const flattened = [];
+
+        blocks.forEach(block => {
+            const paragraphs = Array.isArray(block?.paragraphs) ? block.paragraphs : [];
+            paragraphs.forEach(paragraph => {
+                const lines = Array.isArray(paragraph?.lines) ? paragraph.lines : [];
+                lines.forEach(line => {
+                    const words = Array.isArray(line?.words) ? line.words : [];
+                    const bbox = line?.bbox || {};
+                    const text = normalizeText(words.map(word => word?.text || '').join(' ')).trim();
+                    if (!text) return;
+                    flattened.push({
+                        text,
+                        bbox: {
+                            x0: Number.isFinite(bbox.x0) ? bbox.x0 : 0,
+                            y0: Number.isFinite(bbox.y0) ? bbox.y0 : 0,
+                            x1: Number.isFinite(bbox.x1) ? bbox.x1 : 0,
+                            y1: Number.isFinite(bbox.y1) ? bbox.y1 : 0
+                        }
+                    });
+                });
+            });
+        });
+
+        return flattened.sort((a, b) => {
+            if (Math.abs(a.bbox.y0 - b.bbox.y0) > 6) {
+                return a.bbox.y0 - b.bbox.y0;
+            }
+            return a.bbox.x0 - b.bbox.x0;
+        });
+    }
+
+    function groupLinesIntoRows(lines) {
+        const rows = [];
+        const sorted = lines.slice().sort((a, b) => a.bbox.y0 - b.bbox.y0);
+
+        sorted.forEach(line => {
+            const height = Math.max(1, line.bbox.y1 - line.bbox.y0);
+            const centerY = (line.bbox.y0 + line.bbox.y1) / 2;
+            const row = rows.find(candidate => Math.abs(candidate.centerY - centerY) <= Math.max(18, candidate.height * 0.65, height * 0.65));
+            if (row) {
+                row.lines.push(line);
+                row.height = Math.max(row.height, height);
+                row.centerY = row.lines.reduce((sum, item) => sum + ((item.bbox.y0 + item.bbox.y1) / 2), 0) / row.lines.length;
+            } else {
+                rows.push({
+                    centerY,
+                    height,
+                    lines: [line]
+                });
+            }
+        });
+
+        return rows
+            .map(row => ({
+                centerY: row.centerY,
+                lines: row.lines.sort((a, b) => a.bbox.x0 - b.bbox.x0)
+            }))
+            .sort((a, b) => a.centerY - b.centerY);
+    }
+
+    function splitRowColumns(row) {
+        if (!row || !Array.isArray(row.lines) || row.lines.length < 2) {
+            return null;
+        }
+
+        const sorted = row.lines.slice().sort((a, b) => a.bbox.x0 - b.bbox.x0);
+        let bestGap = -1;
+        let splitIndex = -1;
+
+        for (let i = 0; i < sorted.length - 1; i += 1) {
+            const gap = sorted[i + 1].bbox.x0 - sorted[i].bbox.x1;
+            if (gap > bestGap) {
+                bestGap = gap;
+                splitIndex = i;
+            }
+        }
+
+        if (splitIndex === -1 || bestGap < 24) {
+            return null;
+        }
+
+        const leftLines = sorted.slice(0, splitIndex + 1);
+        const rightLines = sorted.slice(splitIndex + 1);
+        if (!leftLines.length || !rightLines.length) {
+            return null;
+        }
+
+        return {
+            left: leftLines.map(item => item.text).join(' ').trim(),
+            right: rightLines.map(item => item.text).join(' ').trim()
+        };
+    }
+
+    function extractPrimaryNumber(text) {
+        const matches = String(text || '').match(/-?\d[\d,]*/g);
+        if (!matches || !matches.length) {
+            return '';
+        }
+        return matches[0].replace(/,/g, '');
+    }
+
+    function parseFieldsFromStructuredLayout(result) {
+        const fields = createEmptyFields();
+        const lines = flattenOcrLines(result);
+        if (!lines.length) {
+            return {
+                fields,
+                warning: '目前圖片沒有取得可用版面資訊，請改用更清晰或裁切更完整的圖片。',
+                valid: false
+            };
+        }
+
+        const rows = groupLinesIntoRows(lines);
+        if (rows.length < LAYOUT_SCHEMA.length || rows.length > LAYOUT_SCHEMA.length + 2) {
+            return {
+                fields,
+                warning: '偵測到的行數與固定版面不符，請改用其他圖片。',
+                valid: false
+            };
+        }
+
+        const selectedRows = rows.slice(0, LAYOUT_SCHEMA.length);
+        for (let i = 0; i < selectedRows.length; i += 1) {
+            const schema = LAYOUT_SCHEMA[i];
+            const columns = splitRowColumns(selectedRows[i]);
+            if (!columns) {
+                return {
+                    fields,
+                    warning: '偵測到欄位分隔異常，無法穩定判斷左右兩欄，請改用其他圖片。',
+                    valid: false
+                };
+            }
+
+            const leftValue = extractPrimaryNumber(columns.left);
+            const rightValue = extractPrimaryNumber(columns.right);
+            if (!leftValue || !rightValue) {
+                return {
+                    fields,
+                    warning: '有些列沒有抓到足夠數字，建議改用更清晰或裁切更完整的圖片。',
+                    valid: false
+                };
+            }
+
+            fields[schema.left] = createFieldEntry(leftValue, 'layout:left-row-' + (i + 1), columns.left);
+            fields[schema.right] = createFieldEntry(rightValue, 'layout:right-row-' + (i + 1), columns.right);
+        }
+
+        return {
+            fields,
+            warning: '',
+            valid: true
+        };
     }
 
     function loadSamples() {
@@ -262,7 +446,7 @@
         setStatus('running', '初始化 OCR 引擎中...', '載入中');
         updateProgress(0.08);
 
-        state.worker = await window.Tesseract.createWorker('chi_tra+eng', 1, {
+        state.worker = await window.Tesseract.createWorker(['chi_tra', 'eng'], 1, {
             logger: message => {
                 if (!message.status) return;
                 const progress = typeof message.progress === 'number' ? message.progress : 0;
@@ -500,6 +684,20 @@
         container.appendChild(fragment);
     }
 
+    function renderLayoutWarning() {
+        const warning = byId('ocr-demo-layout-warning');
+        if (!warning) return;
+
+        if (state.layoutWarning) {
+            warning.hidden = false;
+            warning.textContent = state.layoutWarning;
+            return;
+        }
+
+        warning.hidden = true;
+        warning.textContent = '';
+    }
+
     function buildJsonPayload() {
         const payload = {
             preprocess: { ...state.preprocess },
@@ -663,6 +861,7 @@
         if (rawText) {
             rawText.value = state.rawText;
         }
+        renderLayoutWarning();
         renderFields();
         syncJsonOutput();
         renderSampleMeta();
@@ -690,22 +889,11 @@
 
         state.rawText = '';
         state.fields = createEmptyFields();
+        state.layoutWarning = '';
         updateProgress(0);
         setStatus('idle', keepFile ? '圖片已保留，可重新辨識' : '等待上傳圖片', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
         updatePreview();
         updateOutputs();
-    }
-
-    function canvasToBlob(canvas) {
-        return new Promise((resolve, reject) => {
-            canvas.toBlob(blob => {
-                if (blob) {
-                    resolve(blob);
-                    return;
-                }
-                reject(new Error('無法建立 OCR 圖像資料'));
-            }, 'image/png');
-        });
     }
 
     async function runOcr() {
@@ -726,27 +914,52 @@
             if (!canvas) {
                 throw new Error('找不到預處理畫布');
             }
-            const blob = await canvasToBlob(canvas);
 
             setStatus('running', 'OCR 辨識中...', 'chi_tra + eng');
-            const result = await worker.recognize(blob);
+            let result = await worker.recognize(canvas, {}, { blocks: true });
 
             if (jobId !== state.lastJobId) {
                 return;
             }
 
-            state.rawText = String(result?.data?.text || '').trim();
-            state.fields = draftFieldsFromText(state.rawText);
+            let recognizedText = String(result?.data?.text || '').trim();
+
+            if (!recognizedText) {
+                setStatus('running', '預處理後未抓到文字，改用原圖重試...', 'chi_tra + eng');
+                updateProgress(0.92);
+                result = await worker.recognize(state.file, {}, { blocks: true });
+                recognizedText = String(result?.data?.text || '').trim();
+            }
+
+            state.rawText = recognizedText;
+            const layoutParse = parseFieldsFromStructuredLayout(result);
+            if (layoutParse.valid) {
+                state.fields = layoutParse.fields;
+                state.layoutWarning = '';
+                setStatus('success', '辨識完成，已依固定版面填入欄位草稿', 'chi_tra + eng');
+            } else {
+                state.fields = createEmptyFields();
+                state.layoutWarning = layoutParse.warning;
+                setStatus('error', layoutParse.warning, 'chi_tra + eng');
+            }
             updateProgress(1);
-            setStatus('success', state.rawText ? '辨識完成，可直接編輯欄位草稿' : '辨識完成，但沒有抓到可用文字', 'chi_tra + eng');
             updateOutputs();
 
-            notify({
-                type: 'success',
-                title: 'OCR 完成',
-                message: state.rawText ? '已產生原始文字、命中資訊與欄位草稿' : '辨識完成，但目前沒有可用文字結果',
-                duration: 3000
-            });
+            if (layoutParse.valid) {
+                notify({
+                    type: 'success',
+                    title: 'OCR 完成',
+                    message: '已依固定版面產生欄位草稿。',
+                    duration: 3000
+                });
+            } else {
+                notify({
+                    type: 'error',
+                    title: '版面辨識失敗',
+                    message: layoutParse.warning,
+                    duration: 4500
+                });
+            }
         } catch (error) {
             setStatus('error', 'OCR 失敗：' + (error && error.message ? error.message : '未知錯誤'), state.workerReady ? 'chi_tra + eng' : '初始化失敗');
             updateProgress(0);
@@ -904,6 +1117,7 @@
                 state.imageElement = await loadImageElement(state.imageUrl);
                 state.rawText = '';
                 state.fields = createEmptyFields();
+                state.layoutWarning = '';
                 updateSampleNameDefault();
                 updatePreview();
                 updateOutputs();
