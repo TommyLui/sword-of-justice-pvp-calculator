@@ -10,17 +10,30 @@ function initAttributePlanner() {
         }
     };
 
-    const ATTRIBUTES = [
-        { id: 'attack', name: '攻擊', min: 0, max: 999999, step: 1 },
-        { id: 'elementalAttack', name: '元素攻擊', min: 0, max: 999999, step: 1 },
-        { id: 'defenseBreak', name: '破防', min: 0, max: 999999, step: 1 },
-        { id: 'shieldBreak', name: '破盾', min: 0, max: 999999, step: 1 },
-        { id: 'accuracy', name: '命中', min: 0, max: 999999, step: 1 },
-        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1 },
-        { id: 'critDamage', name: '會傷', min: 0, max: 999999, step: 1 },
-        { id: 'elementalBreak', name: '忽視元抗', min: 0, max: 999999, step: 1 }
-    ];
-    const BASELINE_SYNC_KEYS = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'accuracy', 'crit', 'critDamage', 'elementalBreak'];
+    const combat = window.pvpCombat;
+    if (!combat) {
+        notify({
+            type: 'error',
+            title: '載入失敗',
+            message: '傷害公式模組未載入，請重新整理頁面',
+            duration: 5000
+        });
+        return;
+    }
+
+    const config = window.pvpConfig;
+    if (!config) {
+        notify({
+            type: 'error',
+            title: '載入失敗',
+            message: '欄位設定模組未載入，請重新整理頁面',
+            duration: 5000
+        });
+        return;
+    }
+
+    const ATTRIBUTES = config.PLANNER_ATTRIBUTES;
+    const BASELINE_SYNC_KEYS = config.BASELINE_SYNC_KEYS;
 
     const state = {
         step: 1,
@@ -75,36 +88,6 @@ function initAttributePlanner() {
         return Object.fromEntries(ATTRIBUTES.map(attr => [attr.id, 0]));
     }
 
-    function calculateRemainDefense(defense, defenseBreak) {
-        return Math.max(0, defense - defenseBreak);
-    }
-
-    function calculateDefenseRate(remainDefense) {
-        return Math.max(10, ((remainDefense / (remainDefense + 19032)) * 100) + 10);
-    }
-
-    function calculateRemainShield(shieldBreak, airShield) {
-        if (shieldBreak >= airShield) return 0;
-        if (shieldBreak >= airShield / 3) return 0.5 * (airShield - shieldBreak);
-        return airShield - 2 * shieldBreak;
-    }
-
-    function calculateElementalResisRate(elementalResistance, elementalBreak) {
-        const diff = Math.max(0, elementalResistance - elementalBreak);
-        return (diff / (diff + 4762)) * 100;
-    }
-
-    function calculateActualAccuracyRate(accuracy, blockResistance) {
-        const diff = Math.max(0, accuracy - blockResistance);
-        return Math.min(((143 * diff) / (diff + 10688) + 95) / 100, 1) * 100;
-    }
-
-    function calculateActualCritRate(crit, extraCritRate, criticalResistance) {
-        const diff = Math.max(0, crit - criticalResistance);
-        const baseRate = Math.max(0, (115 * diff - 200) / (diff + 2666) / 100);
-        return Math.min(baseRate + (extraCritRate / 100), 1) * 100;
-    }
-
     function readCombatScenario() {
         return {
             attack: toNumber(document.getElementById('atk1-attack')?.value, 0),
@@ -131,19 +114,7 @@ function initAttributePlanner() {
     }
 
     function calculateEffectiveDamage(stats) {
-        const remainDefense = calculateRemainDefense(stats.defense, stats.defenseBreak);
-        const defenseRate = calculateDefenseRate(remainDefense);
-        const remainShield = calculateRemainShield(stats.shieldBreak, stats.airShield);
-        const elementalResisRate = calculateElementalResisRate(stats.elementalResistance, stats.elementalBreak);
-        const actualAccuracyRate = calculateActualAccuracyRate(stats.accuracy, stats.blockResistance);
-        const actualCritRate = calculateActualCritRate(stats.crit, stats.extraCritRate, stats.criticalResistance);
-
-        const skillBase = 58000;
-        const skillMultiplier = 3.38;
-        const baseDamage = ((skillBase + skillMultiplier * (stats.attack + stats.pvpAttack + stats.skillAttack - stats.pvpResistance - remainShield - stats.skillResistance)) * (1 - defenseRate / 100) + (stats.elementalAttack * skillMultiplier * (1 - elementalResisRate / 100))) * (1 + stats.pvpAttackRate / 100);
-        const finalDamage = Math.max(0, baseDamage);
-
-        return Math.floor(finalDamage * (actualAccuracyRate / 100) * (1 + (actualCritRate / 100) * ((stats.critDamage / 100) - stats.criticalDefense / 100)) + finalDamage * (1 - (actualAccuracyRate / 100)) * 0.5);
+        return combat.calculateCombatStats(stats).expectedDamage;
     }
 
     function buildZeroResult(note) {
