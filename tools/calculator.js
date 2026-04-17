@@ -36,8 +36,15 @@ function initCalculator() {
     const defenseProperties = config.DEFENSE_FIELDS;
     const bridgeInputIds = new Set(Object.values(bridgeFieldMap));
     const SYNC_SOURCE = 'calculator';
+    const OCR_FIELD_BY_TARGET = {
+        atk1: 'attack',
+        atk2: 'attack',
+        def1: 'defense',
+        def2: 'defense'
+    };
 
     let isApplyingBridgeUpdate = false;
+    let pendingOcrTarget = '';
 
     function applyCompareValueClass(element, value) {
         element.classList.remove('positive', 'negative');
@@ -216,6 +223,81 @@ function initCalculator() {
         calculateResults();
     }
 
+    function setCalculatorInputValue(inputId, value) {
+        const input = document.getElementById(inputId);
+        if (!input) return false;
+        input.value = String(value);
+        localStorage.setItem(inputId, String(value));
+        return true;
+    }
+
+    function applyOcrToTarget(targetKey, ocrResult) {
+        const fieldKey = OCR_FIELD_BY_TARGET[targetKey];
+        if (!fieldKey) {
+            throw new Error('未設定 OCR 匯入目標');
+        }
+
+        const field = ocrResult?.fields?.[fieldKey];
+        const value = String(field?.value || '').trim();
+        if (!value) {
+            throw new Error(fieldKey === 'attack' ? 'OCR 沒有辨識到攻擊數值' : 'OCR 沒有辨識到防禦數值');
+        }
+
+        const inputId = `${targetKey}-${fieldKey}`;
+        if (!setCalculatorInputValue(inputId, value)) {
+            throw new Error('找不到目標欄位：' + inputId);
+        }
+
+        calculateResults();
+        if (targetKey === 'atk1' && bridgeInputIds.has(inputId)) {
+            publishToBridge();
+        }
+
+        notify({
+            type: 'success',
+            title: 'OCR 匯入成功',
+            message: `${fieldKey === 'attack' ? '攻擊' : '防禦'}已匯入 ${targetKey.toUpperCase()}`,
+            duration: 3000
+        });
+    }
+
+    async function handleOcrFileSelection(file) {
+        if (!file) return;
+        const targetKey = pendingOcrTarget;
+        pendingOcrTarget = '';
+        if (!targetKey) return;
+
+        const ocrApi = window.pvpOcr;
+        if (!ocrApi?.recognizeFromFile) {
+            notify({
+                type: 'error',
+                title: 'OCR 不可用',
+                message: 'OCR 模組尚未載入，請重新整理頁面後再試',
+                duration: 5000
+            });
+            return;
+        }
+
+        try {
+            const result = await ocrApi.recognizeFromFile(file, ocrApi.getDefaultPreprocess?.());
+            applyOcrToTarget(targetKey, result);
+        } catch (error) {
+            notify({
+                type: 'error',
+                title: 'OCR 匯入失敗',
+                message: error && error.message ? error.message : '請重新選擇圖片後再試',
+                duration: 5000
+            });
+        }
+    }
+
+    function bindOcrButton(buttonId, targetKey) {
+        document.getElementById(buttonId)?.addEventListener('click', () => {
+            pendingOcrTarget = targetKey;
+            document.getElementById('calculator-ocr-file')?.click();
+        });
+    }
+
     if (window.__calculatorInitialized) {
         hydrateCalculatorState();
         return;
@@ -286,6 +368,11 @@ function initCalculator() {
         });
         calculateResults();
     });
+
+    bindOcrButton('atk1-ocr-btn', 'atk1');
+    bindOcrButton('atk2-ocr-btn', 'atk2');
+    bindOcrButton('def1-ocr-btn', 'def1');
+    bindOcrButton('def2-ocr-btn', 'def2');
 
     document.getElementById('export-btn')?.addEventListener('click', () => {
         const readGroup = (prefix, keys) => Object.fromEntries(keys.map(key => [key, document.getElementById(`${prefix}${key}`).value]));
@@ -416,6 +503,12 @@ function initCalculator() {
             }
         };
         reader.readAsText(file);
+        event.target.value = '';
+    });
+
+    document.getElementById('calculator-ocr-file')?.addEventListener('change', event => {
+        const file = event.target.files && event.target.files[0];
+        handleOcrFileSelection(file);
         event.target.value = '';
     });
 

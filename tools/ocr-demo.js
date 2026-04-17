@@ -528,6 +528,18 @@
         };
     }
 
+    function buildRecognitionResult() {
+        return {
+            templateVersion: PANEL_TEMPLATE_VERSION,
+            strategy: 'fixed-panel-rows',
+            preprocess: { ...state.preprocess },
+            rawText: state.rawText,
+            fields: cloneFields(state.fields),
+            layoutWarning: state.layoutWarning,
+            debug: buildDebugPayload()
+        };
+    }
+
     function loadSamples() {
         try {
             const raw = localStorage.getItem(SAMPLE_STORAGE_KEY);
@@ -1161,6 +1173,58 @@
         }
     }
 
+    async function recognizeFromFile(file, preprocessOverrides) {
+        if (!file) {
+            throw new Error('請先選擇圖片');
+        }
+
+        const previousState = {
+            file: state.file,
+            imageUrl: state.imageUrl,
+            imageElement: state.imageElement,
+            rawText: state.rawText,
+            fields: cloneFields(state.fields),
+            layoutWarning: state.layoutWarning,
+            preprocess: { ...state.preprocess },
+            debug: JSON.parse(JSON.stringify(state.debug)),
+            progress: state.progress,
+            isRunning: state.isRunning,
+            lastJobId: state.lastJobId
+        };
+
+        const objectUrl = URL.createObjectURL(file);
+
+        try {
+            state.file = file;
+            state.imageUrl = objectUrl;
+            state.imageElement = await loadImageElement(objectUrl);
+            state.preprocess = { ...DEFAULT_PREPROCESS, ...(preprocessOverrides || {}) };
+            hydrateControls();
+            await runOcr();
+            return buildRecognitionResult();
+        } finally {
+            URL.revokeObjectURL(objectUrl);
+            state.file = previousState.file;
+            state.imageUrl = previousState.imageUrl;
+            state.imageElement = previousState.imageElement;
+            state.rawText = previousState.rawText;
+            state.fields = cloneFields(previousState.fields);
+            state.layoutWarning = previousState.layoutWarning;
+            state.preprocess = { ...previousState.preprocess };
+            state.debug = previousState.debug;
+            state.progress = previousState.progress;
+            state.isRunning = previousState.isRunning;
+            state.lastJobId = previousState.lastJobId;
+
+            if (window.__ocrDemoInitialized) {
+                hydrateControls();
+                updatePreview();
+                updateOutputs();
+                updateButtons();
+            }
+        }
+    }
+
     async function copyText(value, successMessage) {
         if (!value) return;
 
@@ -1401,5 +1465,12 @@
         updatePreview();
         updateOutputs();
         updateButtons();
+    };
+
+    window.pvpOcr = {
+        recognizeFromFile,
+        getDefaultPreprocess: function getDefaultPreprocess() {
+            return { ...DEFAULT_PREPROCESS };
+        }
     };
 })();
