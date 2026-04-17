@@ -688,6 +688,21 @@
     height: 280px;
 }
 
+#view-league .league-chart-fallback {
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    border: 1px dashed rgba(214, 168, 74, 0.28);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(8, 17, 29, 0.45), rgba(20, 31, 51, 0.3));
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
 @media (max-width: 1100px) {
     #view-league .league-charts-row {
         grid-template-columns: 1fr;

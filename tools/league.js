@@ -35,6 +35,7 @@ function initLeague() {
     let statsCache = null;
 
     const WAN_COLUMNS = new Set(['playerDamage', 'buildingDamage', 'healing', 'damageTaken']);
+    const chartUnavailableMessage = '圖表套件未載入，目前僅顯示表格與摘要資料';
     const ROLE_COLORS = {
         '九靈': '#A78BFA',
         '素問': '#FFC0CB',
@@ -157,6 +158,33 @@ function initLeague() {
         const muted = style.getPropertyValue('--muted').trim() || '#93A4C7';
         const border = style.getPropertyValue('--border').trim() || 'rgba(214,168,74,0.1)';
         return { text, muted, border };
+    }
+
+    function isChartAvailable() {
+        return typeof window.Chart === 'function';
+    }
+
+    function renderChartFallback(sectionId, canvasId, message) {
+        const section = document.getElementById(sectionId);
+        const canvas = document.getElementById(canvasId);
+        if (!section || !canvas) return;
+
+        if (canvas._fallbackEl) {
+            canvas._fallbackEl.remove();
+            canvas._fallbackEl = null;
+        }
+
+        canvas.hidden = false;
+        if (!message) {
+            return;
+        }
+
+        canvas.hidden = true;
+        const fallback = document.createElement('div');
+        fallback.className = 'league-chart-fallback';
+        fallback.textContent = message;
+        canvas.insertAdjacentElement('afterend', fallback);
+        canvas._fallbackEl = fallback;
     }
 
     function populateRoleFilter() {
@@ -340,6 +368,11 @@ function initLeague() {
         const canvas = document.getElementById('league-comparison-chart');
         if (!canvas) return;
         if (comparisonChart) comparisonChart.destroy();
+        renderChartFallback('league-comparison-section', 'league-comparison-chart', '');
+        if (!isChartAvailable()) {
+            renderChartFallback('league-comparison-section', 'league-comparison-chart', chartUnavailableMessage);
+            return;
+        }
 
         const labels = ['擊敗', '對玩家傷害', '治療值', '重傷', '化羽/清泉', '焚骨'];
         const keys = ['kills', 'playerDamage', 'healing', 'deaths', 'revive', 'burn'];
@@ -409,6 +442,11 @@ function initLeague() {
         const canvas = document.getElementById('league-class-chart');
         if (!canvas) return;
         if (classChart) classChart.destroy();
+        renderChartFallback('league-class-section', 'league-class-chart', '');
+        if (!isChartAvailable()) {
+            renderChartFallback('league-class-section', 'league-class-chart', chartUnavailableMessage);
+            return;
+        }
 
         const counts = {};
         guild.players.forEach(p => {

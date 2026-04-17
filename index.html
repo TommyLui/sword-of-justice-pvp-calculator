@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="app-version" content="S2.2">
-    <title>逆水寒 PVP 工具箱 - S2.2</title>
+    <title>Sword of Justice PVP Toolkit - S2.2</title>
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -86,27 +86,27 @@
 <body>
     <div class="app">
         <aside class="sidebar" id="sidebar">
-            <div class="brand"><img src="icon.jpg" alt="Logo"><div><h1>逆水寒 PVP 工具箱</h1><p>S2.2版本</p></div></div>
+            <div class="brand"><img src="icon.jpg" alt="Logo"><div><h1>Sword of Justice PVP Toolkit</h1><p>Version S2.2</p></div></div>
             <nav class="nav">
-                <a class="active" href="#/" data-route="">🏠 首頁</a>
-                <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
-                <a href="#/attribute-planner" data-route="attribute-planner">📈 屬性規劃</a>
-                <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
-                <a href="#/league" data-route="league">📊 聯賽數據分析</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
+                <a class="active" href="#/" data-route="">🏠 Home</a>
+                <a href="#/calculator" data-route="calculator">⚔️ Damage Calculator</a>
+                <a href="#/attribute-planner" data-route="attribute-planner">📈 Attribute Planner</a>
+                <a href="#/crafting" data-route="crafting">🗂️ Crafting Database</a>
+                <a href="#/league" data-route="league">📊 League Analytics</a>
+                <a href="#" class="disabled" aria-disabled="true" title="Coming soon">🛡️ Build Comparator</a>
             </nav>
-            <div class="sidebar-footer">頂樓風很大<br>幫會內部使用</div>
+            <div class="sidebar-footer">Internal guild tools<br>Use with care</div>
         </aside>
         <main class="main">
-            <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button><button class="mobile-nav-toggle" id="darkToggle">🌙 夜間模式</button></div>
+            <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ Menu</button><button class="mobile-nav-toggle" id="darkToggle">🌙 Dark mode</button></div>
             <div id="view-home" class="view">
-                <section class="hero"><h2>逆水寒 PVP 工具箱</h2></section>
+                <section class="hero"><h2>Sword of Justice PVP Toolkit</h2></section>
                 <section class="section">
                     <div class="patch-image">
-                        <img src="https://r.res.easebar.com/pic/20260327/f5d9f947-6e36-409e-bcce-10c13ebba03f.jpg" alt="S2.2 版本更新" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
+                        <img src="https://r.res.easebar.com/pic/20260327/f5d9f947-6e36-409e-bcce-10c13ebba03f.jpg" alt="S2.2 update" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
                     </div>
                 </section>
-                <div class="footer">版本 S2.2</div>
+                <div class="footer">Version S2.2</div>
             </div>
             <div id="view-calculator" class="view" hidden>
                 <div class="calc-toolbar" style="display: flex; gap: 10px; margin-bottom: 14px; justify-content: flex-end;">
@@ -300,9 +300,11 @@
             </div>
         </main>
     </div>
-    <nav class="bottom-nav" aria-label="行動版導覽"><a href="#/" data-route=""><span>🏠</span>首頁</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>計算器</a><a href="#/attribute-planner" data-route="attribute-planner"><span>📈</span>規劃</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>打造</a><a href="#/league" data-route="league"><span>📊</span>聯賽</a></nav>
+    <nav class="bottom-nav" aria-label="Mobile navigation"><a href="#/" data-route=""><span>🏠</span>Home</a><a href="#/calculator" data-route="calculator"><span>⚔️</span>Calc</a><a href="#/attribute-planner" data-route="attribute-planner"><span>📈</span>Plan</a><a href="#/crafting" data-route="crafting"><span>🗂️</span>Craft</a><a href="#/league" data-route="league"><span>📊</span>League</a></nav>
     <div id="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="tools/pvp-config.js"></script>
+    <script src="tools/combat-formulas.js"></script>
     <script src="tools/calculator.js"></script>
     <script src="tools/league.js"></script>
     <script src="tools/crafting.js"></script>
