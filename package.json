@@ -1,0 +1,14 @@
+{
+  "name": "sword-of-justice-pvp-calculator-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:single": "playwright test --grep"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.53.0",
+    "serve": "^14.2.4"
+  }
+}
