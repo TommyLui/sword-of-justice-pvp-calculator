@@ -2,9 +2,9 @@
     const SAMPLE_STORAGE_KEY = 'ocrDemoSamples';
     const DEFAULT_PREPROCESS = {
         grayscale: true,
-        thresholdEnabled: false,
-        contrast: 120,
-        threshold: 165,
+        thresholdEnabled: true,
+        contrast: 130,
+        threshold: 200,
         scale: 1
     };
     const NORMALIZE_REPLACEMENTS = [
@@ -12,11 +12,15 @@
         ['会傷', '會傷'],
         ['会伤', '會傷'],
         ['攻击', '攻擊'],
+        ['攻還', '攻擊'],
         ['元素攻击', '元素攻擊'],
         ['元素抗', '元素抗'],
         ['防御', '防禦'],
+        ['防徽', '防禦'],
+        ['防徵', '防禦'],
         ['忽视', '忽視'],
         ['抵御', '抵禦'],
+        ['抵徽', '抵禦'],
         ['气盾', '氣盾'],
         ['格挡', '格擋'],
         ['额外会心率', '額外會心率'],
@@ -24,6 +28,7 @@
         ['流派克制百分比', '克制百分比']
     ];
     const CJK_CHAR = '[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]';
+    const PANEL_TEMPLATE_VERSION = 'fixed-panel-v1';
     const FIELDS = [
         { key: 'attack', label: '攻擊', aliases: ['外功攻擊', '內功攻擊'], allowLoose: false },
         { key: 'elementalAttack', label: '元素攻擊', aliases: ['元素攻擊'] },
@@ -46,16 +51,30 @@
         { key: 'criticalResistance', label: '會心抵抗', aliases: ['會心抵抗', '抗外會心', '抗內會心'] },
         { key: 'extraCritRate', label: '額外會心率', aliases: ['額外會心率'] }
     ];
-    const LAYOUT_SCHEMA = [
-        { left: 'attack', right: 'defenseBreak' },
-        { left: 'elementalAttack', right: 'elementalBreak' },
-        { left: 'accuracy', right: 'crit' },
-        { left: 'skillAttack', right: 'pvpAttack' },
-        { left: 'defense', right: 'defense' },
-        { left: 'blockResistance', right: 'blockResistance' },
-        { left: 'criticalResistance', right: 'criticalResistance' },
-        { left: 'elementalResistance', right: 'pvpResistance' }
+    const FIXED_PANEL_ROW_SCHEMA = [
+        { left: 'attack', right: 'defenseBreak', topRatio: 0.08, bottomRatio: 0.18 },
+        { left: 'elementalAttack', right: 'elementalBreak', topRatio: 0.18, bottomRatio: 0.28 },
+        { left: 'accuracy', right: 'crit', topRatio: 0.28, bottomRatio: 0.38 },
+        { left: null, right: 'pvpAttack', topRatio: 0.38, bottomRatio: 0.48 },
+        { left: 'defense', right: 'defense', mode: 'average', topRatio: 0.50, bottomRatio: 0.60 },
+        { left: 'blockResistance', right: 'blockResistance', mode: 'average', topRatio: 0.60, bottomRatio: 0.70 },
+        { left: 'criticalResistance', right: 'criticalResistance', mode: 'average', topRatio: 0.70, bottomRatio: 0.80 },
+        { left: 'elementalResistance', right: 'pvpResistance', topRatio: 0.80, bottomRatio: 0.90 }
     ];
+    const PANEL_VISIBLE_FIELD_KEYS = new Set([
+        'attack',
+        'elementalAttack',
+        'defenseBreak',
+        'accuracy',
+        'crit',
+        'elementalBreak',
+        'pvpAttack',
+        'defense',
+        'blockResistance',
+        'criticalResistance',
+        'elementalResistance',
+        'pvpResistance'
+    ]);
 
     const state = {
         worker: null,
@@ -72,7 +91,14 @@
         progress: 0,
         lastJobId: 0,
         samples: [],
-        referenceSample: null
+        referenceSample: null,
+        debug: {
+            templateVersion: PANEL_TEMPLATE_VERSION,
+            strategy: 'fixed-panel-rows',
+            rowAttempts: [],
+            fallbackKeys: [],
+            notes: []
+        }
     };
 
     function createFieldEntry(value, matchedAlias, sourceSnippet) {
@@ -127,6 +153,42 @@
         return fallback;
     }
 
+    function countFilledFields(fields) {
+        return FIELDS.reduce((count, field) => {
+            if (!PANEL_VISIBLE_FIELD_KEYS.has(field.key)) return count;
+            return count + (String(fields?.[field.key]?.value || '') !== '' ? 1 : 0);
+        }, 0);
+    }
+
+    function getVisibleFields() {
+        return FIELDS.filter(field => PANEL_VISIBLE_FIELD_KEYS.has(field.key));
+    }
+
+    function countFallbackWins(primary, secondary, allowedKeys) {
+        const allowed = allowedKeys instanceof Set ? allowedKeys : PANEL_VISIBLE_FIELD_KEYS;
+        return FIELDS.reduce((count, field) => {
+            if (!allowed.has(field.key)) return count;
+            const primaryValue = String(primary?.[field.key]?.value || '');
+            const secondaryValue = String(secondary?.[field.key]?.value || '');
+            return count + (!primaryValue && secondaryValue ? 1 : 0);
+        }, 0);
+    }
+
+    function pushDebugNote(note) {
+        if (!note) return;
+        state.debug.notes.push(String(note));
+    }
+
+    function resetDebugState() {
+        state.debug = {
+            templateVersion: PANEL_TEMPLATE_VERSION,
+            strategy: 'fixed-panel-rows',
+            rowAttempts: [],
+            fallbackKeys: [],
+            notes: []
+        };
+    }
+
     function normalizeText(text) {
         let output = String(text || '')
             .replace(/\r/g, '')
@@ -144,7 +206,11 @@
         });
 
         output = output.replace(new RegExp('(' + CJK_CHAR + ')\\s+(?=' + CJK_CHAR + ')', 'g'), '$1');
-        output = output.replace(/\s+/g, ' ');
+        output = output
+            .split('\n')
+            .map(line => line.replace(/\s+/g, ' ').trim())
+            .filter(Boolean)
+            .join('\n');
 
         return output;
     }
@@ -178,12 +244,17 @@
         return null;
     }
 
-    function draftFieldsFromText(text) {
+    function draftFieldsFromText(text, allowedKeys) {
         const normalized = normalizeText(text);
         const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
         const next = createEmptyFields();
+        const allowed = allowedKeys instanceof Set ? allowedKeys : null;
 
         FIELDS.forEach(field => {
+            if (allowed && !allowed.has(field.key)) {
+                next[field.key] = createFieldEntry('', '', '');
+                return;
+            }
             const aliases = field.aliases.slice();
             if (field.allowLoose !== false) {
                 aliases.push(field.label);
@@ -207,6 +278,31 @@
         });
 
         return next;
+    }
+
+    function mergeFieldDrafts(primary, secondary, sourceLabel, allowedKeys) {
+        const merged = createEmptyFields();
+        const allowed = allowedKeys instanceof Set ? allowedKeys : null;
+        FIELDS.forEach(field => {
+            const preferred = primary?.[field.key];
+            const fallback = secondary?.[field.key];
+            if (String(preferred?.value || '') !== '') {
+                merged[field.key] = createFieldEntry(preferred.value, preferred.matchedAlias, preferred.sourceSnippet);
+                return;
+            }
+            if (allowed && !allowed.has(field.key)) {
+                merged[field.key] = createFieldEntry('', '', '');
+                return;
+            }
+            if (String(fallback?.value || '') !== '') {
+                const matchedAlias = fallback.matchedAlias || sourceLabel || 'fallback';
+                merged[field.key] = createFieldEntry(fallback.value, matchedAlias, fallback.sourceSnippet);
+                state.debug.fallbackKeys.push(field.key);
+                return;
+            }
+            merged[field.key] = createFieldEntry('', '', '');
+        });
+        return merged;
     }
 
     function flattenOcrLines(result) {
@@ -313,56 +409,122 @@
         return matches[0].replace(/,/g, '');
     }
 
-    function parseFieldsFromStructuredLayout(result) {
+    function averageNumbers(leftValue, rightValue) {
+        const left = parseInt(leftValue, 10);
+        const right = parseInt(rightValue, 10);
+        if (!Number.isFinite(left) || !Number.isFinite(right)) {
+            return '';
+        }
+        return String(Math.round((left + right) / 2));
+    }
+
+    function extractAllNumbers(text) {
+        const matches = String(text || '').match(/-?\d[\d,]*/g);
+        if (!matches || !matches.length) return [];
+        return matches.map(item => item.replace(/,/g, '')).filter(Boolean);
+    }
+
+    function getRowText(row) {
+        if (!row || !Array.isArray(row.lines)) return '';
+        return normalizeText(row.lines.map(item => item.text).join(' '));
+    }
+
+    function assignPairFields(fields, leftKey, rightKey, numbers, sourceText, index) {
+        const leftValue = numbers[0] || '';
+        const rightValue = numbers.length > 1 ? numbers[numbers.length - 1] : '';
+        if (leftKey && leftValue) {
+            fields[leftKey] = createFieldEntry(leftValue, 'panel:row-' + index + '-left', sourceText);
+        }
+        if (rightKey && rightValue) {
+            fields[rightKey] = createFieldEntry(rightValue, 'panel:row-' + index + '-right', sourceText);
+        }
+        return { leftValue, rightValue };
+    }
+
+    function recognizeFixedPanel(result) {
         const fields = createEmptyFields();
         const lines = flattenOcrLines(result);
         if (!lines.length) {
             return {
                 fields,
-                warning: '目前圖片沒有取得可用版面資訊，請改用更清晰或裁切更完整的圖片。',
-                valid: false
+                warning: '目前圖片沒有取得可用的固定面板文字列，請改用更清晰或裁切更完整的圖片。',
+                valid: false,
+                matchedCount: 0,
+                rowAttempts: []
             };
         }
 
-        const rows = groupLinesIntoRows(lines);
-        if (rows.length < LAYOUT_SCHEMA.length || rows.length > LAYOUT_SCHEMA.length + 2) {
-            return {
-                fields,
-                warning: '偵測到的行數與固定版面不符，請改用其他圖片。',
-                valid: false
-            };
+        const groupedRows = groupLinesIntoRows(lines)
+            .map(row => ({
+                text: getRowText(row),
+                numbers: extractAllNumbers(getRowText(row))
+            }))
+            .filter(row => row.numbers.length > 0);
+
+        const rows = groupedRows.slice(0, FIXED_PANEL_ROW_SCHEMA.length);
+        const rowAttempts = [];
+
+        if (rows.length < FIXED_PANEL_ROW_SCHEMA.length) {
+            pushDebugNote('固定面板列數不足：預期 ' + FIXED_PANEL_ROW_SCHEMA.length + ' 列，實際 ' + rows.length + ' 列。');
         }
 
-        const selectedRows = rows.slice(0, LAYOUT_SCHEMA.length);
-        for (let i = 0; i < selectedRows.length; i += 1) {
-            const schema = LAYOUT_SCHEMA[i];
-            const columns = splitRowColumns(selectedRows[i]);
-            if (!columns) {
-                return {
-                    fields,
-                    warning: '偵測到欄位分隔異常，無法穩定判斷左右兩欄，請改用其他圖片。',
-                    valid: false
-                };
+        for (let i = 0; i < rows.length; i += 1) {
+            const row = rows[i];
+            const schema = FIXED_PANEL_ROW_SCHEMA[i];
+            const sourceText = row.text;
+            const numbers = row.numbers;
+            let leftValue = '';
+            let rightValue = '';
+
+            if (schema.mode === 'average' && schema.left && schema.right && schema.left === schema.right) {
+                const averaged = numbers.length >= 2 ? averageNumbers(numbers[0], numbers[1]) : '';
+                if (averaged) {
+                    fields[schema.left] = createFieldEntry(averaged, 'panel:row-' + (i + 1) + '-avg', sourceText);
+                    leftValue = averaged;
+                }
+            } else if (!schema.left && schema.right) {
+                rightValue = numbers.length ? numbers[numbers.length - 1] : '';
+                if (rightValue) {
+                    fields[schema.right] = createFieldEntry(rightValue, 'panel:row-' + (i + 1) + '-right', sourceText);
+                }
+            } else {
+                const assigned = assignPairFields(fields, schema.left, schema.right, numbers, sourceText, i + 1);
+                leftValue = assigned.leftValue;
+                rightValue = assigned.rightValue;
             }
 
-            const leftValue = extractPrimaryNumber(columns.left);
-            const rightValue = extractPrimaryNumber(columns.right);
-            if (!leftValue || !rightValue) {
-                return {
-                    fields,
-                    warning: '有些列沒有抓到足夠數字，建議改用更清晰或裁切更完整的圖片。',
-                    valid: false
-                };
-            }
-
-            fields[schema.left] = createFieldEntry(leftValue, 'layout:left-row-' + (i + 1), columns.left);
-            fields[schema.right] = createFieldEntry(rightValue, 'layout:right-row-' + (i + 1), columns.right);
+            rowAttempts.push({
+                row: i + 1,
+                leftKey: schema.left,
+                rightKey: schema.right,
+                text: sourceText,
+                numbers,
+                leftValue,
+                rightValue
+            });
         }
 
+        state.debug.rowAttempts = rowAttempts;
+
+        const filled = countFilledFields(fields);
+        const valid = filled >= 10;
         return {
             fields,
-            warning: '',
-            valid: true
+            warning: valid ? '' : '固定面板列解析只成功抓到部分欄位，已改用文字 fallback 補值。建議確認截圖完整度與預處理設定。',
+            valid,
+            matchedCount: filled,
+            rowAttempts
+        };
+    }
+
+    function buildDebugPayload() {
+        return {
+            templateVersion: state.debug.templateVersion,
+            strategy: state.debug.strategy,
+            filledCount: countFilledFields(state.fields),
+            fallbackKeys: state.debug.fallbackKeys,
+            notes: state.debug.notes,
+            rowAttempts: state.debug.rowAttempts
         };
     }
 
@@ -377,6 +539,7 @@
                 name: String(item.name || '未命名樣本'),
                 createdAt: String(item.createdAt || new Date().toISOString()),
                 fileName: String(item.fileName || ''),
+                templateVersion: String(item.templateVersion || 'legacy'),
                 rawText: String(item.rawText || ''),
                 preprocess: {
                     grayscale: item.preprocess?.grayscale !== false,
@@ -385,7 +548,8 @@
                     threshold: toInt(item.preprocess?.threshold, DEFAULT_PREPROCESS.threshold),
                     scale: toInt(item.preprocess?.scale, DEFAULT_PREPROCESS.scale)
                 },
-                fields: cloneFields(item.fields)
+                fields: cloneFields(item.fields),
+                debug: item.debug && typeof item.debug === 'object' ? item.debug : null
             }));
         } catch (error) {
             return [];
@@ -639,7 +803,7 @@
         container.innerHTML = '';
         const fragment = document.createDocumentFragment();
 
-        FIELDS.forEach(field => {
+        getVisibleFields().forEach(field => {
             const item = state.fields[field.key] || createFieldEntry('', '', '');
             const wrap = document.createElement('label');
             wrap.className = 'ocr-demo-field';
@@ -658,6 +822,7 @@
             input.addEventListener('input', () => {
                 state.fields[field.key].value = input.value;
                 syncJsonOutput();
+                syncDebugOutput();
                 renderComparison();
                 updateButtons();
             });
@@ -700,10 +865,12 @@
 
     function buildJsonPayload() {
         const payload = {
+            templateVersion: PANEL_TEMPLATE_VERSION,
+            strategy: 'fixed-panel-rows',
             preprocess: { ...state.preprocess },
             fields: {}
         };
-        FIELDS.forEach(field => {
+        getVisibleFields().forEach(field => {
             const item = state.fields[field.key] || createFieldEntry('', '', '');
             payload.fields[field.key] = {
                 value: item.value || '',
@@ -718,6 +885,17 @@
         const output = byId('ocr-demo-json-output');
         if (!output) return;
         output.value = JSON.stringify(buildJsonPayload(), null, 2);
+    }
+
+    function syncDebugOutput() {
+        const output = byId('ocr-demo-debug-output');
+        const summary = byId('ocr-demo-debug-summary');
+        const filledCount = countFilledFields(state.fields);
+        if (summary) {
+            summary.textContent = '目前模板：' + PANEL_TEMPLATE_VERSION + ' · 已填欄位 ' + filledCount + '/' + getVisibleFields().length + ' · fallback ' + state.debug.fallbackKeys.length + ' 欄';
+        }
+        if (!output) return;
+        output.value = JSON.stringify(buildDebugPayload(), null, 2);
     }
 
     function renderSampleSelect() {
@@ -758,10 +936,12 @@
             return;
         }
 
+        const sampleVersion = sample.templateVersion || 'legacy';
         meta.textContent = [
             sample.fileName || '未記錄檔名',
             formatDate(sample.createdAt),
-            formatPreprocessSummary(sample.preprocess || DEFAULT_PREPROCESS)
+            formatPreprocessSummary(sample.preprocess || DEFAULT_PREPROCESS),
+            '模板 ' + sampleVersion + (sampleVersion === PANEL_TEMPLATE_VERSION ? '（相符）' : '（與目前不同）')
         ].join(' · ');
     }
 
@@ -789,7 +969,7 @@
         let diffCount = 0;
         let missingCount = 0;
 
-        FIELDS.forEach(field => {
+        getVisibleFields().forEach(field => {
             const current = state.fields[field.key] || createFieldEntry('', '', '');
             const sample = state.referenceSample.fields[field.key] || createFieldEntry('', '', '');
             const currentValue = String(current.value || '');
@@ -817,14 +997,11 @@
 
             const row = document.createElement('tr');
             row.className = same ? 'same' : (!hasCurrent || !hasSample ? 'missing' : 'diff');
-            row.innerHTML = [
-                '<td>' + field.label + '</td>',
-                '<td>' + (currentValue || '—') + '</td>',
-                '<td>' + (sampleValue || '—') + '</td>',
-                '<td>' + diffText + '</td>',
-                '<td>' + (current.matchedAlias || '—') + '</td>',
-                '<td>' + (sample.matchedAlias || '—') + '</td>'
-            ].join('');
+            [field.label, currentValue || '—', sampleValue || '—', diffText, current.matchedAlias || '—', sample.matchedAlias || '—'].forEach(value => {
+                const td = document.createElement('td');
+                td.textContent = value;
+                row.appendChild(td);
+            });
             body.appendChild(row);
         });
 
@@ -864,6 +1041,7 @@
         renderLayoutWarning();
         renderFields();
         syncJsonOutput();
+        syncDebugOutput();
         renderSampleMeta();
         renderComparison();
         updateButtons();
@@ -890,6 +1068,7 @@
         state.rawText = '';
         state.fields = createEmptyFields();
         state.layoutWarning = '';
+        resetDebugState();
         updateProgress(0);
         setStatus('idle', keepFile ? '圖片已保留，可重新辨識' : '等待上傳圖片', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
         updatePreview();
@@ -902,8 +1081,9 @@
         state.isRunning = true;
         state.lastJobId += 1;
         const jobId = state.lastJobId;
+        resetDebugState();
         updateButtons();
-        setStatus('running', '準備開始辨識...', state.workerReady ? 'chi_tra + eng' : '載入中');
+        setStatus('running', '準備開始固定面板列辨識...', state.workerReady ? 'chi_tra + eng' : '載入中');
         updateProgress(0.05);
 
         try {
@@ -915,7 +1095,7 @@
                 throw new Error('找不到預處理畫布');
             }
 
-            setStatus('running', 'OCR 辨識中...', 'chi_tra + eng');
+            setStatus('running', '固定面板 OCR 辨識中...', 'chi_tra + eng');
             let result = await worker.recognize(canvas, {}, { blocks: true });
 
             if (jobId !== state.lastJobId) {
@@ -925,6 +1105,7 @@
             let recognizedText = String(result?.data?.text || '').trim();
 
             if (!recognizedText) {
+                pushDebugNote('預處理後整頁文字過少，改用原圖重試整頁 OCR。');
                 setStatus('running', '預處理後未抓到文字，改用原圖重試...', 'chi_tra + eng');
                 updateProgress(0.92);
                 result = await worker.recognize(state.file, {}, { blocks: true });
@@ -932,31 +1113,36 @@
             }
 
             state.rawText = recognizedText;
-            const layoutParse = parseFieldsFromStructuredLayout(result);
-            if (layoutParse.valid) {
-                state.fields = layoutParse.fields;
-                state.layoutWarning = '';
-                setStatus('success', '辨識完成，已依固定版面填入欄位草稿', 'chi_tra + eng');
+            const panelParse = recognizeFixedPanel(result);
+            const fallbackFields = draftFieldsFromText(state.rawText, PANEL_VISIBLE_FIELD_KEYS);
+            const fallbackWins = countFallbackWins(panelParse.fields, fallbackFields, PANEL_VISIBLE_FIELD_KEYS);
+            if (fallbackWins > 0) {
+                pushDebugNote('已啟用同面板欄位文字 fallback 補齊固定面板未命中的欄位。');
+            }
+            state.fields = mergeFieldDrafts(panelParse.fields, fallbackFields, 'text-fallback', PANEL_VISIBLE_FIELD_KEYS);
+            state.layoutWarning = panelParse.warning;
+
+            const finalFilledCount = countFilledFields(state.fields);
+            if (panelParse.valid || finalFilledCount >= 10) {
+                setStatus('success', '辨識完成，已依固定面板模板產生欄位草稿', 'chi_tra + eng');
             } else {
-                state.fields = createEmptyFields();
-                state.layoutWarning = layoutParse.warning;
-                setStatus('error', layoutParse.warning, 'chi_tra + eng');
+                setStatus('error', panelParse.warning || '固定面板模板命中不足，請確認截圖完整度。', 'chi_tra + eng');
             }
             updateProgress(1);
             updateOutputs();
 
-            if (layoutParse.valid) {
+            if (panelParse.valid || finalFilledCount >= 10) {
                 notify({
                     type: 'success',
                     title: 'OCR 完成',
-                    message: '已依固定版面產生欄位草稿。',
+                    message: '已依固定面板模板產生欄位草稿。',
                     duration: 3000
                 });
             } else {
                 notify({
                     type: 'error',
                     title: '版面辨識失敗',
-                    message: layoutParse.warning,
+                    message: panelParse.warning || '固定面板模板命中不足，請確認截圖完整度與預處理設定。',
                     duration: 4500
                 });
             }
@@ -1022,9 +1208,11 @@
             name,
             createdAt: new Date().toISOString(),
             fileName: state.file?.name || '',
+            templateVersion: PANEL_TEMPLATE_VERSION,
             rawText: state.rawText,
             preprocess: { ...state.preprocess },
-            fields: cloneFields(state.fields)
+            fields: cloneFields(state.fields),
+            debug: buildDebugPayload()
         };
 
         state.samples.unshift(sample);
@@ -1086,6 +1274,7 @@
         syncPreprocessFromControls();
         updatePreview();
         syncJsonOutput();
+        syncDebugOutput();
         if (state.file && !state.isRunning) {
             setStatus('idle', '預處理已更新，按「重新辨識」套用新設定', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
         }
@@ -1096,6 +1285,7 @@
         hydrateControls();
         updatePreview();
         syncJsonOutput();
+        syncDebugOutput();
         if (state.file && !state.isRunning) {
             setStatus('idle', '預處理已還原為預設值，可重新辨識', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
         }
@@ -1118,6 +1308,7 @@
                 state.rawText = '';
                 state.fields = createEmptyFields();
                 state.layoutWarning = '';
+                resetDebugState();
                 updateSampleNameDefault();
                 updatePreview();
                 updateOutputs();
@@ -1203,6 +1394,7 @@
         window.__ocrDemoInitialized = true;
         state.fields = createEmptyFields();
         state.samples = loadSamples();
+        resetDebugState();
         bindEvents();
         hydrateControls();
         renderSampleSelect();

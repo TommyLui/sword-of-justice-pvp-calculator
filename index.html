@@ -143,8 +143,8 @@
             <div id="view-ocr-demo" class="view" hidden>
                 <div class="ocr-demo-header">
                     <div>
-                        <h2>OCR Demo（通用版）</h2>
-                        <p>上傳角色截圖後，取得原始 OCR 文字與可編輯欄位草稿。此頁目前不會直接寫入計算器。</p>
+                        <h2>OCR Demo（固定面板版 Beta）</h2>
+                        <p>上傳固定角色面板截圖後，依模板產生可編輯欄位草稿與 JSON。此頁目前不會直接寫入計算器。</p>
                     </div>
                 </div>
 
@@ -152,7 +152,7 @@
                     <div class="ocr-demo-upload-box">
                         <div class="ocr-demo-upload-icon">🖼️</div>
                         <h3>上傳截圖</h3>
-                        <p id="ocr-demo-upload-note">支援 PNG / JPG / WEBP。第一次辨識會額外下載 OCR 引擎與繁中字庫（約 10-15 MB），請稍候。</p>
+                        <p id="ocr-demo-upload-note">支援 PNG / JPG / WEBP。請盡量使用完整、比例一致的固定面板截圖；第一次辨識會額外下載 OCR 引擎與繁中字庫（約 10-15 MB），請稍候。</p>
                         <div class="ocr-demo-upload-actions">
                             <input type="file" id="ocr-demo-file" accept="image/*" hidden>
                             <button id="ocr-demo-pick-btn" type="button" class="ocr-demo-primary-btn">選擇圖片</button>
@@ -175,16 +175,16 @@
                                     <span>灰階</span>
                                 </label>
                                 <label class="ocr-demo-toggle">
-                                    <input type="checkbox" id="ocr-demo-threshold-enabled">
+                                    <input type="checkbox" id="ocr-demo-threshold-enabled" checked>
                                     <span>黑白二值化</span>
                                 </label>
                                 <label class="ocr-demo-control" for="ocr-demo-contrast">
-                                    <span>對比 <strong id="ocr-demo-contrast-value">120%</strong></span>
-                                    <input type="range" id="ocr-demo-contrast" min="80" max="180" step="5" value="120">
+                                    <span>對比 <strong id="ocr-demo-contrast-value">130%</strong></span>
+                                    <input type="range" id="ocr-demo-contrast" min="80" max="180" step="5" value="130">
                                 </label>
                                 <label class="ocr-demo-control" for="ocr-demo-threshold">
-                                    <span>二值化門檻 <strong id="ocr-demo-threshold-value">165</strong></span>
-                                    <input type="range" id="ocr-demo-threshold" min="80" max="220" step="5" value="165" disabled>
+                                    <span>二值化門檻 <strong id="ocr-demo-threshold-value">200</strong></span>
+                                    <input type="range" id="ocr-demo-threshold" min="80" max="220" step="5" value="200">
                                 </label>
                                 <label class="ocr-demo-control" for="ocr-demo-scale">
                                     <span>OCR 放大</span>
@@ -238,8 +238,9 @@
                             <h3>可編輯欄位草稿</h3>
                             <button id="ocr-demo-copy-json-btn" type="button" class="ocr-demo-secondary-btn" disabled>複製 JSON</button>
                         </div>
-                        <p class="ocr-demo-panel-note">這是通用 OCR 草稿，請自行檢查與修正。每個欄位會標示命中的別名與來源片段，方便你校準規則。</p>
+                        <p class="ocr-demo-panel-note">系統會先依固定面板模板抓欄位，再以文字 fallback 補缺值。請自行檢查與修正；每個欄位都會保留來源資訊，方便校準。</p>
                         <div id="ocr-demo-layout-warning" class="ocr-demo-layout-warning" hidden></div>
+                        <div id="ocr-demo-debug-summary" class="ocr-demo-panel-note">目前模板：fixed-panel-v1</div>
                         <div id="ocr-demo-fields" class="ocr-demo-fields"></div>
                     </section>
                 </div>
@@ -257,6 +258,12 @@
                             <h3>JSON 草稿</h3>
                         </div>
                         <textarea id="ocr-demo-json-output" class="ocr-demo-textarea" readonly placeholder="辨識後會輸出結構化草稿"></textarea>
+                    </section>
+                    <section class="ocr-demo-panel">
+                        <div class="ocr-demo-panel-head">
+                            <h3>面板偵錯資訊</h3>
+                        </div>
+                        <textarea id="ocr-demo-debug-output" class="ocr-demo-textarea" readonly placeholder="固定面板模板、命中方式與列切片資訊會顯示在這裡"></textarea>
                     </section>
                 </div>
 
@@ -286,7 +293,7 @@
                         <div class="ocr-demo-panel-head">
                             <h3>校準比對</h3>
                         </div>
-                        <p class="ocr-demo-panel-note">載入樣本後，會把目前結果與已存樣本逐欄比對，方便看出需要補 alias 還是調整預處理。</p>
+                        <p class="ocr-demo-panel-note">載入樣本後，會把目前結果與已存樣本逐欄比對，並顯示樣本模板版本是否與目前固定面板模板一致。</p>
                         <div id="ocr-demo-compare-empty" class="ocr-demo-empty-state">請先選擇並載入一個樣本</div>
                         <div id="ocr-demo-compare-wrap" hidden>
                             <div class="ocr-demo-compare-summary" id="ocr-demo-compare-summary"></div>
