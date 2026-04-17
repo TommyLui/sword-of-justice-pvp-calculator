@@ -36,11 +36,17 @@ function initCalculator() {
     const defenseProperties = config.DEFENSE_FIELDS;
     const bridgeInputIds = new Set(Object.values(bridgeFieldMap));
     const SYNC_SOURCE = 'calculator';
-    const OCR_FIELD_BY_TARGET = {
-        atk1: 'attack',
-        atk2: 'attack',
-        def1: 'defense',
-        def2: 'defense'
+    const OCR_IMPORT_CONFIG = {
+        atk1: { fields: ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit', 'elementalBreak', 'pvpAttack'] },
+        atk2: { fields: ['attack', 'elementalAttack', 'defenseBreak', 'accuracy', 'crit', 'elementalBreak', 'pvpAttack'] },
+        def1: { fields: ['defense', 'blockResistance', 'criticalResistance', 'elementalResistance', 'pvpResistance'] },
+        def2: { fields: ['defense', 'blockResistance', 'criticalResistance', 'elementalResistance', 'pvpResistance'] }
+    };
+    const OCR_TARGET_LABELS = {
+        atk1: '進攻數值1',
+        atk2: '進攻數值2',
+        def1: '防禦數值1',
+        def2: '防禦數值2'
     };
 
     let isApplyingBridgeUpdate = false;
@@ -232,31 +238,43 @@ function initCalculator() {
     }
 
     function applyOcrToTarget(targetKey, ocrResult) {
-        const fieldKey = OCR_FIELD_BY_TARGET[targetKey];
-        if (!fieldKey) {
+        const importConfig = OCR_IMPORT_CONFIG[targetKey];
+        if (!importConfig) {
             throw new Error('未設定 OCR 匯入目標');
         }
 
-        const field = ocrResult?.fields?.[fieldKey];
-        const value = String(field?.value || '').trim();
-        if (!value) {
-            throw new Error(fieldKey === 'attack' ? 'OCR 沒有辨識到攻擊數值' : 'OCR 沒有辨識到防禦數值');
-        }
+        const importedFields = [];
+        importConfig.fields.forEach(fieldKey => {
+            const field = ocrResult?.fields?.[fieldKey];
+            const value = String(field?.value || '').trim();
+            if (!value) return;
 
-        const inputId = `${targetKey}-${fieldKey}`;
-        if (!setCalculatorInputValue(inputId, value)) {
-            throw new Error('找不到目標欄位：' + inputId);
+            const inputId = `${targetKey}-${fieldKey}`;
+            if (setCalculatorInputValue(inputId, value)) {
+                importedFields.push(fieldKey);
+            }
+        });
+
+        if (!importedFields.length) {
+            throw new Error(targetKey.startsWith('atk') ? 'OCR 沒有辨識到可匯入的進攻數值' : 'OCR 沒有辨識到可匯入的防禦數值');
         }
 
         calculateResults();
-        if (targetKey === 'atk1' && bridgeInputIds.has(inputId)) {
+        if (targetKey === 'atk1' && importedFields.some(fieldKey => bridgeInputIds.has(`${targetKey}-${fieldKey}`))) {
             publishToBridge();
         }
+
+        const importedLabels = importedFields
+            .map(fieldKey => {
+                const label = document.querySelector(`label[for="${targetKey}-${fieldKey}"]`);
+                return label ? label.textContent.replace(':', '').trim() : fieldKey;
+            })
+            .join('、');
 
         notify({
             type: 'success',
             title: 'OCR 匯入成功',
-            message: `${fieldKey === 'attack' ? '攻擊' : '防禦'}已匯入 ${targetKey.toUpperCase()}`,
+            message: `${importedLabels} 已匯入 ${OCR_TARGET_LABELS[targetKey] || targetKey}`,
             duration: 3000
         });
     }
