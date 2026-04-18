@@ -73,10 +73,12 @@ npm run test:single -- league
 ### Run real-image OCR baseline tests locally
 
 ```bash
-npx playwright test tests/e2e/ocr-real.spec.js
+npm run test:ocr-real
 ```
 
 These OCR baseline tests use the real sample images under `ocr_example/` and call `window.pvpOcr.recognizeFromFile(...)` directly. They are intended for local regression checks only.
+
+They are excluded from the default `npm test` suite so the main feedback loop stays fast.
 
 ### Why OCR real-image tests are skipped in CI
 

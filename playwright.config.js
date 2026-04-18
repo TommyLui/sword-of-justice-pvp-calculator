@@ -2,6 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
+  testIgnore: ['**/ocr-real.spec.js'],
   timeout: 30000,
   fullyParallel: false,
   retries: process.env.CI ? 1 : 0,

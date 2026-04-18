@@ -6,7 +6,7 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:single": "playwright test --grep",
-    "test:ocr-real": "playwright test tests/e2e/ocr-real.spec.js"
+    "test:ocr-real": "playwright test -c playwright.ocr-real.config.js tests/e2e/ocr-real.spec.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
