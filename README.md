@@ -82,6 +82,20 @@ These OCR baseline tests use the real sample images under `ocr_example/` and cal
 
 `tests/e2e/ocr-real.spec.js` is skipped when `process.env.CI` is set because it depends on real Tesseract runtime behavior, CDN downloads, worker startup, and image OCR stability. This keeps the main CI suite fast and reliable while still allowing local baseline verification.
 
+### Run OCR real-image baseline in GitHub Actions
+
+This repo also provides a manual workflow for OCR real-image baseline checks:
+
+- Workflow file: `.github/workflows/ocr-real.yml`
+- Trigger: `workflow_dispatch`
+
+Use it when you want to validate OCR behavior on GitHub-hosted runners without putting real-image OCR into the normal push / pull request gate.
+
+The manual OCR workflow runs `npm run test:ocr-real` and uploads:
+
+- `ocr-real-report`
+- `ocr-real-test-results`
+
 GitHub Actions also runs the Playwright suite on push and pull request via `.github/workflows/test.yml`.
 
 ### CI artifacts

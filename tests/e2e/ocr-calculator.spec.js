@@ -95,4 +95,70 @@ test.describe('calculator OCR integration', () => {
     await expect(page.locator('#planner-app')).toBeVisible();
     await expect(page.locator('#planner-baseline-attack')).toHaveValue('99');
   });
+
+  test('imports attack-side OCR fields into atk2 without updating planner baseline', async ({ page }) => {
+    await page.fill('#atk1-attack', '1');
+    await page.dispatchEvent('#atk1-attack', 'input');
+
+    const result = buildResult({
+      attack: 16000,
+      elementalAttack: 4500,
+      defenseBreak: 2800,
+      accuracy: 1800,
+      crit: 1200,
+      elementalBreak: 650,
+      pvpAttack: 500
+    });
+
+    await page.evaluate(mock => {
+      window.pvpOcr.recognizeFromFile = async () => mock;
+    }, result);
+
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.click('#atk2-ocr-btn')
+    ]);
+    await chooser.setFiles(dummyImagePath);
+
+    await page.waitForFunction(() => document.getElementById('damage1_2').textContent !== '0');
+    await expect(page.locator('#atk2-attack')).toHaveValue('16000');
+    await expect(page.locator('#atk2-defenseBreak')).toHaveValue('2800');
+    await expect(page.locator('#atk2-crit')).toHaveValue('1200');
+    await expect(page.locator('#atk2-pvpAttack')).toHaveValue('500');
+
+    await page.goto('/#/attribute-planner');
+    await expect(page.locator('#planner-app')).toBeVisible();
+    await expect(page.locator('#planner-baseline-attack')).toHaveValue('1');
+  });
+
+  test('imports defense-side OCR fields into def2 without affecting planner baseline', async ({ page }) => {
+    await page.fill('#atk1-attack', '88');
+    await page.dispatchEvent('#atk1-attack', 'input');
+
+    const result = buildResult({
+      defense: 23000,
+      blockResistance: 7500,
+      criticalResistance: 6100,
+      elementalResistance: 4100,
+      pvpResistance: 2600
+    });
+
+    await page.evaluate(mock => {
+      window.pvpOcr.recognizeFromFile = async () => mock;
+    }, result);
+
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.click('#def2-ocr-btn')
+    ]);
+    await chooser.setFiles(dummyImagePath);
+
+    await expect(page.locator('#def2-defense')).toHaveValue('23000');
+    await expect(page.locator('#def2-blockResistance')).toHaveValue('7500');
+    await expect(page.locator('#def2-pvpResistance')).toHaveValue('2600');
+
+    await page.goto('/#/attribute-planner');
+    await expect(page.locator('#planner-app')).toBeVisible();
+    await expect(page.locator('#planner-baseline-attack')).toHaveValue('88');
+  });
 });
