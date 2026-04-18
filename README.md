@@ -1,4 +1,7 @@
 # sword-of-justice-pvp-calculator
+
+[![Run Playwright Tests](https://github.com/TommyLui/sword-of-justice-pvp-calculator/actions/workflows/test.yml/badge.svg)](https://github.com/TommyLui/sword-of-justice-pvp-calculator/actions/workflows/test.yml)
+
 A pvp damage calculator for the online game "Sword of justice"
 
 ## Live Demo
@@ -32,3 +35,39 @@ Then open `http://localhost:3000`. Manual refresh required after changes.
 python -m http.server 8000
 ```
 Then open `http://localhost:8000`. Manual refresh required after changes.
+
+## Automated Testing
+
+This repo now includes Playwright E2E tests for routing, calculator, planner sync, crafting, formulas, and league upload flows.
+
+### Install test dependencies
+
+```bash
+npm install
+```
+
+### Run all tests
+
+```bash
+npm test
+```
+
+### Run headed mode
+
+```bash
+npm run test:headed
+```
+
+### Run debug mode
+
+```bash
+npm run test:debug
+```
+
+### Run a subset by grep
+
+```bash
+npm run test:single -- league
+```
+
+GitHub Actions also runs the Playwright suite on push and pull request via `.github/workflows/test.yml`.

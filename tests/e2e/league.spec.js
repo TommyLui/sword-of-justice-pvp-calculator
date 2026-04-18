@@ -51,4 +51,31 @@ test.describe('league upload flow', () => {
     await expect(page.locator('#league-table-body tr')).toHaveCount(1);
     await expect(page.locator('#league-table-body tr').first()).toContainText('無符合條件的玩家');
   });
+
+  test('sorts league table by numeric columns', async ({ page }) => {
+    await page.locator('#league-file').setInputFiles(fixturePath);
+    await expect(page.locator('#league-content')).toBeVisible();
+
+    await page.locator('#league-tabs .league-tab').filter({ hasText: 'Guild Alpha' }).click();
+    await page.locator('#league-table th[data-col="kills"]').click();
+    await expect(page.locator('#league-table th[data-col="kills"]')).toHaveClass(/sort-desc/);
+    await expect(page.locator('#league-table-body tr').first()).toContainText('Alice');
+
+    await page.locator('#league-table th[data-col="kills"]').click();
+    await expect(page.locator('#league-table th[data-col="kills"]')).toHaveClass(/sort-asc/);
+    await expect(page.locator('#league-table-body tr').first()).toContainText('Bob');
+  });
+
+  test('shows chart fallback when Chart.js is unavailable', async ({ page }) => {
+    await page.locator('#league-file').setInputFiles(fixturePath);
+    await expect(page.locator('#league-content')).toBeVisible();
+
+    await page.evaluate(() => {
+      window.Chart = undefined;
+      document.getElementById('darkToggle')?.click();
+    });
+
+    await expect(page.locator('#league-comparison-section .league-chart-fallback')).toContainText('圖表套件未載入');
+    await expect(page.locator('#league-class-section .league-chart-fallback')).toContainText('圖表套件未載入');
+  });
 });
