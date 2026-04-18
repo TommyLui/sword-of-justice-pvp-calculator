@@ -48,4 +48,18 @@ test.describe('attribute planner flow', () => {
     await page.click('#planner-reset-candidate');
     await expect(page.locator('#planner-candidate-attack')).toHaveValue('20000');
   });
+
+  test('chip buttons update candidate values and recompute KPI', async ({ page }) => {
+    await page.click('#planner-next');
+    await expect(page.locator('[data-step-panel="2"]')).toBeVisible();
+
+    const chip = page.locator('#planner-candidate-attack').locator('..').locator('.planner-chip-btn').filter({ hasText: '+100' }).first();
+    const before = await page.locator('#planner-kpi').textContent();
+
+    await chip.click();
+
+    await expect(page.locator('#planner-candidate-attack')).toHaveValue('100');
+    const after = await page.locator('#planner-kpi').textContent();
+    expect(after).not.toBe(before);
+  });
 });

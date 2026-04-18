@@ -90,4 +90,15 @@ test.describe('league upload flow', () => {
     await expect(page.locator('#summary-healing .league-card-value')).toContainText('26萬');
     await expect(page.locator('#summary-burn .league-card-value')).toHaveText('3');
   });
+
+  test('shows parse failure for malformed league CSV', async ({ page }) => {
+    await page.locator('#league-file').setInputFiles({
+      name: 'bad-league.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('not,a,valid,league,csv\nfoo,bar,baz')
+    });
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('解析失敗');
+    await expect(page.locator('#league-content')).toBeHidden();
+  });
 });

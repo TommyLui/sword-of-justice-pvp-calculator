@@ -178,4 +178,21 @@ test.describe('calculator OCR integration', () => {
     await expect(page.locator('.notification.error .notification-title')).toHaveText('OCR 匯入失敗');
     await expect(page.locator('#atk1-ocr-btn')).toBeEnabled();
   });
+
+  test('shows empty-result error when OCR returns no importable attack fields', async ({ page }) => {
+    const result = buildResult();
+
+    await page.evaluate(mock => {
+      window.pvpOcr.recognizeFromFile = async () => mock;
+    }, result);
+
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.click('#atk1-ocr-btn')
+    ]);
+    await chooser.setFiles(dummyImagePath);
+
+    await expect(page.locator('.notification.error .notification-message')).toHaveText('OCR 沒有辨識到可匯入的進攻數值');
+    await expect(page.locator('#atk1-ocr-btn')).toBeEnabled();
+  });
 });
