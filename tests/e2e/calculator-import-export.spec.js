@@ -70,4 +70,19 @@ test.describe('calculator import export', () => {
     await expect(page.locator('#atk2-crit')).toHaveValue('543');
     await expect(page.locator('#def1-defense')).toHaveValue('67890');
   });
+
+  test('shows error notification for invalid calculator import JSON', async ({ page }) => {
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.click('#import-btn')
+    ]);
+    await chooser.setFiles({
+      name: 'bad.json.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('{ bad json')
+    });
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('匯入失敗');
+    await expect(page.locator('#atk1-attack')).toHaveValue('0');
+  });
 });

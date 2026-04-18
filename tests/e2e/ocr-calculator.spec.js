@@ -161,4 +161,21 @@ test.describe('calculator OCR integration', () => {
     await expect(page.locator('#planner-app')).toBeVisible();
     await expect(page.locator('#planner-baseline-attack')).toHaveValue('88');
   });
+
+  test('shows error notification and re-enables buttons when OCR throws', async ({ page }) => {
+    await page.evaluate(() => {
+      window.pvpOcr.recognizeFromFile = async () => {
+        throw new Error('模擬 OCR 失敗');
+      };
+    });
+
+    const [chooser] = await Promise.all([
+      page.waitForEvent('filechooser'),
+      page.click('#atk1-ocr-btn')
+    ]);
+    await chooser.setFiles(dummyImagePath);
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('OCR 匯入失敗');
+    await expect(page.locator('#atk1-ocr-btn')).toBeEnabled();
+  });
 });
