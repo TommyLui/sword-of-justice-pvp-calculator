@@ -777,6 +777,19 @@
         wrap.classList.remove('empty');
     }
 
+    function createProcessedCanvasForCurrentImage() {
+        if (!state.imageElement) return null;
+        const existing = byId('ocr-demo-processed-canvas');
+        if (existing) {
+            applyPreprocessToCanvas(existing, state.imageElement, state.preprocess);
+            return existing;
+        }
+
+        const canvas = document.createElement('canvas');
+        applyPreprocessToCanvas(canvas, state.imageElement, state.preprocess);
+        return canvas;
+    }
+
     function updatePreview() {
         const img = byId('ocr-demo-preview');
         const empty = byId('ocr-demo-preview-empty');
@@ -1102,7 +1115,7 @@
             syncPreprocessFromControls();
             renderProcessedPreview();
             const worker = await ensureWorker();
-            const canvas = byId('ocr-demo-processed-canvas');
+            const canvas = createProcessedCanvasForCurrentImage();
             if (!canvas) {
                 throw new Error('找不到預處理畫布');
             }
