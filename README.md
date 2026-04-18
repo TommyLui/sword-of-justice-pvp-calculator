@@ -70,6 +70,18 @@ npm run test:debug
 npm run test:single -- league
 ```
 
+### Run real-image OCR baseline tests locally
+
+```bash
+npx playwright test tests/e2e/ocr-real.spec.js
+```
+
+These OCR baseline tests use the real sample images under `ocr_example/` and call `window.pvpOcr.recognizeFromFile(...)` directly. They are intended for local regression checks only.
+
+### Why OCR real-image tests are skipped in CI
+
+`tests/e2e/ocr-real.spec.js` is skipped when `process.env.CI` is set because it depends on real Tesseract runtime behavior, CDN downloads, worker startup, and image OCR stability. This keeps the main CI suite fast and reliable while still allowing local baseline verification.
+
 GitHub Actions also runs the Playwright suite on push and pull request via `.github/workflows/test.yml`.
 
 ### CI artifacts
