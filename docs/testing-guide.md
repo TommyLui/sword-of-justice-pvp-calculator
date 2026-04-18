@@ -82,3 +82,10 @@ Artifacts:
 - `tests/e2e/ocr-real.spec.js` is intentionally skipped in normal CI and only meant for local/manual OCR regression checks
 - When adding new tests, prefer stable selectors (`id`, explicit route ids, fixed button ids)
 - When testing OCR integration, mock `window.pvpOcr.recognizeFromFile` unless the goal is a real-image baseline
+
+## Formula Safety Summary
+
+- The calculator and planner now share one formula source: `tools/combat-formulas.js`
+- A dedicated audit doc exists at `docs/superpowers/specs/2026-04-18-formula-equivalence-audit.md`
+- Regression coverage for formulas lives in `tests/e2e/formulas.spec.js`
+- Current audit conclusion: recent refactors extracted shared math, but did not change the formula behavior

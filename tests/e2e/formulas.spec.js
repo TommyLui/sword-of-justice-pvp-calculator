@@ -12,20 +12,65 @@ test.describe('combat formulas', () => {
       defenseRate: window.pvpCombat.calculateDefenseRate(0),
       remainShield1: window.pvpCombat.calculateRemainShield(0, 9000),
       remainShield2: window.pvpCombat.calculateRemainShield(4000, 9000),
-      remainShield3: window.pvpCombat.calculateRemainShield(9000, 9000)
+      remainShield3: window.pvpCombat.calculateRemainShield(9000, 9000),
+      elementalResisRate: window.pvpCombat.calculateElementalResisRate(5000, 1000),
+      actualAccuracyRate: window.pvpCombat.calculateActualAccuracyRate(5000, 1000),
+      actualCritRate: window.pvpCombat.calculateActualCritRate(5000, 10, 1000),
+      actualCritRateCapped: window.pvpCombat.calculateActualCritRate(999999, 100, 0)
     }));
 
-    expect(result).toEqual({
-      remainDefense1: 7000,
-      remainDefense2: 0,
-      defenseRate: 10,
-      remainShield1: 9000,
-      remainShield2: 2500,
-      remainShield3: 0
-    });
+    expect(result.remainDefense1).toBe(7000);
+    expect(result.remainDefense2).toBe(0);
+    expect(result.defenseRate).toBe(10);
+    expect(result.remainShield1).toBe(9000);
+    expect(result.remainShield2).toBe(2500);
+    expect(result.remainShield3).toBe(0);
+    expect(result.elementalResisRate).toBeCloseTo(45.65167769915545, 8);
+    expect(result.actualAccuracyRate).toBeCloseTo(100, 8);
+    expect(result.actualCritRate).toBeCloseTo(78.97689768976898, 8);
+    expect(result.actualCritRateCapped).toBe(100);
   });
 
-  test('evaluates combat stats golden values', async ({ page }) => {
+  test('covers remaining shield branches and negative crit bonus behavior', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const stats = {
+        attack: 10000,
+        elementalAttack: 0,
+        defenseBreak: 0,
+        shieldBreak: 4000,
+        pvpAttack: 0,
+        accuracy: 999999,
+        crit: 999999,
+        critDamage: 50,
+        extraCritRate: 0,
+        pvpAttackRate: 0,
+        elementalBreak: 0,
+        skillAttack: 0,
+        defense: 0,
+        airShield: 9000,
+        elementalResistance: 0,
+        pvpResistance: 0,
+        blockResistance: 0,
+        criticalResistance: 0,
+        criticalDefense: 100,
+        skillResistance: 0
+      };
+
+      return {
+        remainShieldMid: window.pvpCombat.calculateRemainShield(4000, 9000),
+        remainShieldLow: window.pvpCombat.calculateRemainShield(2000, 9000),
+        stats: window.pvpCombat.calculateCombatStats(stats)
+      };
+    });
+
+    expect(result.remainShieldMid).toBe(2500);
+    expect(result.remainShieldLow).toBe(5000);
+    expect(result.stats.actualAccuracyRate).toBe(100);
+    expect(result.stats.actualCritRate).toBe(100);
+    expect(result.stats.expectedDamage).toBeLessThan(result.stats.finalDamage);
+  });
+
+  test('evaluates zero and typical combat stats golden values', async ({ page }) => {
     const result = await page.evaluate(() => {
       const zero = {
         attack: 0,
@@ -60,6 +105,18 @@ test.describe('combat formulas', () => {
         zero: window.pvpCombat.calculateCombatStats(zero),
         typical: window.pvpCombat.calculateCombatStats(typical)
       };
+    });
+
+    expect(result.zero).toEqual({
+      remainDefense: 0,
+      defenseRate: 10,
+      remainShield: 0,
+      elementalResisRate: 0,
+      actualAccuracyRate: 95,
+      actualCritRate: 0,
+      baseDamage: 52200,
+      finalDamage: 52200,
+      expectedDamage: 50895
     });
 
     expect(result.zero.expectedDamage).toBe(50895);
