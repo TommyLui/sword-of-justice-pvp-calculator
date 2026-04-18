@@ -71,3 +71,12 @@ npm run test:single -- league
 ```
 
 GitHub Actions also runs the Playwright suite on push and pull request via `.github/workflows/test.yml`.
+
+### CI artifacts
+
+When the GitHub Actions Playwright workflow runs, it uploads:
+
+- `playwright-report/` — HTML report
+- `test-results/` — screenshots, traces, videos, and failure artifacts
+
+If a test fails in CI, download these artifacts from the workflow run page for debugging.

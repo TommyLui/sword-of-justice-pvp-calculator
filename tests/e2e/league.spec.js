@@ -29,10 +29,12 @@ test.describe('league upload flow', () => {
     await page.locator('#league-file').setInputFiles(fixturePath);
     await expect(page.locator('#league-content')).toBeVisible();
 
+    await page.locator('#league-tabs .league-tab').filter({ hasText: 'Guild Beta' }).click();
     await page.reload();
     await expect(page.locator('#league-content')).toBeVisible();
     await expect(page.locator('#league-filename')).toHaveText('league-sample.csv');
     await expect(page.locator('#league-tabs .league-tab')).toHaveCount(2);
+    await expect(page.locator('#league-table-title')).toContainText('Guild Beta');
   });
 
   test('switches guild tabs and filters players by role', async ({ page }) => {
@@ -77,5 +79,15 @@ test.describe('league upload flow', () => {
 
     await expect(page.locator('#league-comparison-section .league-chart-fallback')).toContainText('圖表套件未載入');
     await expect(page.locator('#league-class-section .league-chart-fallback')).toContainText('圖表套件未載入');
+  });
+
+  test('renders summary cards with aggregated totals', async ({ page }) => {
+    await page.locator('#league-file').setInputFiles(fixturePath);
+    await expect(page.locator('#league-content')).toBeVisible();
+
+    await expect(page.locator('#summary-kills .league-card-value')).toHaveText('25');
+    await expect(page.locator('#summary-damage .league-card-value')).toContainText('60萬');
+    await expect(page.locator('#summary-healing .league-card-value')).toContainText('26萬');
+    await expect(page.locator('#summary-burn .league-card-value')).toHaveText('3');
   });
 });
