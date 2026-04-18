@@ -33,6 +33,34 @@ test.describe('crafting page', () => {
     await expect(page.locator('#crafting-count')).toHaveText(String(initialCount));
   });
 
+  test('updates detail panel when selecting a different crafting record', async ({ page }) => {
+    await page.goto('/#/crafting');
+    await expect(page.locator('#view-crafting')).toBeVisible();
+    await page.waitForFunction(() => parseInt(document.getElementById('crafting-count').textContent || '0', 10) > 0);
+
+    const firstTitle = await page.locator('#crafting-detail .crafting-detail-title').textContent();
+    const secondItem = page.locator('#crafting-list .crafting-item').nth(1);
+    const secondName = await secondItem.locator('.crafting-item-name').textContent();
+
+    await secondItem.click();
+
+    await expect(page.locator('#crafting-detail .crafting-detail-title')).toHaveText(secondName || '');
+    expect(secondName).not.toBe(firstTitle);
+  });
+
+  test('shows tag and effect text in crafting detail panel when available', async ({ page }) => {
+    await page.goto('/#/crafting');
+    await expect(page.locator('#view-crafting')).toBeVisible();
+    await page.waitForFunction(() => parseInt(document.getElementById('crafting-count').textContent || '0', 10) > 0);
+
+    const taggedItem = page.locator('#crafting-list .crafting-item').filter({ has: page.locator('.crafting-item-tag') }).first();
+    await taggedItem.click();
+
+    await expect(page.locator('#crafting-detail .crafting-detail-tag')).toBeVisible();
+    const effectText = await page.locator('#crafting-detail .crafting-detail-effect-text').textContent();
+    expect((effectText || '').trim().length).toBeGreaterThan(0);
+  });
+
   test('shows error UI when crafting data fetch fails', async ({ page }) => {
     await page.route('**/tools/crafting-db.json', route => route.abort());
     await page.route('**/crafting-db.json', route => route.abort());
