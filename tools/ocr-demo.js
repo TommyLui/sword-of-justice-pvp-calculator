@@ -1,4 +1,5 @@
 (function () {
+    // ── 1. 常數與設定 ───────────────────────────────────────────────
     const SAMPLE_STORAGE_KEY = 'ocrDemoSamples';
     const DEFAULT_PREPROCESS = {
         grayscale: true,
@@ -101,6 +102,7 @@
         }
     };
 
+    // ── 2. 資料工廠與共用小工具（無 DOM 依賴）────────────────────
     function createFieldEntry(value, matchedAlias, sourceSnippet) {
         return {
             value: value || '',
@@ -153,6 +155,7 @@
         return fallback;
     }
 
+    // ── 3. 文字正規化與固定面板解析（純計算）─────────────────────
     function countFilledFields(fields) {
         return FIELDS.reduce((count, field) => {
             if (!PANEL_VISIBLE_FIELD_KEYS.has(field.key)) return count;
@@ -295,6 +298,7 @@
                 return;
             }
             if (String(fallback?.value || '') !== '') {
+                // 注意：這裡除了合併欄位，也會刻意留下 fallback 命中的 debug 記錄。
                 const matchedAlias = fallback.matchedAlias || sourceLabel || 'fallback';
                 merged[field.key] = createFieldEntry(fallback.value, matchedAlias, fallback.sourceSnippet);
                 state.debug.fallbackKeys.push(field.key);
@@ -540,6 +544,7 @@
         };
     }
 
+    // ── 4. 樣本資料與 OCR runtime 協調────────────────────────────
     function loadSamples() {
         try {
             const raw = localStorage.getItem(SAMPLE_STORAGE_KEY);
@@ -637,6 +642,7 @@
         return state.worker;
     }
 
+    // ── 5. 預處理、UI 同步與輸出渲染──────────────────────────────
     function updateProgress(progress) {
         state.progress = Math.max(0, Math.min(1, progress || 0));
         const bar = byId('ocr-demo-progress-bar');
@@ -1100,6 +1106,7 @@
         updateOutputs();
     }
 
+    // ── 6. 非同步 OCR 執行與公開 API──────────────────────────────
     async function runOcr() {
         if (!state.file || state.isRunning || !state.imageElement) return;
 
@@ -1367,6 +1374,7 @@
         }
     }
 
+    // ── 7. 事件綁定與初始化────────────────────────────────────────
     function bindEvents() {
         byId('ocr-demo-pick-btn')?.addEventListener('click', () => {
             byId('ocr-demo-file')?.click();

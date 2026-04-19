@@ -2,6 +2,7 @@ function initLeague() {
     if (window.__leagueInitialized) return;
     window.__leagueInitialized = true;
 
+    // ── A. 通知與常數設定 ─────────────────────────────────────────
     const notify = (options) => {
         if (window.showNotification) {
             window.showNotification(options);
@@ -47,6 +48,7 @@ function initLeague() {
         '玄機': '#EAE86F'
     };
 
+    // ── B. 純函式工具（格式化、CSV 解析、統計）───────────────────
     function formatNumber(n) {
         return Number(n).toLocaleString('zh-TW');
     }
@@ -152,6 +154,7 @@ function initLeague() {
         return cache;
     }
 
+    // ── C. DOM / 主題工具 ──────────────────────────────────────────
     function getThemeColors() {
         const style = getComputedStyle(document.body);
         const text = style.getPropertyValue('--text').trim() || '#E8EEF9';
@@ -187,6 +190,7 @@ function initLeague() {
         canvas._fallbackEl = fallback;
     }
 
+    // ── D. 渲染函式 ────────────────────────────────────────────────
     function populateRoleFilter() {
         const select = document.getElementById('league-class-filter');
         if (!select || !leagueData || !leagueData.guilds) return;
@@ -481,6 +485,40 @@ function initLeague() {
         });
     }
 
+    // ── E. 上傳解析工具與事件綁定 ────────────────────────────────
+    function handleParsedText(rawText, file) {
+        try {
+            leagueData = parseCSV(rawText);
+            if (!leagueData.guilds.length) {
+                return false;
+            }
+            let storageWarning = false;
+            try {
+                localStorage.setItem('leagueData', JSON.stringify(leagueData));
+                localStorage.setItem('leagueFilename', file.name);
+            } catch (storageError) {
+                storageWarning = true;
+            }
+            document.getElementById('league-filename').textContent = file.name;
+            activeGuild = null;
+            sortColumn = null;
+            activeFilter = '';
+            localStorage.removeItem('leagueActiveTab');
+            render();
+            notify({
+                type: storageWarning ? 'info' : 'success',
+                title: storageWarning ? '匯入成功（未儲存）' : '匯入成功',
+                message: storageWarning
+                    ? '已載入 ' + leagueData.guilds.length + ' 個公會的數據，數據量過大無法自動儲存'
+                    : '已載入 ' + leagueData.guilds.length + ' 個公會的數據',
+                duration: storageWarning ? 5000 : 3000
+            });
+            return true;
+        } catch (err) {
+            return false;
+        }
+    }
+
     // Upload handlers
     document.getElementById('league-upload-btn')?.addEventListener('click', () => {
         document.getElementById('league-file').click();
@@ -493,43 +531,10 @@ function initLeague() {
     document.getElementById('league-file')?.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        const handleParsedText = (rawText) => {
-            try {
-                leagueData = parseCSV(rawText);
-                if (!leagueData.guilds.length) {
-                    return false;
-                }
-                let storageWarning = false;
-                try {
-                    localStorage.setItem('leagueData', JSON.stringify(leagueData));
-                    localStorage.setItem('leagueFilename', file.name);
-                } catch (storageError) {
-                    storageWarning = true;
-                }
-                document.getElementById('league-filename').textContent = file.name;
-                activeGuild = null;
-                sortColumn = null;
-                activeFilter = '';
-                localStorage.removeItem('leagueActiveTab');
-                render();
-                notify({
-                    type: storageWarning ? 'info' : 'success',
-                    title: storageWarning ? '匯入成功（未儲存）' : '匯入成功',
-                    message: storageWarning
-                        ? '已載入 ' + leagueData.guilds.length + ' 個公會的數據，數據量過大無法自動儲存'
-                        : '已載入 ' + leagueData.guilds.length + ' 個公會的數據',
-                    duration: storageWarning ? 5000 : 3000
-                });
-                return true;
-            } catch (err) {
-                return false;
-            }
-        };
-
         const reader = new FileReader();
         reader.onload = (ev) => {
             const text = String(ev.target.result || '');
-            if (handleParsedText(text)) {
+            if (handleParsedText(text, file)) {
                 return;
             }
 
@@ -537,7 +542,7 @@ function initLeague() {
             const fallbackReader = new FileReader();
             fallbackReader.onload = (ev2) => {
                 const fallbackText = String(ev2.target.result || '');
-                if (!handleParsedText(fallbackText)) {
+                if (!handleParsedText(fallbackText, file)) {
                     notify({
                         type: 'error',
                         title: '解析失敗',
@@ -581,6 +586,7 @@ function initLeague() {
         renderTable();
     });
 
+    // ── F. 初始化與 localStorage 還原 ─────────────────────────────
     // Load saved data
     const saved = localStorage.getItem('leagueData');
     if (saved) {
