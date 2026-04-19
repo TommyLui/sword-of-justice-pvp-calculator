@@ -557,7 +557,7 @@ function initLeague() {
         e.target.value = '';
     });
 
-    document.getElementById('darkToggle')?.addEventListener('click', () => {
+    document.addEventListener('pvp:themechange', () => {
         if (!leagueData || !leagueData.guilds?.length) return;
         if (document.getElementById('view-league')?.hidden) return;
         renderComparisonChart();

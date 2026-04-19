@@ -279,6 +279,7 @@
         darkToggle?.addEventListener('click', () => {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark);
+            document.dispatchEvent(new CustomEvent('pvp:themechange'));
         });
         document.querySelectorAll('.nav a, .bottom-nav a').forEach(link => {
             link.addEventListener('click', () => {
