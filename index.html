@@ -265,6 +265,12 @@
             if (route === 'attribute-planner') {
                 initAttributePlanner();
             }
+            document.dispatchEvent(new CustomEvent('pvp:routechange', {
+                detail: {
+                    route,
+                    viewId
+                }
+            }));
         }
         window.addEventListener('hashchange', () => navigate(location.hash));
         const navToggle = document.getElementById('navToggle');
@@ -279,7 +285,11 @@
         darkToggle?.addEventListener('click', () => {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark);
-            document.dispatchEvent(new CustomEvent('pvp:themechange'));
+            document.dispatchEvent(new CustomEvent('pvp:themechange', {
+                detail: {
+                    darkMode: isDark
+                }
+            }));
         });
         document.querySelectorAll('.nav a, .bottom-nav a').forEach(link => {
             link.addEventListener('click', () => {
