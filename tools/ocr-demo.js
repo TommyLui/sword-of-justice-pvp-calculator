@@ -1374,6 +1374,39 @@
         }
     }
 
+    async function handleSelectedFile(file) {
+        if (!file) return;
+
+        try {
+            clearObjectUrl();
+            state.file = file;
+            state.imageUrl = URL.createObjectURL(file);
+            state.imageElement = await loadImageElement(state.imageUrl);
+            state.rawText = '';
+            state.fields = createEmptyFields();
+            state.layoutWarning = '';
+            resetDebugState();
+            updateSampleNameDefault();
+            updatePreview();
+            updateOutputs();
+            setStatus('idle', '圖片已載入，可先調整預處理再重新辨識', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
+            notify({
+                type: 'info',
+                title: '圖片已載入',
+                message: '可先調整預處理，再執行 OCR。',
+                duration: 2200
+            });
+        } catch (error) {
+            resetState();
+            notify({
+                type: 'error',
+                title: '圖片載入失敗',
+                message: error && error.message ? error.message : '請重新選擇圖片',
+                duration: 4000
+            });
+        }
+    }
+
     // ── 7. 事件綁定與初始化────────────────────────────────────────
     function bindEvents() {
         byId('ocr-demo-pick-btn')?.addEventListener('click', () => {
@@ -1382,36 +1415,7 @@
 
         byId('ocr-demo-file')?.addEventListener('change', async event => {
             const file = event.target.files && event.target.files[0];
-            if (!file) return;
-
-            try {
-                clearObjectUrl();
-                state.file = file;
-                state.imageUrl = URL.createObjectURL(file);
-                state.imageElement = await loadImageElement(state.imageUrl);
-                state.rawText = '';
-                state.fields = createEmptyFields();
-                state.layoutWarning = '';
-                resetDebugState();
-                updateSampleNameDefault();
-                updatePreview();
-                updateOutputs();
-                setStatus('idle', '圖片已載入，可先調整預處理再重新辨識', state.workerReady ? 'chi_tra + eng' : '尚未初始化');
-                notify({
-                    type: 'info',
-                    title: '圖片已載入',
-                    message: '可先調整預處理，再執行 OCR。',
-                    duration: 2200
-                });
-            } catch (error) {
-                resetState();
-                notify({
-                    type: 'error',
-                    title: '圖片載入失敗',
-                    message: error && error.message ? error.message : '請重新選擇圖片',
-                    duration: 4000
-                });
-            }
+            await handleSelectedFile(file);
         });
 
         ['ocr-demo-grayscale', 'ocr-demo-threshold-enabled', 'ocr-demo-contrast', 'ocr-demo-threshold', 'ocr-demo-scale'].forEach(id => {

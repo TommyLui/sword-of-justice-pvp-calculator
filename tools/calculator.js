@@ -556,3 +556,12 @@ function initCalculator() {
 
     hydrateCalculatorState();
 }
+
+if (!window.__calculatorRouteListenerBound) {
+    window.__calculatorRouteListenerBound = true;
+    document.addEventListener('pvp:routechange', event => {
+        if (event?.detail?.route === 'calculator') {
+            initCalculator();
+        }
+    });
+}

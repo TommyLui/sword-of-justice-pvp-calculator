@@ -519,18 +519,13 @@ function initLeague() {
         }
     }
 
-    // Upload handlers
-    document.getElementById('league-upload-btn')?.addEventListener('click', () => {
-        document.getElementById('league-file').click();
-    });
+    function openLeagueFilePicker() {
+        document.getElementById('league-file')?.click();
+    }
 
-    document.getElementById('league-reupload-btn')?.addEventListener('click', () => {
-        document.getElementById('league-file').click();
-    });
-
-    document.getElementById('league-file')?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
+    function handleLeagueFile(file) {
         if (!file) return;
+
         const reader = new FileReader();
         reader.onload = (ev) => {
             const text = String(ev.target.result || '');
@@ -554,6 +549,16 @@ function initLeague() {
             fallbackReader.readAsText(file, 'Big5');
         };
         reader.readAsText(file, 'UTF-8');
+    }
+
+    // Upload handlers
+    document.getElementById('league-upload-btn')?.addEventListener('click', openLeagueFilePicker);
+
+    document.getElementById('league-reupload-btn')?.addEventListener('click', openLeagueFilePicker);
+
+    document.getElementById('league-file')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        handleLeagueFile(file);
         e.target.value = '';
     });
 

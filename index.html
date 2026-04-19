@@ -256,15 +256,6 @@
             if (route === 'calculator') {
                 initCalculator();
             }
-            if (route === 'league') {
-                initLeague();
-            }
-            if (route === 'crafting') {
-                initCrafting();
-            }
-            if (route === 'attribute-planner') {
-                initAttributePlanner();
-            }
             document.dispatchEvent(new CustomEvent('pvp:routechange', {
                 detail: {
                     route,
