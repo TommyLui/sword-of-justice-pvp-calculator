@@ -471,3 +471,12 @@ function initAttributePlanner() {
 
     bootstrap();
 }
+
+if (!window.__attributePlannerRouteListenerBound) {
+    window.__attributePlannerRouteListenerBound = true;
+    document.addEventListener('pvp:routechange', event => {
+        if (event?.detail?.route === 'attribute-planner') {
+            initAttributePlanner();
+        }
+    });
+}

@@ -462,3 +462,12 @@ function initCrafting() {
     // Initialize
     loadData();
 }
+
+if (!window.__craftingRouteListenerBound) {
+    window.__craftingRouteListenerBound = true;
+    document.addEventListener('pvp:routechange', event => {
+        if (event?.detail?.route === 'crafting') {
+            initCrafting();
+        }
+    });
+}

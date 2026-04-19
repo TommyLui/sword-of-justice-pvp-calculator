@@ -600,3 +600,12 @@ function initLeague() {
         }
     }
 }
+
+if (!window.__leagueRouteListenerBound) {
+    window.__leagueRouteListenerBound = true;
+    document.addEventListener('pvp:routechange', event => {
+        if (event?.detail?.route === 'league') {
+            initLeague();
+        }
+    });
+}
