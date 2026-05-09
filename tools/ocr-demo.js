@@ -93,16 +93,20 @@
         lastJobId: 0,
         samples: [],
         referenceSample: null,
-        debug: {
+        debug: createDebugState()
+    };
+
+    // ── 2. 資料工廠與共用小工具（無 DOM 依賴）────────────────────
+    function createDebugState() {
+        return {
             templateVersion: PANEL_TEMPLATE_VERSION,
             strategy: 'fixed-panel-rows',
             rowAttempts: [],
             fallbackKeys: [],
             notes: []
-        }
-    };
+        };
+    }
 
-    // ── 2. 資料工廠與共用小工具（無 DOM 依賴）────────────────────
     function createFieldEntry(value, matchedAlias, sourceSnippet) {
         return {
             value: value || '',
@@ -183,13 +187,7 @@
     }
 
     function resetDebugState() {
-        state.debug = {
-            templateVersion: PANEL_TEMPLATE_VERSION,
-            strategy: 'fixed-panel-rows',
-            rowAttempts: [],
-            fallbackKeys: [],
-            notes: []
-        };
+        state.debug = createDebugState();
     }
 
     function normalizeText(text) {
@@ -521,6 +519,24 @@
         };
     }
 
+    function parseRecognitionResult(result, rawText) {
+        const panelParse = recognizeFixedPanel(result);
+        const fallbackFields = draftFieldsFromText(rawText, PANEL_VISIBLE_FIELD_KEYS);
+        const fallbackWins = countFallbackWins(panelParse.fields, fallbackFields, PANEL_VISIBLE_FIELD_KEYS);
+
+        if (fallbackWins > 0) {
+            pushDebugNote('已啟用同面板欄位文字 fallback 補齊固定面板未命中的欄位。');
+        }
+
+        const fields = mergeFieldDrafts(panelParse.fields, fallbackFields, 'text-fallback', PANEL_VISIBLE_FIELD_KEYS);
+        return {
+            fields,
+            layoutWarning: panelParse.warning,
+            panelParse,
+            filledCount: countFilledFields(fields)
+        };
+    }
+
     function buildDebugPayload() {
         return {
             templateVersion: state.debug.templateVersion,
@@ -544,30 +560,34 @@
         };
     }
 
-    // ── 4. 樣本資料與 OCR runtime 協調────────────────────────────
+    // ── 4. 樣本資料儲存與正規化────────────────────────────────────
+    function normalizeSample(item) {
+        return {
+            id: String(item.id || Date.now()),
+            name: String(item.name || '未命名樣本'),
+            createdAt: String(item.createdAt || new Date().toISOString()),
+            fileName: String(item.fileName || ''),
+            templateVersion: String(item.templateVersion || 'legacy'),
+            rawText: String(item.rawText || ''),
+            preprocess: {
+                grayscale: item.preprocess?.grayscale !== false,
+                thresholdEnabled: !!item.preprocess?.thresholdEnabled,
+                contrast: toInt(item.preprocess?.contrast, DEFAULT_PREPROCESS.contrast),
+                threshold: toInt(item.preprocess?.threshold, DEFAULT_PREPROCESS.threshold),
+                scale: toInt(item.preprocess?.scale, DEFAULT_PREPROCESS.scale)
+            },
+            fields: cloneFields(item.fields),
+            debug: item.debug && typeof item.debug === 'object' ? item.debug : null
+        };
+    }
+
     function loadSamples() {
         try {
             const raw = localStorage.getItem(SAMPLE_STORAGE_KEY);
             if (!raw) return [];
             const parsed = JSON.parse(raw);
             if (!Array.isArray(parsed)) return [];
-            return parsed.map(item => ({
-                id: String(item.id || Date.now()),
-                name: String(item.name || '未命名樣本'),
-                createdAt: String(item.createdAt || new Date().toISOString()),
-                fileName: String(item.fileName || ''),
-                templateVersion: String(item.templateVersion || 'legacy'),
-                rawText: String(item.rawText || ''),
-                preprocess: {
-                    grayscale: item.preprocess?.grayscale !== false,
-                    thresholdEnabled: !!item.preprocess?.thresholdEnabled,
-                    contrast: toInt(item.preprocess?.contrast, DEFAULT_PREPROCESS.contrast),
-                    threshold: toInt(item.preprocess?.threshold, DEFAULT_PREPROCESS.threshold),
-                    scale: toInt(item.preprocess?.scale, DEFAULT_PREPROCESS.scale)
-                },
-                fields: cloneFields(item.fields),
-                debug: item.debug && typeof item.debug === 'object' ? item.debug : null
-            }));
+            return parsed.map(normalizeSample);
         } catch (error) {
             return [];
         }
@@ -576,6 +596,28 @@
     function persistSamples() {
         localStorage.setItem(SAMPLE_STORAGE_KEY, JSON.stringify(state.samples));
     }
+
+    function getSelectedSample() {
+        const select = byId('ocr-demo-sample-select');
+        if (!select || !select.value) return null;
+        return state.samples.find(item => item.id === select.value) || null;
+    }
+
+    function buildCurrentSample(name) {
+        return {
+            id: String(Date.now()),
+            name,
+            createdAt: new Date().toISOString(),
+            fileName: state.file?.name || '',
+            templateVersion: PANEL_TEMPLATE_VERSION,
+            rawText: state.rawText,
+            preprocess: { ...state.preprocess },
+            fields: cloneFields(state.fields),
+            debug: buildDebugPayload()
+        };
+    }
+
+    // ── 5. Tesseract runtime 載入與辨識執行─────────────────────────
 
     function loadTesseractScript() {
         if (window.Tesseract) {
@@ -642,7 +684,27 @@
         return state.worker;
     }
 
-    // ── 5. 預處理、UI 同步與輸出渲染──────────────────────────────
+    async function recognizeWithTextFallback(worker, canvas, fallbackFile, isCurrentJob) {
+        let result = await worker.recognize(canvas, {}, { blocks: true });
+
+        if (isCurrentJob && !isCurrentJob()) {
+            return { result, rawText: '', stale: true };
+        }
+
+        let rawText = String(result?.data?.text || '').trim();
+
+        if (!rawText) {
+            pushDebugNote('預處理後整頁文字過少，改用原圖重試整頁 OCR。');
+            setStatus('running', '預處理後未抓到文字，改用原圖重試...', 'chi_tra + eng');
+            updateProgress(0.92);
+            result = await worker.recognize(fallbackFile, {}, { blocks: true });
+            rawText = String(result?.data?.text || '').trim();
+        }
+
+        return { result, rawText, stale: false };
+    }
+
+    // ── 6. 預處理、UI 同步與輸出渲染──────────────────────────────
     function updateProgress(progress) {
         state.progress = Math.max(0, Math.min(1, progress || 0));
         const bar = byId('ocr-demo-progress-bar');
@@ -1106,7 +1168,7 @@
         updateOutputs();
     }
 
-    // ── 6. 非同步 OCR 執行與公開 API──────────────────────────────
+    // ── 7. 非同步 OCR 編排────────────────────────────────────────
     async function runOcr() {
         if (!state.file || state.isRunning || !state.imageElement) return;
 
@@ -1128,42 +1190,26 @@
             }
 
             setStatus('running', '固定面板 OCR 辨識中...', 'chi_tra + eng');
-            let result = await worker.recognize(canvas, {}, { blocks: true });
+            const recognition = await recognizeWithTextFallback(worker, canvas, state.file, () => jobId === state.lastJobId);
 
-            if (jobId !== state.lastJobId) {
+            if (recognition.stale || jobId !== state.lastJobId) {
                 return;
             }
 
-            let recognizedText = String(result?.data?.text || '').trim();
+            state.rawText = recognition.rawText;
+            const parsed = parseRecognitionResult(recognition.result, state.rawText);
+            state.fields = parsed.fields;
+            state.layoutWarning = parsed.layoutWarning;
 
-            if (!recognizedText) {
-                pushDebugNote('預處理後整頁文字過少，改用原圖重試整頁 OCR。');
-                setStatus('running', '預處理後未抓到文字，改用原圖重試...', 'chi_tra + eng');
-                updateProgress(0.92);
-                result = await worker.recognize(state.file, {}, { blocks: true });
-                recognizedText = String(result?.data?.text || '').trim();
-            }
-
-            state.rawText = recognizedText;
-            const panelParse = recognizeFixedPanel(result);
-            const fallbackFields = draftFieldsFromText(state.rawText, PANEL_VISIBLE_FIELD_KEYS);
-            const fallbackWins = countFallbackWins(panelParse.fields, fallbackFields, PANEL_VISIBLE_FIELD_KEYS);
-            if (fallbackWins > 0) {
-                pushDebugNote('已啟用同面板欄位文字 fallback 補齊固定面板未命中的欄位。');
-            }
-            state.fields = mergeFieldDrafts(panelParse.fields, fallbackFields, 'text-fallback', PANEL_VISIBLE_FIELD_KEYS);
-            state.layoutWarning = panelParse.warning;
-
-            const finalFilledCount = countFilledFields(state.fields);
-            if (panelParse.valid || finalFilledCount >= 10) {
+            if (parsed.panelParse.valid || parsed.filledCount >= 10) {
                 setStatus('success', '辨識完成，已依固定面板模板產生欄位草稿', 'chi_tra + eng');
             } else {
-                setStatus('error', panelParse.warning || '固定面板模板命中不足，請確認截圖完整度。', 'chi_tra + eng');
+                setStatus('error', parsed.layoutWarning || '固定面板模板命中不足，請確認截圖完整度。', 'chi_tra + eng');
             }
             updateProgress(1);
             updateOutputs();
 
-            if (panelParse.valid || finalFilledCount >= 10) {
+            if (parsed.panelParse.valid || parsed.filledCount >= 10) {
                 notify({
                     type: 'success',
                     title: 'OCR 完成',
@@ -1174,7 +1220,7 @@
                 notify({
                     type: 'error',
                     title: '版面辨識失敗',
-                    message: panelParse.warning || '固定面板模板命中不足，請確認截圖完整度與預處理設定。',
+                    message: parsed.layoutWarning || '固定面板模板命中不足，請確認截圖完整度與預處理設定。',
                     duration: 4500
                 });
             }
@@ -1193,12 +1239,9 @@
         }
     }
 
-    async function recognizeFromFile(file, preprocessOverrides) {
-        if (!file) {
-            throw new Error('請先選擇圖片');
-        }
-
-        const previousState = {
+    // ── 8. 公開 API 與暫存狀態還原────────────────────────────────
+    function captureSessionState() {
+        return {
             file: state.file,
             imageUrl: state.imageUrl,
             imageElement: state.imageElement,
@@ -1211,6 +1254,36 @@
             isRunning: state.isRunning,
             lastJobId: state.lastJobId
         };
+    }
+
+    function restoreSessionState(previousState) {
+        state.file = previousState.file;
+        state.imageUrl = previousState.imageUrl;
+        state.imageElement = previousState.imageElement;
+        state.rawText = previousState.rawText;
+        state.fields = cloneFields(previousState.fields);
+        state.layoutWarning = previousState.layoutWarning;
+        state.preprocess = { ...previousState.preprocess };
+        state.debug = previousState.debug;
+        state.progress = previousState.progress;
+        state.isRunning = previousState.isRunning;
+        state.lastJobId = previousState.lastJobId;
+    }
+
+    function refreshInitializedUi() {
+        if (!window.__ocrDemoInitialized) return;
+        hydrateControls();
+        updatePreview();
+        updateOutputs();
+        updateButtons();
+    }
+
+    async function recognizeFromFile(file, preprocessOverrides) {
+        if (!file) {
+            throw new Error('請先選擇圖片');
+        }
+
+        const previousState = captureSessionState();
 
         const objectUrl = URL.createObjectURL(file);
 
@@ -1223,26 +1296,12 @@
             return buildRecognitionResult();
         } finally {
             URL.revokeObjectURL(objectUrl);
-            state.file = previousState.file;
-            state.imageUrl = previousState.imageUrl;
-            state.imageElement = previousState.imageElement;
-            state.rawText = previousState.rawText;
-            state.fields = cloneFields(previousState.fields);
-            state.layoutWarning = previousState.layoutWarning;
-            state.preprocess = { ...previousState.preprocess };
-            state.debug = previousState.debug;
-            state.progress = previousState.progress;
-            state.isRunning = previousState.isRunning;
-            state.lastJobId = previousState.lastJobId;
-
-            if (window.__ocrDemoInitialized) {
-                hydrateControls();
-                updatePreview();
-                updateOutputs();
-                updateButtons();
-            }
+            restoreSessionState(previousState);
+            refreshInitializedUi();
         }
     }
+
+    // ── 9. 樣本與操作事件處理────────────────────────────────────
 
     async function copyText(value, successMessage) {
         if (!value) return;
@@ -1286,17 +1345,7 @@
 
         const input = byId('ocr-demo-sample-name');
         const name = (input?.value || '').trim() || ((state.file?.name || 'ocr-sample').replace(/\.[^.]+$/, ''));
-        const sample = {
-            id: String(Date.now()),
-            name,
-            createdAt: new Date().toISOString(),
-            fileName: state.file?.name || '',
-            templateVersion: PANEL_TEMPLATE_VERSION,
-            rawText: state.rawText,
-            preprocess: { ...state.preprocess },
-            fields: cloneFields(state.fields),
-            debug: buildDebugPayload()
-        };
+        const sample = buildCurrentSample(name);
 
         state.samples.unshift(sample);
         persistSamples();
@@ -1316,9 +1365,7 @@
     }
 
     function loadSelectedSample() {
-        const select = byId('ocr-demo-sample-select');
-        if (!select || !select.value) return;
-        const sample = state.samples.find(item => item.id === select.value);
+        const sample = getSelectedSample();
         if (!sample) return;
 
         state.referenceSample = sample;
@@ -1407,7 +1454,7 @@
         }
     }
 
-    // ── 7. 事件綁定與初始化────────────────────────────────────────
+    // ── 10. 事件綁定與初始化───────────────────────────────────────
     function bindEvents() {
         byId('ocr-demo-pick-btn')?.addEventListener('click', () => {
             byId('ocr-demo-file')?.click();

@@ -1,0 +1,4 @@
+{"file":".trellis/spec/frontend/index.md","reason":"Frontend overview and pre-development checklist for static SPA changes."}
+{"file":".trellis/spec/frontend/directory-structure.md","reason":"Preserve root static SPA shape, script ordering, and OCR feature ownership conventions."}
+{"file":".trellis/spec/frontend/state-management.md","reason":"Preserve file-local state, localStorage key ownership, and OCR sample persistence contract."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Apply required patterns and choose the correct OCR-focused Playwright verification."}

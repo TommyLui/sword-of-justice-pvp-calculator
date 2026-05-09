@@ -211,6 +211,40 @@ Treat these as browser runtime data sources, not API-backed server state. Do not
 
 ---
 
+## Async Runtime State
+
+Long-running browser jobs use file-local state as part of their cancellation contract. When refactoring OCR or similar async work, keep the freshness check close to every nested retry/fallback path, not only at the top-level caller.
+
+Example:
+
+```js
+// tools/ocr-demo.js pattern
+state.lastJobId += 1;
+const jobId = state.lastJobId;
+
+const recognition = await recognizeWithTextFallback(worker, canvas, () => jobId === state.lastJobId);
+if (recognition.stale || jobId !== state.lastJobId) {
+    return;
+}
+```
+
+Helpers that can perform additional async work after the first await should accept an `isCurrentJob` callback or equivalent guard and return a stale result before retrying or updating UI-visible state:
+
+```js
+async function recognizeWithTextFallback(worker, canvas, fallbackFile, isCurrentJob) {
+    const result = await worker.recognize(canvas, {}, { blocks: true });
+    if (isCurrentJob && !isCurrentJob()) {
+        return { result, rawText: '', stale: true };
+    }
+
+    // Safe to continue fallback/retry work using the captured fallbackFile.
+}
+```
+
+Capture input snapshots before starting async work and pass them into helpers instead of reading mutable feature state after an `await`. This prevents an older upload/OCR job from continuing expensive fallback work, using the wrong file/image after state changes, or publishing stale progress/status after a newer job has started.
+
+---
+
 ## Common Mistakes
 
 - Do not add a global state library to solve feature-local state.
@@ -219,3 +253,4 @@ Treat these as browser runtime data sources, not API-backed server state. Do not
 - Do not rename `localStorage` keys casually; persistence and Playwright tests depend on stable keys.
 - Do not store user-imported data as HTML. Persist JSON/text values and render with `textContent`.
 - Do not assume state is reset on route changes; feature scripts intentionally reuse initialized DOM/state on route revisits.
+- Do not move async fallback/retry work behind a top-level stale-job guard without preserving freshness checks inside the helper; old OCR jobs can otherwise keep running after a newer upload starts.
