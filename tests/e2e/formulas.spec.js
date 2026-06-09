@@ -15,6 +15,7 @@ test.describe('combat formulas', () => {
       remainShield3: window.pvpCombat.calculateRemainShield(9000, 9000),
       elementalResisRate: window.pvpCombat.calculateElementalResisRate(5000, 1000),
       actualAccuracyRate: window.pvpCombat.calculateActualAccuracyRate(5000, 1000),
+      actualAccuracyRateBelowBase: window.pvpCombat.calculateActualAccuracyRate(1000, 5000),
       actualCritRate: window.pvpCombat.calculateActualCritRate(5000, 10, 1000),
       actualCritRateCapped: window.pvpCombat.calculateActualCritRate(999999, 100, 0)
     }));
@@ -27,6 +28,7 @@ test.describe('combat formulas', () => {
     expect(result.remainShield3).toBe(0);
     expect(result.elementalResisRate).toBeCloseTo(45.65167769915545, 8);
     expect(result.actualAccuracyRate).toBeCloseTo(100, 8);
+    expect(result.actualAccuracyRateBelowBase).toBeCloseTo(9.473684210526315, 8);
     expect(result.actualCritRate).toBeCloseTo(78.97689768976898, 8);
     expect(result.actualCritRateCapped).toBe(100);
   });

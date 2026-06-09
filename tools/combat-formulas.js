@@ -29,7 +29,7 @@
     }
 
     function calculateActualAccuracyRate(accuracy, blockResistance) {
-        const diff = Math.max(0, accuracy - blockResistance);
+        const diff = accuracy - blockResistance;
         return Math.min(((143 * diff) / (diff + 10688) + 95) / 100, 1) * 100;
     }
 
