@@ -6,11 +6,6 @@ const CALCULATOR_TO_PLANNER_CASES = [
   { field: 'elementalBreak', value: '9999' }
 ];
 
-const PLANNER_TO_CALCULATOR_CASES = [
-  { field: 'attack', value: '80000' },
-  { field: 'shieldBreak', value: '7777' }
-];
-
 test.describe('calculator and planner sync', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/#/');
@@ -29,22 +24,18 @@ test.describe('calculator and planner sync', () => {
     });
   }
 
-  for (const { field, value } of PLANNER_TO_CALCULATOR_CASES) {
-    test(`syncs planner baseline ${field} back to calculator atk1`, async ({ page }) => {
-      await page.goto('/#/calculator');
-      await page.goto('/#/attribute-planner');
-      await page.waitForSelector('#planner-app:not([hidden])');
-      await page.fill(`#planner-baseline-${field}`, value);
-      await page.dispatchEvent(`#planner-baseline-${field}`, 'change');
+  test('planner baseline is read-only and does not push back to calculator', async ({ page }) => {
+    await page.goto('/#/calculator');
+    await page.fill('#atk1-attack', '10000');
+    await page.dispatchEvent('#atk1-attack', 'input');
 
-      await page.goto('/#/calculator');
-      await page.waitForFunction(
-        ({ inputId, expected }) => document.getElementById(inputId).value === expected,
-        { inputId: `atk1-${field}`, expected: value }
-      );
-      await expect(page.locator(`#atk1-${field}`)).toHaveValue(value);
-    });
-  }
+    await page.goto('/#/attribute-planner');
+    await page.waitForSelector('#planner-app:not([hidden])');
+
+    const baselineInput = page.locator('#planner-baseline-attack');
+    await expect(baselineInput).toHaveValue('10000');
+    await expect(baselineInput).toBeDisabled();
+  });
 
   test('does not sync atk2 into planner baseline', async ({ page }) => {
     await page.goto('/#/calculator');

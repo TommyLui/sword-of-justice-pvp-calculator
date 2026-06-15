@@ -208,6 +208,6 @@ Because of this fetch, serve the app over HTTP (`npx serve .`, Playwright web se
 
 - Do not add React/custom hook abstractions to share stateful logic; use native events, init functions, and small shared `window.pvp...` modules.
 - Do not skip initialization guards. Rebinding listeners on route revisit causes duplicate handlers and stale state bugs.
-- Do not drop sync `source` metadata or re-entry flags (`isApplyingBridgeUpdate`, `isApplyingSync`); calculator/planner sync depends on them.
+- Sync publishers must set `source` metadata and use re-entry flags (`isApplyingBridgeUpdate`, `isApplyingSync`) to avoid feedback loops. Subscribers that do not publish may omit the re-entry flag but should still respect `source` when applicable.
 - Do not perform fetch-dependent validation over `file://`; HTTP serving is required.
 - Do not make real OCR/Tesseract calls in the default regression path; use mocks except for `npm run test:ocr-real`.

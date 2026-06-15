@@ -165,7 +165,7 @@
                 <div class="attribute-planner-header">
                     <h2>屬性規劃</h2>
                     <div class="attribute-planner-kpi">
-                        預估有效傷害提升：<strong id="planner-kpi">+0.00%</strong>
+                        基準有效傷害：<strong id="planner-kpi">0</strong>
                     </div>
                 </div>
 
@@ -173,55 +173,32 @@
 
                 <div id="planner-app" class="planner-app" hidden>
                     <div class="planner-steps" role="tablist" aria-label="屬性規劃步驟">
-                        <button type="button" class="planner-step active" data-step="1">1. 基準</button>
-                        <button type="button" class="planner-step" data-step="2">2. 目標</button>
-                        <button type="button" class="planner-step" data-step="3">3. 結果</button>
+                        <button type="button" class="planner-step active" data-step="1" id="planner-step-btn-1" role="tab" aria-selected="true" aria-controls="planner-panel-1">1. 基準</button>
+                        <button type="button" class="planner-step" data-step="2" id="planner-step-btn-2" role="tab" aria-selected="false" aria-controls="planner-panel-2">2. 增量</button>
+                        <button type="button" class="planner-step" data-step="3" id="planner-step-btn-3" role="tab" aria-selected="false" aria-controls="planner-panel-3">3. 比較</button>
                     </div>
 
                     <div class="planner-panels">
-                        <section class="planner-panel active" data-step-panel="1">
-                            <h3>設定基準（目前面板）</h3>
-                            <p>此規劃器的傷害提升結果，是以傷害計算器的進攻數值 1 與防禦數值 1 為基準情境。</p>
-                            <p>輸入你現在的屬性。基準值會與傷害計算器的進攻數值1雙向同步。</p>
+                        <section class="planner-panel active" data-step-panel="1" id="planner-panel-1" role="tabpanel" aria-labelledby="planner-step-btn-1">
+                            <h3>基準屬性</h3>
+                            <p>以下數值來自傷害計算器的「進攻數值1」，會隨計算器即時同步，無法在此直接編輯。</p>
                             <div id="planner-baseline-fields" class="planner-fields"></div>
                         </section>
 
-                        <section class="planner-panel" data-step-panel="2" hidden>
+                        <section class="planner-panel" data-step-panel="2" id="planner-panel-2" role="tabpanel" aria-labelledby="planner-step-btn-2" hidden>
                             <div class="planner-panel-head">
-                                <h3>調整目標（目標面板）</h3>
+                                <h3>設定階梯增量</h3>
                                 <div class="planner-confirm-actions planner-confirm-actions-inline">
-                                    <button id="planner-reset-candidate" type="button" class="planner-secondary-btn">重置目標 = 基準</button>
+                                    <button id="planner-reset-steps" type="button" class="planner-secondary-btn">重置所有增量</button>
                                 </div>
                             </div>
-                            <p>調整你預計達成的屬性。</p>
-                            <div id="planner-candidate-fields" class="planner-fields"></div>
+                            <p>為每個屬性輸入每次要增加多少；未設定（0 或空白）的屬性不會列入比較。</p>
+                            <div id="planner-step-fields" class="planner-fields"></div>
                         </section>
 
-                        <section class="planner-panel" data-step-panel="3" hidden>
-                            <h3>結果分析</h3>
-                            <div class="planner-result-cards">
-                                <div class="planner-result-card">
-                                    <div class="planner-result-label">總提升</div>
-                                    <div id="planner-result-total" class="planner-result-value">+0.00%</div>
-                                </div>
-                                <div class="planner-result-card">
-                                    <div class="planner-result-label">前 3 大貢獻</div>
-                                    <ul id="planner-top3" class="planner-top3"></ul>
-                                </div>
-                            </div>
-                            <div class="planner-contrib-wrap">
-                                <table class="planner-contrib-table">
-                                    <thead>
-                                        <tr>
-                                            <th>屬性</th>
-                                            <th>基準</th>
-                                            <th>目標</th>
-                                            <th>貢獻</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="planner-contrib-body"></tbody>
-                                </table>
-                            </div>
+                        <section class="planner-panel" data-step-panel="3" id="planner-panel-3" role="tabpanel" aria-labelledby="planner-step-btn-3" hidden>
+                            <h3>階梯比較結果</h3>
+                            <div id="planner-stepping-results"></div>
                             <div id="planner-notes" class="planner-notes"></div>
                         </section>
                     </div>
@@ -253,10 +230,11 @@
             document.querySelectorAll('.view').forEach(v => v.hidden = true);
             document.getElementById(viewId).hidden = false;
             document.querySelectorAll('.nav a, .bottom-nav a').forEach(a => a.classList.toggle('active', a.dataset.route === route));
-            if (route === 'calculator') {
+            if (route === 'calculator' || route === 'attribute-planner') {
                 initCalculator();
             }
             document.dispatchEvent(new CustomEvent('pvp:routechange', {
+
                 detail: {
                     route,
                     viewId

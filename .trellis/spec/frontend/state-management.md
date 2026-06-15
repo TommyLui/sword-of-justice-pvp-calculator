@@ -51,10 +51,9 @@ let statsCache = null;
 ```js
 // tools/attribute-planner.js
 const state = {
-    step: 1,
+    wizardStep: 1,
     baseline: {},
-    candidate: {},
-    lastResult: null
+    steps: {}
 };
 ```
 

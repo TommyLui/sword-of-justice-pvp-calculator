@@ -33,35 +33,29 @@ function initAttributePlanner() {
     }
 
     const ATTRIBUTES = config.PLANNER_ATTRIBUTES;
-    const BASELINE_SYNC_KEYS = config.BASELINE_SYNC_KEYS;
+    const STEP_LEVELS = 10;
+    const STEP_STORAGE_PREFIX = 'planner-step-';
 
     const state = {
-        step: 1,
+        wizardStep: 1,
         baseline: {},
-        candidate: {},
-        lastResult: null
+        steps: {}
     };
 
-    const SYNC_SOURCE = 'attribute-planner';
-    let isApplyingSync = false;
-    let hasBoundBaselineSyncInputs = false;
-
-    const diffElementsByAttr = {};
+    let debouncedRenderComparison;
 
     const loadingEl = document.getElementById('planner-loading');
     const appEl = document.getElementById('planner-app');
     const baselineFieldsEl = document.getElementById('planner-baseline-fields');
-    const candidateFieldsEl = document.getElementById('planner-candidate-fields');
-    const contribBodyEl = document.getElementById('planner-contrib-body');
-    const top3El = document.getElementById('planner-top3');
+    const stepFieldsEl = document.getElementById('planner-step-fields');
+    const steppingResultsEl = document.getElementById('planner-stepping-results');
     const notesEl = document.getElementById('planner-notes');
     const kpiEl = document.getElementById('planner-kpi');
-    const resultTotalEl = document.getElementById('planner-result-total');
     const stepButtons = Array.from(document.querySelectorAll('#view-attribute-planner .planner-step'));
     const panels = Array.from(document.querySelectorAll('#view-attribute-planner .planner-panel'));
     const prevBtn = document.getElementById('planner-prev');
     const nextBtn = document.getElementById('planner-next');
-    const resetCandidateBtn = document.getElementById('planner-reset-candidate');
+    const resetStepsBtn = document.getElementById('planner-reset-steps');
 
     function toNumber(value, fallback = 0) {
         const n = Number(value);
@@ -74,14 +68,48 @@ function initAttributePlanner() {
         return sign + percent.toFixed(2) + '%';
     }
 
-    function normalizeByAttribute(attr, value) {
-        const parsed = toNumber(value, 0);
-        if (!Number.isFinite(parsed)) {
-            return attr.min || 0;
+    function formatInteger(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? Math.floor(n).toLocaleString('zh-TW') : '0';
+    }
+
+    function formatIncrement(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n.toLocaleString('zh-TW') : '0';
+    }
+
+    function loadStepsFromStorage() {
+        const steps = createZeroStats();
+        ATTRIBUTES.forEach(attr => {
+            const saved = localStorage.getItem(STEP_STORAGE_PREFIX + attr.id);
+            if (saved !== null) {
+                steps[attr.id] = Math.max(0, toNumber(saved, 0));
+            }
+        });
+        return steps;
+    }
+
+    function saveStepToStorage(attrId, value) {
+        const key = STEP_STORAGE_PREFIX + attrId;
+        if (value > 0) {
+            localStorage.setItem(key, String(value));
+        } else {
+            localStorage.removeItem(key);
         }
-        if (parsed < attr.min) return attr.min;
-        if (parsed > attr.max) return attr.max;
-        return parsed;
+    }
+
+    function clearStepsStorage() {
+        ATTRIBUTES.forEach(attr => {
+            localStorage.removeItem(STEP_STORAGE_PREFIX + attr.id);
+        });
+    }
+
+    function debounce(fn, delay) {
+        let timer = null;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), delay);
+        };
     }
 
     function createZeroStats() {
@@ -113,114 +141,133 @@ function initAttributePlanner() {
         };
     }
 
-    function calculateEffectiveDamage(stats) {
-        return combat.calculateCombatStats(stats).expectedDamage;
-    }
-
-    function buildZeroResult(note) {
-        const contributions = ATTRIBUTES.map(attr => ({
-            attrId: attr.id,
-            attrName: attr.name,
-            baselineValue: normalizeByAttribute(attr, state.baseline[attr.id]),
-            candidateValue: normalizeByAttribute(attr, state.candidate[attr.id]),
-            deltaGain: 0
-        }));
-
-        return {
-            improvePercent: 0,
-            baselineTotal: 0,
-            candidateTotal: 0,
-            contributions,
-            top3: contributions.slice(0, 3),
-            notes: [note]
-        };
-    }
-
-    function calculateEstimate() {
+    function calculateSteppingComparison() {
         const scenario = readCombatScenario();
         const baselineStats = { ...scenario, ...state.baseline };
-        const candidateStats = { ...scenario, ...state.candidate };
-        const baselineDamage = calculateEffectiveDamage(baselineStats);
-        const candidateDamage = calculateEffectiveDamage(candidateStats);
+        const baselineDamage = combat.calculateCombatStats(baselineStats).expectedDamage;
+        const results = [];
 
-        if (baselineDamage <= 0) {
-            return buildZeroResult('目前基準傷害為 0，請先在傷害計算器設定可造成傷害的比較情境。');
-        }
+        ATTRIBUTES.forEach(attr => {
+            const step = toNumber(state.steps[attr.id], 0);
+            if (step <= 0) return;
 
-        const contributions = ATTRIBUTES.map(attr => {
-            const singleAttrCandidate = {
-                ...baselineStats,
-                [attr.id]: normalizeByAttribute(attr, state.candidate[attr.id])
-            };
-            const singleAttrDamage = calculateEffectiveDamage(singleAttrCandidate);
-            const deltaGain = ((singleAttrDamage - baselineDamage) / baselineDamage) || 0;
+            const rows = [];
+            let previousDamage = baselineDamage;
+            const baselineValue = toNumber(state.baseline[attr.id], 0);
 
-            return {
-                attrId: attr.id,
-                attrName: attr.name,
-                baselineValue: normalizeByAttribute(attr, state.baseline[attr.id]),
-                candidateValue: normalizeByAttribute(attr, state.candidate[attr.id]),
-                deltaGain
-            };
+            for (let level = 1; level <= STEP_LEVELS; level++) {
+                const increment = level * step;
+                const attrValue = baselineValue + increment;
+                const stats = { ...baselineStats, [attr.id]: attrValue };
+                const damage = combat.calculateCombatStats(stats).expectedDamage;
+                const marginalGain = previousDamage > 0 ? ((damage - previousDamage) / previousDamage) : 0;
+                const cumulativeGain = baselineDamage > 0 ? ((damage - baselineDamage) / baselineDamage) : 0;
+
+                rows.push({
+                    level,
+                    increment,
+                    appliedIncrement: attrValue - baselineValue,
+                    damage,
+                    marginalGain,
+                    cumulativeGain
+                });
+                previousDamage = damage;
+            }
+
+            results.push({ attr, step, rows });
         });
 
         return {
-            improvePercent: (candidateDamage - baselineDamage) / baselineDamage,
-            baselineTotal: 0,
-            candidateTotal: (candidateDamage - baselineDamage) / baselineDamage,
-            contributions,
-            top3: [...contributions].sort((a, b) => b.deltaGain - a.deltaGain).slice(0, 3),
+            baselineDamage,
+            results,
             notes: ['依目前傷害計算器的「進攻數值1 vs 防禦數值1」公式即時計算。']
         };
     }
 
-    function renderResults() {
-        const result = calculateEstimate();
-        state.lastResult = result;
-        if (!result) return;
+    function renderComparison() {
+        const result = calculateSteppingComparison();
 
-        kpiEl.textContent = formatSignedPercent(result.improvePercent);
-        resultTotalEl.textContent = formatSignedPercent(result.improvePercent);
+        kpiEl.textContent = formatInteger(result.baselineDamage);
+        steppingResultsEl.innerHTML = '';
+        notesEl.innerHTML = '';
 
-        contribBodyEl.innerHTML = '';
-        const fragment = document.createDocumentFragment();
-        result.contributions.forEach(item => {
-            const tr = document.createElement('tr');
+        if (result.baselineDamage <= 0) {
+            const empty = document.createElement('p');
+            empty.textContent = '目前基準傷害為 0，請先在傷害計算器設定可造成傷害的比較情境。';
+            empty.className = 'planner-empty-note';
+            steppingResultsEl.appendChild(empty);
 
-            const tdName = document.createElement('td');
-            tdName.textContent = item.attrName;
-            tr.appendChild(tdName);
-
-            const tdBase = document.createElement('td');
-            tdBase.textContent = String(item.baselineValue);
-            tr.appendChild(tdBase);
-
-            const tdCandidate = document.createElement('td');
-            tdCandidate.textContent = String(item.candidateValue);
-            tr.appendChild(tdCandidate);
-
-            const tdDelta = document.createElement('td');
-            tdDelta.textContent = formatSignedPercent(item.deltaGain);
-            tdDelta.className = item.deltaGain >= 0 ? 'planner-positive' : 'planner-negative';
-            tr.appendChild(tdDelta);
-
-            fragment.appendChild(tr);
-        });
-        contribBodyEl.appendChild(fragment);
-
-        top3El.innerHTML = '';
-        result.top3.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item.attrName + ' ' + formatSignedPercent(item.deltaGain);
-            top3El.appendChild(li);
-        });
-        if (result.top3.length === 0) {
-            const li = document.createElement('li');
-            li.textContent = '目前無可比較資料';
-            top3El.appendChild(li);
+            result.notes.forEach(note => {
+                const p = document.createElement('p');
+                p.textContent = note;
+                notesEl.appendChild(p);
+            });
+            return;
         }
 
-        notesEl.innerHTML = '';
+        if (result.results.length === 0) {
+            const empty = document.createElement('p');
+            empty.textContent = '請在「增量」步驟為至少一項屬性設定階梯增量。';
+            empty.className = 'planner-empty-note';
+            steppingResultsEl.appendChild(empty);
+        } else {
+            const fragment = document.createDocumentFragment();
+            result.results.forEach(group => {
+                const section = document.createElement('div');
+                section.className = 'planner-stepping-group';
+
+                const heading = document.createElement('h4');
+                heading.textContent = `${group.attr.name}（每階 +${group.step}）`;
+                section.appendChild(heading);
+
+                const wrap = document.createElement('div');
+                wrap.className = 'planner-contrib-wrap';
+
+                const table = document.createElement('table');
+                table.className = 'planner-contrib-table';
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                ['等級', '增加數值', '邊際提升', '累積提升'].forEach(text => {
+                    const th = document.createElement('th');
+                    th.textContent = text;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                group.rows.forEach(row => {
+                    const tr = document.createElement('tr');
+
+                    const tdLevel = document.createElement('td');
+                    tdLevel.textContent = String(row.level);
+                    tr.appendChild(tdLevel);
+
+                    const tdIncrement = document.createElement('td');
+                    tdIncrement.textContent = '+' + formatIncrement(row.appliedIncrement);
+                    tr.appendChild(tdIncrement);
+
+                    const tdMarginal = document.createElement('td');
+                    tdMarginal.textContent = formatSignedPercent(row.marginalGain);
+                    tdMarginal.className = row.marginalGain >= 0 ? 'planner-positive' : 'planner-negative';
+                    tr.appendChild(tdMarginal);
+
+                    const tdCumulative = document.createElement('td');
+                    tdCumulative.textContent = formatSignedPercent(row.cumulativeGain);
+                    tdCumulative.className = row.cumulativeGain >= 0 ? 'planner-positive' : 'planner-negative';
+                    tr.appendChild(tdCumulative);
+
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                wrap.appendChild(table);
+                section.appendChild(wrap);
+                fragment.appendChild(section);
+            });
+            steppingResultsEl.appendChild(fragment);
+        }
+
         result.notes.forEach(note => {
             const p = document.createElement('p');
             p.textContent = note;
@@ -228,180 +275,124 @@ function initAttributePlanner() {
         });
     }
 
-    function refreshAllDiffLabels() {
-        ATTRIBUTES.forEach(attr => {
-            const diffEl = diffElementsByAttr[`candidate-${attr.id}`];
-            if (!diffEl) return;
-            const delta = toNumber(state.candidate[attr.id], 0) - toNumber(state.baseline[attr.id], 0);
-            const sign = delta >= 0 ? '+' : '';
-            diffEl.textContent = `差值：${sign}${delta}`;
-        });
-    }
+    debouncedRenderComparison = debounce(renderComparison, 150);
 
-    function pushBaselineToBridge() {
-        if (!window.pvpSyncBridge?.setBaselineAtk1 || isApplyingSync) return;
-        window.pvpSyncBridge.setBaselineAtk1({
-            attack: state.baseline.attack ?? 0,
-            elementalAttack: state.baseline.elementalAttack ?? 0,
-            defenseBreak: state.baseline.defenseBreak ?? 0,
-            shieldBreak: state.baseline.shieldBreak ?? 0,
-            accuracy: state.baseline.accuracy ?? 0,
-            crit: state.baseline.crit ?? 0,
-            critDamage: state.baseline.critDamage ?? 0,
-            elementalBreak: state.baseline.elementalBreak ?? 0
-        }, { source: SYNC_SOURCE });
-    }
-
-    function applyBaselineFromBridge(payload) {
-        if (!payload || payload.source === SYNC_SOURCE || !payload.baselineAtk1) return;
-        isApplyingSync = true;
-        const incoming = payload.baselineAtk1;
-
-        BASELINE_SYNC_KEYS.forEach(key => {
-            state.baseline[key] = toNumber(incoming[key], 0);
-            const baselineInput = document.getElementById(`planner-baseline-${key}`);
-            if (baselineInput) {
-                baselineInput.value = String(state.baseline[key]);
-            }
-        });
-
-        refreshAllDiffLabels();
-        renderResults();
-        isApplyingSync = false;
-    }
-
-    function bindBaselineSyncInputs() {
-        if (hasBoundBaselineSyncInputs) return;
-
-        BASELINE_SYNC_KEYS.forEach(key => {
-            const input = document.getElementById(`planner-baseline-${key}`);
-            if (!input) return;
-
-            input.addEventListener('change', () => {
-                pushBaselineToBridge();
-            });
-
-            input.addEventListener('blur', () => {
-                pushBaselineToBridge();
-            });
-
-            input.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    input.blur();
-                }
-            });
-        });
-
-        hasBoundBaselineSyncInputs = true;
-    }
-
-    function createInputField(attr, mode) {
+    function createBaselineField(attr) {
         const wrap = document.createElement('div');
         wrap.className = 'planner-field';
 
         const label = document.createElement('label');
         label.className = 'planner-field-label';
-        label.setAttribute('for', `planner-${mode}-${attr.id}`);
+        label.setAttribute('for', `planner-baseline-${attr.id}`);
         label.textContent = attr.name;
 
         const input = document.createElement('input');
-        input.id = `planner-${mode}-${attr.id}`;
+        input.id = `planner-baseline-${attr.id}`;
         input.type = 'number';
-        input.min = String(attr.min);
-        input.max = String(attr.max);
-        input.step = String(attr.step || 1);
-        input.value = String(mode === 'baseline' ? state.baseline[attr.id] : state.candidate[attr.id]);
-
-        input.addEventListener('input', () => {
-            const next = toNumber(input.value, 0);
-            if (mode === 'baseline') {
-                state.baseline[attr.id] = next;
-            } else {
-                state.candidate[attr.id] = next;
-            }
-            refreshAllDiffLabels();
-            renderResults();
-        });
-
-        let diff = null;
-        if (mode === 'candidate') {
-            diff = document.createElement('div');
-            diff.className = 'planner-field-diff';
-            diffElementsByAttr[`candidate-${attr.id}`] = diff;
-        }
+        input.value = String(state.baseline[attr.id] || 0);
+        input.disabled = true;
+        input.title = '此數值來自傷害計算器的進攻數值1';
 
         wrap.appendChild(label);
         wrap.appendChild(input);
+        return wrap;
+    }
 
-        if (mode === 'candidate') {
-            const quick = document.createElement('div');
-            quick.className = 'planner-quick-actions';
-            [-500, -100, -10, -1, 1, 10, 100, 500].forEach(delta => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'planner-chip-btn';
-                btn.textContent = (delta > 0 ? '+' : '') + delta;
-                btn.addEventListener('click', () => {
-                    const current = toNumber(state.candidate[attr.id], 0);
-                    const next = current + delta;
-                    state.candidate[attr.id] = next;
-                    input.value = String(next);
-                    refreshAllDiffLabels();
-                    renderResults();
-                });
-                quick.appendChild(btn);
-            });
-            wrap.appendChild(quick);
-        }
+    function createStepField(attr) {
+        const wrap = document.createElement('div');
+        wrap.className = 'planner-field';
 
-        if (diff) {
-            wrap.appendChild(diff);
-        }
+        const label = document.createElement('label');
+        label.className = 'planner-field-label';
+        label.setAttribute('for', `planner-step-${attr.id}`);
+        label.textContent = attr.name;
+
+        const input = document.createElement('input');
+        input.id = `planner-step-${attr.id}`;
+        input.type = 'number';
+        input.min = '0';
+        input.step = String(attr.step || 1);
+        input.value = state.steps[attr.id] ? String(state.steps[attr.id]) : '';
+        input.placeholder = '例如：200';
+
+        input.addEventListener('input', () => {
+            const next = Math.max(0, toNumber(input.value, 0));
+            state.steps[attr.id] = next;
+            saveStepToStorage(attr.id, next);
+            debouncedRenderComparison();
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                input.blur();
+            }
+        });
+
+        wrap.appendChild(label);
+        wrap.appendChild(input);
         return wrap;
     }
 
     function renderFields() {
-        Object.keys(diffElementsByAttr).forEach(key => {
-            delete diffElementsByAttr[key];
-        });
-
-        hasBoundBaselineSyncInputs = false;
-
         baselineFieldsEl.innerHTML = '';
-        candidateFieldsEl.innerHTML = '';
+        stepFieldsEl.innerHTML = '';
 
         const baselineFrag = document.createDocumentFragment();
-        const candidateFrag = document.createDocumentFragment();
+        const stepFrag = document.createDocumentFragment();
 
         ATTRIBUTES.forEach(attr => {
-            baselineFrag.appendChild(createInputField(attr, 'baseline'));
-            candidateFrag.appendChild(createInputField(attr, 'candidate'));
+            baselineFrag.appendChild(createBaselineField(attr));
+            stepFrag.appendChild(createStepField(attr));
         });
 
         baselineFieldsEl.appendChild(baselineFrag);
-        candidateFieldsEl.appendChild(candidateFrag);
-        refreshAllDiffLabels();
-        bindBaselineSyncInputs();
+        stepFieldsEl.appendChild(stepFrag);
+    }
+
+    function applyBaselineFromBridge(payload) {
+        if (!payload || !payload.baselineAtk1) return;
+        const incoming = payload.baselineAtk1;
+
+        ATTRIBUTES.forEach(attr => {
+            if (incoming[attr.id] !== undefined) {
+                state.baseline[attr.id] = toNumber(incoming[attr.id], 0);
+            }
+        });
+
+        ATTRIBUTES.forEach(attr => {
+            const input = document.getElementById(`planner-baseline-${attr.id}`);
+            if (input) {
+                input.value = String(state.baseline[attr.id] || 0);
+            }
+        });
+
+        renderComparison();
     }
 
     function setStep(nextStep) {
-        state.step = Math.min(3, Math.max(1, nextStep));
+        state.wizardStep = Math.min(3, Math.max(1, nextStep));
 
         stepButtons.forEach(btn => {
             const step = Number(btn.dataset.step);
-            btn.classList.toggle('active', step === state.step);
+            const isActive = step === state.wizardStep;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-selected', String(isActive));
         });
 
         panels.forEach(panel => {
             const step = Number(panel.dataset.stepPanel);
-            const isActive = step === state.step;
+            const isActive = step === state.wizardStep;
             panel.hidden = !isActive;
             panel.classList.toggle('active', isActive);
         });
 
-        prevBtn.disabled = state.step === 1;
-        nextBtn.textContent = state.step === 3 ? '完成' : '下一步';
+        prevBtn.disabled = state.wizardStep === 1;
+        nextBtn.textContent = state.wizardStep === 3 ? '完成' : '下一步';
+
+        if (state.wizardStep === 3) {
+            renderComparison();
+        }
     }
 
     function bindEvents() {
@@ -412,20 +403,21 @@ function initAttributePlanner() {
             });
         });
 
-        prevBtn?.addEventListener('click', () => setStep(state.step - 1));
+        prevBtn?.addEventListener('click', () => setStep(state.wizardStep - 1));
         nextBtn?.addEventListener('click', () => {
-            if (state.step < 3) {
-                setStep(state.step + 1);
+            if (state.wizardStep < 3) {
+                setStep(state.wizardStep + 1);
                 return;
             }
             notify({ type: 'info', title: '完成', message: '你可以返回前面步驟持續微調。', duration: 2500 });
         });
 
-        resetCandidateBtn?.addEventListener('click', () => {
-            state.candidate = { ...state.baseline };
+        resetStepsBtn?.addEventListener('click', () => {
+            state.steps = createZeroStats();
+            clearStepsStorage();
             renderFields();
-            renderResults();
-            notify({ type: 'success', title: '已重置', message: '目標屬性已重置為基準值', duration: 2500 });
+            renderComparison();
+            notify({ type: 'success', title: '已重置', message: '所有階梯增量已重置為 0', duration: 2500 });
         });
 
         if (window.pvpSyncBridge?.subscribe) {
@@ -438,30 +430,24 @@ function initAttributePlanner() {
         appEl.hidden = true;
 
         state.baseline = createZeroStats();
-        state.candidate = createZeroStats();
+        state.steps = loadStepsFromStorage();
 
         renderFields();
 
         const existing = window.pvpSyncBridge?.getBaselineAtk1?.();
         if (existing?._meta?.hasValue) {
+            const baselineAtk1 = {};
+            ATTRIBUTES.forEach(attr => {
+                baselineAtk1[attr.id] = existing[attr.id] ?? 0;
+            });
             applyBaselineFromBridge({
-                baselineAtk1: {
-                    attack: existing.attack,
-                    elementalAttack: existing.elementalAttack,
-                    defenseBreak: existing.defenseBreak,
-                    shieldBreak: existing.shieldBreak,
-                    accuracy: existing.accuracy,
-                    crit: existing.crit,
-                    critDamage: existing.critDamage,
-                    elementalBreak: existing.elementalBreak
-                },
+                baselineAtk1,
                 source: existing._meta.source || 'bridge'
             });
         } else {
-            pushBaselineToBridge();
+            renderComparison();
         }
 
-        renderResults();
         setStep(1);
         bindEvents();
 
