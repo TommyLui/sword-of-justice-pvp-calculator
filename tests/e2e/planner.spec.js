@@ -21,7 +21,7 @@ test.describe('attribute planner stepping comparison', () => {
     await expect(page.locator('#planner-kpi')).not.toHaveText('0');
   });
 
-  test('stepping compare renders 10 rows per attribute with step size', async ({ page }) => {
+  test('stepping compare renders a single combined table with 10 rows', async ({ page }) => {
     await page.click('#planner-next');
     await expect(page.locator('[data-step-panel="2"]')).toBeVisible();
 
@@ -31,15 +31,16 @@ test.describe('attribute planner stepping comparison', () => {
     await page.click('#planner-next');
     await expect(page.locator('[data-step-panel="3"]')).toBeVisible();
 
-    const group = page.locator('.planner-stepping-group').filter({ hasText: '攻擊' });
-    await expect(group).toBeVisible();
-    await expect(group.locator('tbody tr')).toHaveCount(10);
+    const table = page.locator('#planner-stepping-results table');
+    await expect(table).toBeVisible();
+    await expect(table.locator('tbody tr')).toHaveCount(10);
+    await expect(page.getByRole('columnheader', { name: '攻擊(增加數值)' })).toBeVisible();
 
-    const firstRow = group.locator('tbody tr').first();
+    const firstRow = table.locator('tbody tr').first();
     await expect(firstRow.locator('td').nth(0)).toHaveText('1');
     await expect(firstRow.locator('td').nth(1)).toHaveText('+200');
 
-    const lastRow = group.locator('tbody tr').last();
+    const lastRow = table.locator('tbody tr').last();
     await expect(lastRow.locator('td').nth(0)).toHaveText('10');
     await expect(lastRow.locator('td').nth(1)).toHaveText('+2,000');
   });
@@ -50,23 +51,42 @@ test.describe('attribute planner stepping comparison', () => {
     await page.dispatchEvent('#planner-step-crit', 'input');
     await page.click('#planner-next');
 
-    await expect(page.locator('.planner-stepping-group')).toHaveCount(1);
-    await expect(page.locator('.planner-stepping-group h4')).toContainText('會心');
+    await expect(page.getByRole('columnheader', { name: '會心(增加數值)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: /^攻擊\(/ })).toHaveCount(0);
   });
 
-  test('reset steps clears step inputs and removes compare tables', async ({ page }) => {
+  test('combined table renders multiple attributes side by side', async ({ page }) => {
+    await page.click('#planner-next');
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+    await page.fill('#planner-step-crit', '50');
+    await page.dispatchEvent('#planner-step-crit', 'input');
+    await page.click('#planner-next');
+
+    const table = page.locator('#planner-stepping-results table');
+    await expect(table).toHaveCount(1);
+    await expect(table.locator('tbody tr')).toHaveCount(10);
+
+    const cells = table.locator('tbody tr').first().locator('td');
+    await expect(cells).toHaveCount(7); // 1 level + 2 attrs * 3 metrics
+
+    await expect(page.getByRole('columnheader', { name: '攻擊(增加數值)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '會心(增加數值)' })).toBeVisible();
+  });
+
+  test('reset steps clears step inputs and removes compare table', async ({ page }) => {
     await page.click('#planner-next');
     await page.fill('#planner-step-attack', '500');
     await page.dispatchEvent('#planner-step-attack', 'input');
     await page.click('#planner-next');
-    await expect(page.locator('.planner-stepping-group')).toHaveCount(1);
+    await expect(page.locator('#planner-stepping-results table')).toHaveCount(1);
 
     await page.click('#planner-prev');
     await page.click('#planner-reset-steps');
     await expect(page.locator('#planner-step-attack')).toHaveValue('');
 
     await page.click('#planner-next');
-    await expect(page.locator('.planner-stepping-group')).toHaveCount(0);
+    await expect(page.locator('#planner-stepping-results table')).toHaveCount(0);
   });
 
   test('persists step sizes after reload', async ({ page }) => {
@@ -95,7 +115,7 @@ test.describe('attribute planner stepping comparison', () => {
     await expect(page.locator('#planner-step-attack')).toHaveValue('');
 
     await page.click('#planner-next');
-    await expect(page.locator('.planner-stepping-group')).toHaveCount(0);
+    await expect(page.locator('#planner-stepping-results table')).toHaveCount(0);
   });
 
   test('restores calculator baseline after direct reload on planner', async ({ page }) => {

@@ -184,6 +184,7 @@ function initAttributePlanner() {
         };
     }
 
+
     function renderComparison() {
         const result = calculateSteppingComparison();
 
@@ -211,38 +212,39 @@ function initAttributePlanner() {
             empty.className = 'planner-empty-note';
             steppingResultsEl.appendChild(empty);
         } else {
-            const fragment = document.createDocumentFragment();
+            const wrap = document.createElement('div');
+            wrap.className = 'planner-contrib-wrap';
+
+            const table = document.createElement('table');
+            table.className = 'planner-contrib-table planner-combined-table';
+
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+
+            const thLevel = document.createElement('th');
+            thLevel.textContent = '等級';
+            headerRow.appendChild(thLevel);
+
             result.results.forEach(group => {
-                const section = document.createElement('div');
-                section.className = 'planner-stepping-group';
-
-                const heading = document.createElement('h4');
-                heading.textContent = `${group.attr.name}（每階 +${group.step}）`;
-                section.appendChild(heading);
-
-                const wrap = document.createElement('div');
-                wrap.className = 'planner-contrib-wrap';
-
-                const table = document.createElement('table');
-                table.className = 'planner-contrib-table';
-
-                const thead = document.createElement('thead');
-                const headerRow = document.createElement('tr');
-                ['等級', '增加數值', '邊際提升', '累積提升'].forEach(text => {
+                ['增加數值', '邊際提升', '累積提升'].forEach(label => {
                     const th = document.createElement('th');
-                    th.textContent = text;
+                    th.textContent = `${group.attr.name}(${label})`;
                     headerRow.appendChild(th);
                 });
-                thead.appendChild(headerRow);
-                table.appendChild(thead);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
 
-                const tbody = document.createElement('tbody');
-                group.rows.forEach(row => {
-                    const tr = document.createElement('tr');
+            const tbody = document.createElement('tbody');
+            for (let level = 1; level <= STEP_LEVELS; level++) {
+                const tr = document.createElement('tr');
 
-                    const tdLevel = document.createElement('td');
-                    tdLevel.textContent = String(row.level);
-                    tr.appendChild(tdLevel);
+                const tdLevel = document.createElement('td');
+                tdLevel.textContent = String(level);
+                tr.appendChild(tdLevel);
+
+                result.results.forEach(group => {
+                    const row = group.rows[level - 1];
 
                     const tdIncrement = document.createElement('td');
                     tdIncrement.textContent = '+' + formatIncrement(row.appliedIncrement);
@@ -255,17 +257,15 @@ function initAttributePlanner() {
 
                     const tdCumulative = document.createElement('td');
                     tdCumulative.textContent = formatSignedPercent(row.cumulativeGain);
-                    tdCumulative.className = row.cumulativeGain >= 0 ? 'planner-positive' : 'planner-negative';
+                    tdCumulative.className = 'planner-cumulative' + (row.cumulativeGain >= 0 ? ' planner-positive' : ' planner-negative');
                     tr.appendChild(tdCumulative);
-
-                    tbody.appendChild(tr);
                 });
-                table.appendChild(tbody);
-                wrap.appendChild(table);
-                section.appendChild(wrap);
-                fragment.appendChild(section);
-            });
-            steppingResultsEl.appendChild(fragment);
+
+                tbody.appendChild(tr);
+            }
+            table.appendChild(tbody);
+            wrap.appendChild(table);
+            steppingResultsEl.appendChild(wrap);
         }
 
         result.notes.forEach(note => {
@@ -315,12 +315,20 @@ function initAttributePlanner() {
         input.value = state.steps[attr.id] ? String(state.steps[attr.id]) : '';
         input.placeholder = '例如：200';
 
+        function normalizeStepInputDisplay() {
+            const next = Math.max(0, toNumber(input.value, 0));
+            input.value = next > 0 ? String(next) : '';
+        }
+
         input.addEventListener('input', () => {
             const next = Math.max(0, toNumber(input.value, 0));
             state.steps[attr.id] = next;
             saveStepToStorage(attr.id, next);
             debouncedRenderComparison();
         });
+
+        input.addEventListener('blur', normalizeStepInputDisplay);
+        input.addEventListener('change', normalizeStepInputDisplay);
 
         input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {

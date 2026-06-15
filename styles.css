@@ -2214,7 +2214,7 @@
     border-bottom: 1px solid rgba(214, 168, 74, 0.06);
 }
 
-#view-attribute-planner .planner-contrib-table td:last-child {
+#view-attribute-planner .planner-cumulative {
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -2250,25 +2250,15 @@
     margin-bottom: 0;
 }
 
-#view-attribute-planner .planner-stepping-group {
-    margin-bottom: 22px;
-}
-
-#view-attribute-planner .planner-stepping-group:last-child {
-    margin-bottom: 0;
-}
-
-#view-attribute-planner .planner-stepping-group h4 {
-    margin: 0 0 10px;
-    font-size: 15px;
-    color: var(--accent-2);
-    font-weight: 600;
-}
-
 #view-attribute-planner .planner-empty-note {
     color: var(--muted);
     font-size: 14px;
     margin: 0;
+}
+
+#view-attribute-planner .planner-combined-table th,
+#view-attribute-planner .planner-combined-table td {
+    white-space: nowrap;
 }
 
 #view-attribute-planner .planner-confirm-actions {
