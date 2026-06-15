@@ -281,8 +281,10 @@ function initCalculator() {
         });
     }
 
+    const OCR_PASTE_BUTTON_IDS = ['atk1-ocr-paste-btn', 'atk2-ocr-paste-btn', 'def1-ocr-paste-btn', 'def2-ocr-paste-btn'];
+
     function setOcrButtonsDisabled(disabled) {
-        OCR_BUTTON_IDS.forEach(buttonId => {
+        [...OCR_BUTTON_IDS, ...OCR_PASTE_BUTTON_IDS].forEach(buttonId => {
             const button = document.getElementById(buttonId);
             if (button) {
                 button.disabled = disabled;
@@ -290,12 +292,8 @@ function initCalculator() {
         });
     }
 
-    async function handleOcrFileSelection(file) {
-        if (!file) return;
-        const targetKey = pendingOcrTarget;
-        pendingOcrTarget = '';
-        if (!targetKey) return;
-        if (isOcrImporting) return;
+    async function runOcrImport(targetKey, file) {
+        if (!file || !targetKey || isOcrImporting) return;
 
         const ocrApi = window.pvpOcr;
         if (!ocrApi?.recognizeFromFile) {
@@ -332,6 +330,30 @@ function initCalculator() {
         }
     }
 
+    function handleOcrFileSelection(file) {
+        const targetKey = pendingOcrTarget;
+        pendingOcrTarget = '';
+        runOcrImport(targetKey, file);
+    }
+
+    async function readClipboardImage() {
+        if (!navigator.clipboard?.read) {
+            throw new Error('瀏覽器不支援剪貼簿圖片讀取，請改用「從圖片讀取」上傳檔案');
+        }
+
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+            const imageType = item.types.find(type => type.startsWith('image/'));
+            if (imageType) {
+                const blob = await item.getType(imageType);
+                const extension = imageType.split('/')[1] || 'png';
+                return new File([blob], `clipboard.${extension}`, { type: imageType });
+            }
+        }
+
+        throw new Error('剪貼簿中沒有圖片');
+    }
+
     function bindOcrButton(buttonId, targetKey) {
         document.getElementById(buttonId)?.addEventListener('click', () => {
             if (isOcrImporting) return;
@@ -339,6 +361,25 @@ function initCalculator() {
             document.getElementById('calculator-ocr-file')?.click();
         });
     }
+
+    function bindOcrPasteButton(buttonId, targetKey) {
+        document.getElementById(buttonId)?.addEventListener('click', async () => {
+            if (isOcrImporting) return;
+
+            try {
+                const file = await readClipboardImage();
+                await runOcrImport(targetKey, file);
+            } catch (error) {
+                notify({
+                    type: 'error',
+                    title: '剪貼簿讀取失敗',
+                    message: error && error.message ? error.message : '無法讀取剪貼簿圖片，請改用「從圖片讀取」上傳檔案',
+                    duration: 5000
+                });
+            }
+        });
+    }
+
 
     if (window.__calculatorInitialized) {
         hydrateCalculatorState();
@@ -415,6 +456,12 @@ function initCalculator() {
     bindOcrButton('atk2-ocr-btn', 'atk2');
     bindOcrButton('def1-ocr-btn', 'def1');
     bindOcrButton('def2-ocr-btn', 'def2');
+
+    bindOcrPasteButton('atk1-ocr-paste-btn', 'atk1');
+    bindOcrPasteButton('atk2-ocr-paste-btn', 'atk2');
+    bindOcrPasteButton('def1-ocr-paste-btn', 'def1');
+    bindOcrPasteButton('def2-ocr-paste-btn', 'def2');
+
 
     document.getElementById('export-btn')?.addEventListener('click', () => {
         const readGroup = (prefix, keys) => Object.fromEntries(keys.map(key => [key, document.getElementById(`${prefix}${key}`).value]));

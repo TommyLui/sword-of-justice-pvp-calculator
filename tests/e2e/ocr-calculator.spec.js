@@ -1,7 +1,39 @@
 const path = require('path');
+const fs = require('fs');
 const { test, expect } = require('@playwright/test');
 
 const dummyImagePath = path.resolve(__dirname, '..', 'fixtures', 'dummy.png');
+
+async function mockClipboardImage(page, bytes) {
+  await page.evaluate(async imageBytes => {
+    const blob = new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
+    const clipboard = {
+      read: async () => [{
+        types: ['image/png'],
+        getType: async type => type === 'image/png' ? blob : new Blob()
+      }]
+    };
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
+  }, bytes);
+}
+
+async function mockEmptyClipboard(page) {
+  await page.evaluate(() => {
+    const clipboard = {
+      read: async () => [{
+        types: ['text/plain'],
+        getType: async type => type === 'text/plain' ? new Blob(['not an image'], { type: 'text/plain' }) : new Blob()
+      }]
+    };
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
+  });
+}
+
+async function mockUnsupportedClipboard(page) {
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', { value: {}, configurable: true });
+  });
+}
 
 function createField(value) {
   return { value: String(value), matchedAlias: 'test', sourceSnippet: '' };
@@ -194,5 +226,78 @@ test.describe('calculator OCR integration', () => {
 
     await expect(page.locator('.notification.error .notification-message')).toHaveText('OCR 沒有辨識到可匯入的進攻數值');
     await expect(page.locator('#atk1-ocr-btn')).toBeEnabled();
+  });
+
+  test('imports attack-side OCR fields into atk1 from clipboard paste', async ({ page }) => {
+    const imageBytes = [...fs.readFileSync(dummyImagePath)];
+    const result = buildResult({
+      attack: 17000,
+      elementalAttack: 5500,
+      defenseBreak: 3200,
+      accuracy: 2100,
+      crit: 1100,
+      elementalBreak: 600,
+      pvpAttack: 450
+    });
+
+    await page.evaluate(mock => {
+      window.pvpOcr.recognizeFromFile = async () => mock;
+    }, result);
+    await mockClipboardImage(page, imageBytes);
+
+    await page.click('#atk1-ocr-paste-btn');
+
+    await expect(page.locator('#atk1-attack')).toHaveValue('17000');
+    await expect(page.locator('#atk1-defenseBreak')).toHaveValue('3200');
+    await expect(page.locator('#atk1-crit')).toHaveValue('1100');
+    await expect(page.locator('#atk1-pvpAttack')).toHaveValue('450');
+    await page.waitForFunction(() => document.getElementById('damage1_1').textContent !== '0');
+  });
+
+  test('imports defense-side OCR fields into def1 from clipboard paste without polluting planner baseline', async ({ page }) => {
+    const imageBytes = [...fs.readFileSync(dummyImagePath)];
+    await page.fill('#atk1-attack', '77');
+    await page.dispatchEvent('#atk1-attack', 'input');
+
+    const result = buildResult({
+      defense: 21000,
+      blockResistance: 8500,
+      criticalResistance: 6200,
+      elementalResistance: 4200,
+      pvpResistance: 2200
+    });
+
+    await page.evaluate(mock => {
+      window.pvpOcr.recognizeFromFile = async () => mock;
+    }, result);
+    await mockClipboardImage(page, imageBytes);
+
+    await page.click('#def1-ocr-paste-btn');
+
+    await expect(page.locator('#def1-defense')).toHaveValue('21000');
+    await expect(page.locator('#def1-blockResistance')).toHaveValue('8500');
+    await expect(page.locator('#def1-pvpResistance')).toHaveValue('2200');
+
+    await page.goto('/#/attribute-planner');
+    await expect(page.locator('#planner-app')).toBeVisible();
+    await expect(page.locator('#planner-baseline-attack')).toHaveValue('77');
+  });
+
+  test('shows error when clipboard paste is not supported', async ({ page }) => {
+    await mockUnsupportedClipboard(page);
+
+    await page.click('#atk1-ocr-paste-btn');
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('剪貼簿讀取失敗');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('瀏覽器不支援');
+  });
+
+  test('shows error when clipboard contains no image', async ({ page }) => {
+    await mockEmptyClipboard(page);
+
+    await page.click('#atk1-ocr-paste-btn');
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('剪貼簿讀取失敗');
+    await expect(page.locator('.notification.error .notification-message')).toHaveText('剪貼簿中沒有圖片');
   });
 });

@@ -569,7 +569,12 @@
 
 #view-calculator .header-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
+}
+
+#view-calculator .ocr-paste-btn {
+    white-space: nowrap;
 }
 
 #view-calculator .header-icon {
