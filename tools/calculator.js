@@ -292,8 +292,9 @@ function initCalculator() {
         });
     }
 
-    async function runOcrImport(targetKey, file) {
-        if (!file || !targetKey || isOcrImporting) return;
+    async function runOcrImport(targetKey, file, options = {}) {
+        const keepBusyLocked = options.keepBusyLocked === true;
+        if (!file || !targetKey || (isOcrImporting && !keepBusyLocked)) return;
 
         const ocrApi = window.pvpOcr;
         if (!ocrApi?.recognizeFromFile) {
@@ -307,8 +308,10 @@ function initCalculator() {
         }
 
         try {
-            isOcrImporting = true;
-            setOcrButtonsDisabled(true);
+            if (!keepBusyLocked) {
+                isOcrImporting = true;
+                setOcrButtonsDisabled(true);
+            }
             notify({
                 type: 'info',
                 title: 'OCR 辨識中',
@@ -325,8 +328,10 @@ function initCalculator() {
                 duration: 5000
             });
         } finally {
-            isOcrImporting = false;
-            setOcrButtonsDisabled(false);
+            if (!keepBusyLocked) {
+                isOcrImporting = false;
+                setOcrButtonsDisabled(false);
+            }
         }
     }
 
@@ -354,6 +359,22 @@ function initCalculator() {
         throw new Error('剪貼簿中沒有圖片');
     }
 
+    function getClipboardErrorMessage(error) {
+        if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') {
+            return '瀏覽器拒絕讀取剪貼簿，請允許剪貼簿權限，或改用「從圖片讀取」上傳檔案';
+        }
+
+        if (error?.message === '剪貼簿中沒有圖片') {
+            return '剪貼簿中沒有圖片，請複製圖片後再試，或改用「從圖片讀取」上傳檔案';
+        }
+
+        if (error?.message && error.message.includes('不支援剪貼簿圖片讀取')) {
+            return error.message;
+        }
+
+        return '無法讀取剪貼簿圖片，請改用「從圖片讀取」上傳檔案';
+    }
+
     function bindOcrButton(buttonId, targetKey) {
         document.getElementById(buttonId)?.addEventListener('click', () => {
             if (isOcrImporting) return;
@@ -367,15 +388,20 @@ function initCalculator() {
             if (isOcrImporting) return;
 
             try {
+                isOcrImporting = true;
+                setOcrButtonsDisabled(true);
                 const file = await readClipboardImage();
-                await runOcrImport(targetKey, file);
+                await runOcrImport(targetKey, file, { keepBusyLocked: true });
             } catch (error) {
                 notify({
                     type: 'error',
                     title: '剪貼簿讀取失敗',
-                    message: error && error.message ? error.message : '無法讀取剪貼簿圖片，請改用「從圖片讀取」上傳檔案',
+                    message: getClipboardErrorMessage(error),
                     duration: 5000
                 });
+            } finally {
+                isOcrImporting = false;
+                setOcrButtonsDisabled(false);
             }
         });
     }

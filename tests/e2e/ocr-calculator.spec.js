@@ -17,6 +17,24 @@ async function mockClipboardImage(page, bytes) {
   }, bytes);
 }
 
+async function mockDelayedClipboardImage(page, bytes) {
+  await page.evaluate(async imageBytes => {
+    const blob = new Blob([new Uint8Array(imageBytes)], { type: 'image/png' });
+    window.__clipboardReadCount = 0;
+    const clipboard = {
+      read: async () => {
+        window.__clipboardReadCount += 1;
+        await new Promise(resolve => setTimeout(resolve, 50));
+        return [{
+          types: ['image/png'],
+          getType: async type => type === 'image/png' ? blob : new Blob()
+        }];
+      }
+    };
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
+  }, bytes);
+}
+
 async function mockEmptyClipboard(page) {
   await page.evaluate(() => {
     const clipboard = {
@@ -33,6 +51,32 @@ async function mockUnsupportedClipboard(page) {
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', { value: {}, configurable: true });
   });
+}
+
+async function mockRejectedClipboard(page) {
+  await page.evaluate(() => {
+    const clipboard = {
+      read: async () => {
+        throw new DOMException('denied', 'NotAllowedError');
+      }
+    };
+    Object.defineProperty(navigator, 'clipboard', { value: clipboard, configurable: true });
+  });
+}
+
+async function mockOcrResult(page, result) {
+  await page.evaluate(mock => {
+    window.__ocrCalls = [];
+    window.pvpOcr.recognizeFromFile = async (file, preprocess) => {
+      window.__ocrCalls.push({
+        isFile: file instanceof File,
+        name: file.name,
+        type: file.type,
+        hasPreprocess: !!preprocess
+      });
+      return mock;
+    };
+  }, result);
 }
 
 function createField(value) {
@@ -240,13 +284,17 @@ test.describe('calculator OCR integration', () => {
       pvpAttack: 450
     });
 
-    await page.evaluate(mock => {
-      window.pvpOcr.recognizeFromFile = async () => mock;
-    }, result);
+    await mockOcrResult(page, result);
     await mockClipboardImage(page, imageBytes);
 
     await page.click('#atk1-ocr-paste-btn');
 
+    await expect.poll(() => page.evaluate(() => window.__ocrCalls)).toEqual([{
+      isFile: true,
+      name: 'clipboard.png',
+      type: 'image/png',
+      hasPreprocess: true
+    }]);
     await expect(page.locator('#atk1-attack')).toHaveValue('17000');
     await expect(page.locator('#atk1-defenseBreak')).toHaveValue('3200');
     await expect(page.locator('#atk1-crit')).toHaveValue('1100');
@@ -283,6 +331,51 @@ test.describe('calculator OCR integration', () => {
     await expect(page.locator('#planner-baseline-attack')).toHaveValue('77');
   });
 
+  test('routes all clipboard paste buttons to the matching calculator target', async ({ page }) => {
+    const imageBytes = [...fs.readFileSync(dummyImagePath)];
+    await mockClipboardImage(page, imageBytes);
+
+    const cases = [
+      { button: '#atk1-ocr-paste-btn', input: '#atk1-attack', value: 10101, result: buildResult({ attack: 10101 }) },
+      { button: '#atk2-ocr-paste-btn', input: '#atk2-attack', value: 20202, result: buildResult({ attack: 20202 }) },
+      { button: '#def1-ocr-paste-btn', input: '#def1-defense', value: 30303, result: buildResult({ defense: 30303 }) },
+      { button: '#def2-ocr-paste-btn', input: '#def2-defense', value: 40404, result: buildResult({ defense: 40404 }) }
+    ];
+
+    for (const scenario of cases) {
+      await page.evaluate(mock => {
+        window.pvpOcr.recognizeFromFile = async () => mock;
+      }, scenario.result);
+      await page.click(scenario.button);
+      await expect(page.locator(scenario.input)).toHaveValue(String(scenario.value));
+    }
+  });
+
+  test('keeps OCR controls disabled during clipboard read and ignores rapid repeated paste clicks', async ({ page }) => {
+    const imageBytes = [...fs.readFileSync(dummyImagePath)];
+    const result = buildResult({ attack: 18000 });
+
+    await mockOcrResult(page, result);
+    await mockDelayedClipboardImage(page, imageBytes);
+
+    await page.evaluate(() => {
+      const button = document.getElementById('atk1-ocr-paste-btn');
+      button.click();
+      button.click();
+    });
+
+    await expect(page.locator('#atk1-ocr-paste-btn')).toBeDisabled();
+    await expect(page.locator('#atk1-ocr-btn')).toBeDisabled();
+    await expect(page.locator('#atk1-attack')).toHaveValue('18000');
+
+    const callCounts = await page.evaluate(() => ({
+      clipboardReads: window.__clipboardReadCount,
+      ocrCalls: window.__ocrCalls.length
+    }));
+    expect(callCounts).toEqual({ clipboardReads: 1, ocrCalls: 1 });
+    await expect(page.locator('#atk1-ocr-paste-btn')).toBeEnabled();
+  });
+
   test('shows error when clipboard paste is not supported', async ({ page }) => {
     await mockUnsupportedClipboard(page);
 
@@ -290,6 +383,17 @@ test.describe('calculator OCR integration', () => {
 
     await expect(page.locator('.notification.error .notification-title')).toHaveText('剪貼簿讀取失敗');
     await expect(page.locator('.notification.error .notification-message')).toContainText('瀏覽器不支援');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('從圖片讀取');
+  });
+
+  test('shows fallback guidance when browser rejects clipboard read', async ({ page }) => {
+    await mockRejectedClipboard(page);
+
+    await page.click('#atk1-ocr-paste-btn');
+
+    await expect(page.locator('.notification.error .notification-title')).toHaveText('剪貼簿讀取失敗');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('瀏覽器拒絕讀取剪貼簿');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('從圖片讀取');
   });
 
   test('shows error when clipboard contains no image', async ({ page }) => {
@@ -298,6 +402,7 @@ test.describe('calculator OCR integration', () => {
     await page.click('#atk1-ocr-paste-btn');
 
     await expect(page.locator('.notification.error .notification-title')).toHaveText('剪貼簿讀取失敗');
-    await expect(page.locator('.notification.error .notification-message')).toHaveText('剪貼簿中沒有圖片');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('剪貼簿中沒有圖片');
+    await expect(page.locator('.notification.error .notification-message')).toContainText('從圖片讀取');
   });
 });
