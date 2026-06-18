@@ -328,10 +328,10 @@ body:not(.dark-mode) .theme-toggle-moon {
 }
 
 .cta-ghost {
-    color: var(--text);
-    background: linear-gradient(145deg, var(--surface-strong), var(--surface-soft));
-    border: 1px solid var(--border);
-    box-shadow: var(--clay-shadow-sm);
+    color: var(--blue-light);
+    background: var(--accent-soft);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
 }
 
 .home-cards {
@@ -427,14 +427,14 @@ body:not(.dark-mode) .theme-toggle-moon {
 .cta {
     display: inline-block;
     margin-top: 16px;
-    background: linear-gradient(145deg, var(--accent-2), var(--accent));
+    background: var(--blue-grad);
     color: var(--on-accent);
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: 10px;
     text-decoration: none;
     font-family: var(--font-head);
     font-weight: 700;
-    box-shadow: 6px 6px 14px rgba(91,168,212,.3), inset 2px 2px 4px rgba(255,255,255,.3), inset -2px -2px 4px rgba(91,168,212,.2);
+    box-shadow: 0 8px 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.2);
 }
 
 .grid {
@@ -516,23 +516,23 @@ body:not(.dark-mode) .theme-toggle-moon {
 
 .notification {
     position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 16px 22px;
-    border-radius: 8px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    box-shadow: var(--clay-shadow);
+    top: 22px;
+    right: 22px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: var(--panel-2);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg), 0 0 24px var(--accent-glow);
     color: var(--text);
     font-family: var(--font-body);
     font-size: 14px;
     z-index: 1000;
     transform: translateX(120%);
     transition: transform 0.3s ease;
-    max-width: 320px;
+    max-width: 340px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .notification.show {
@@ -540,15 +540,32 @@ body:not(.dark-mode) .theme-toggle-moon {
 }
 
 .notification.success {
-    border-left: 4px solid #4caf50;
+    border-left: 4px solid var(--teal);
 }
 
 .notification.error {
-    border-left: 4px solid #f44336;
+    border-left: 4px solid var(--rose);
 }
 
 .notification-icon {
-    font-size: 20px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: #fff;
+    background: var(--blue-grad);
+    font-size: 16px;
+    box-shadow: 0 0 14px var(--accent-glow);
+}
+
+.notification.success .notification-icon {
+    background: var(--teal-grad);
+}
+
+.notification.error .notification-icon {
+    background: linear-gradient(135deg, var(--rose-light), var(--rose));
 }
 
 .notification-content {
@@ -558,13 +575,17 @@ body:not(.dark-mode) .theme-toggle-moon {
 .notification-title {
     font-family: var(--font-head);
     font-weight: 700;
+    font-size: 15px;
     margin-bottom: 4px;
     color: var(--ink);
+    letter-spacing: -.01em;
 }
 
 .notification-message {
     color: var(--muted);
-    font-size: 13px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.4;
 }
 
 .notification-close {
@@ -579,6 +600,16 @@ body:not(.dark-mode) .theme-toggle-moon {
 
 .notification-close:hover {
     color: var(--text);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: .55; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
 @media (max-width: 900px) {
@@ -2316,10 +2347,10 @@ button {
 #view-calculator .calc-dialog-actions button {
     font-family: var(--font-head);
     color: var(--on-accent);
-    background: linear-gradient(145deg, var(--accent-2), var(--accent));
+    background: var(--blue-grad);
     border: 1px solid var(--accent-border);
-    border-radius: 8px;
-    box-shadow: 5px 5px 12px var(--accent-glow), inset 2px 2px 4px rgba(255,255,255,.24), inset -2px -2px 4px rgba(0,0,0,.12);
+    border-radius: 10px;
+    box-shadow: 0 8px 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.2);
 }
 
 .cta:active,
@@ -2330,14 +2361,16 @@ button {
 #view-attribute-planner .planner-primary-btn:active,
 #view-attribute-planner .planner-secondary-btn:active {
     transform: translateY(0);
-    box-shadow: var(--clay-shadow-inset);
+    filter: brightness(.96);
+    box-shadow: 0 4px 10px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.15);
 }
 
 #view-calculator #calculator-reset-cancel,
 #view-attribute-planner .planner-secondary-btn {
-    color: var(--text);
-    background: linear-gradient(145deg, var(--surface-strong), var(--surface-soft));
-    border-color: var(--border);
+    color: var(--blue-light);
+    background: var(--accent-soft);
+    border: 1px solid var(--border-strong);
+    box-shadow: none;
 }
 
 #view-calculator .calc-dialog-backdrop {
@@ -2357,12 +2390,13 @@ button {
 #view-crafting .crafting-search-input,
 #view-crafting .crafting-filter-select,
 #view-attribute-planner .planner-field input {
-    font-family: var(--font-body);
+    font-family: var(--font-mono);
     color: var(--text);
     background: var(--field-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: var(--clay-shadow-inset);
+    transition: border-color .2s ease, box-shadow .2s ease;
 }
 
 #view-calculator input:hover,
@@ -2467,9 +2501,9 @@ body:not(.dark-mode) #view-attribute-planner .attribute-planner-kpi strong {
 #view-attribute-planner .planner-step.active,
 #view-crafting .crafting-item.active {
     color: var(--on-accent);
-    background: linear-gradient(145deg, var(--accent-2), var(--accent));
+    background: var(--blue-grad);
     border-color: var(--accent-border);
-    box-shadow: 5px 5px 12px var(--accent-glow), inset 2px 2px 4px rgba(255,255,255,.22), inset -2px -2px 4px rgba(0,0,0,.14);
+    box-shadow: 0 0 18px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.2);
 }
 
 #view-attribute-planner .planner-step.active::after {

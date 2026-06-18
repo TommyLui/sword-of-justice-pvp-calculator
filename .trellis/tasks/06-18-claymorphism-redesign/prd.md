@@ -156,3 +156,33 @@
 ## Research References
 
 無外部研究需求——claymorphism 與暗模式最佳實踐已在先前 demo(三-d.html / darkblue.html)驗證,直接套用並調整。
+
+---
+
+## Amendment 2026-06-18 — Phase 1+2 範圍收斂與字體決策調整
+
+**Context**: 完成 `demo/darkblue.html` 與現況 `styles.css`/`index.html` 的系統性比對後(見 `.trellis/workspace/tommy/darkblue-3d-gap-analysis.md`),發現實作已部分完成(dark-mode 變數已是 darkblue 色譜),但 darkblue 的設計語彙(字體/光暈/漸層角度/寫實落影/mono 標籤)幾乎未移植。使用者決定先收斂到 Phase 1+2(foundation + 共用元件)。
+
+**Decision**(使用者 2026-06-18 確認「只跑 Phase 1+2」):
+- **範圍**:僅執行分析報告 §5 的 Phase 1(Foundation:字體+token+陰影+keyframe)與 Phase 2(共用元件:button/input/notification)。Phase 3-5(shell + 各 view + polish)暫不執行,待 Phase 1+2 驗證後再決定。
+- **字體決策調整**:由原 Decision 的 Quicksand/Plus Jakarta Sans/Nunito 改為 **Manrope(標題)/Inter(正文)/JetBrains Mono(數字+標籤)**,以對齊 `demo/darkblue.html`。理由:darkblue 的「科技感計算室」氣質大量仰賴 JetBrains Mono 的 uppercase + letter-spacing 標籤,Quicksand 無法重現此語彙。
+- **陰影方案**:採分析報告 §2.3 方案 A——保留 `--clay-shadow*` 變數名但改寫其值為 darkblue 寫實陰影(單向落影 + 頂部高光 + 外光暈),100+ 處引用自動換風格,改動最小。
+- **圓角/漸層角度**:順帶將 145deg→135deg、8px 圓角依元件分級(panel 16/card 12/input 10/button 10/tab 999/icon 12/tag 6)。
+
+**Phase 1+2 Acceptance Criteria(新增,取代原 PR1 驗收)**:
+- [ ] `index.html` Google Fonts 換為 Manrope/Inter/JetBrains Mono;`file://` 降級系統字不報錯
+- [ ] `index.html` 兩個 `:root`/`body.dark-mode` 補齊 darkblue token(`--blue-light`/`--blue-bright`/`--cyan`/`--teal`/`--amber`/`--rose`/`--shadow-glow`/`--blue-grad`/`--cyan-grad`/`--indigo-grad`/`--teal-grad` 等,light mode 給淺色變體)
+- [ ] `styles.css` 新增 `@keyframes pulse-dot` 與 `shimmer`
+- [ ] `--clay-shadow*` 變數值改寫為 darkblue 寫實陰影;`styles.css` 全域按鈕/input/notification 樣式對齊 darkblue
+- [ ] `showNotification` JS 改用漸層 nico + Manrope title + mono msg 結構
+- [ ] `npm test` 全綠(至少 routing/dark-mode/calculator/sync/crafting/league spec)
+- [ ] dark mode 目視主色調/字體/陰影接近 `demo/darkblue.html`;light mode 無 console error 且對比度可讀
+
+**Out of Scope for Phase 1+2**(明確排除,避免範圍蔓延):
+- sidebar 結構改造(nav-ico/status-dot/nav-label/patch-frame)—屬 Phase 3
+- hero stat-strip/光條、home-cards 色彩變體—屬 Phase 3
+- calculator result-card 結構、planner step-num 拆分、league stat-card 6 色、crafting-tag 統一—屬 Phase 4
+- 任何 `tools/*.js` render 邏輯改動(除 `showNotification`)—屬 Phase 3-4
+- HTML class 改名(league-card→stat-card 等)—屬 Phase 4
+
+**Rollback**:Phase 1+2 僅改 `index.html`(`<style>` + Google Fonts link + `showNotification` JS)與 `styles.css`(變數值 + 共用元件樣式 + keyframe),不動 HTML view 結構與 `tools/*.js`(除 showNotification)。回滾 = `git checkout HEAD -- index.html styles.css`。

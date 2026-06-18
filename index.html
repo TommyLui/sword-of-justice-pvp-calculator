@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
         :root {
@@ -37,12 +37,43 @@
             --row-bg-alt: rgba(184, 224, 247, 0.18);
             --ink: #1a3a5c;
             --on-accent: #0a2540;
-            --clay-shadow: 8px 8px 16px rgba(91,168,212,.32), -8px -8px 16px rgba(255,255,255,.9), inset 2px 2px 4px rgba(255,255,255,.5), inset -2px -2px 4px rgba(91,168,212,.16);
-            --clay-shadow-sm: 5px 5px 10px rgba(91,168,212,.26), -5px -5px 10px rgba(255,255,255,.85), inset 1.5px 1.5px 3px rgba(255,255,255,.5), inset -1.5px -1.5px 3px rgba(91,168,212,.14);
-            --clay-shadow-inset: inset 4px 4px 8px rgba(91,168,212,.28), inset -4px -4px 8px rgba(255,255,255,.85);
-            --font-head: 'Quicksand', 'Plus Jakarta Sans', sans-serif;
-            --font-body: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', sans-serif;
-            --font-num: 'Nunito', 'Plus Jakarta Sans', sans-serif;
+            --clay-shadow: 0 12px 32px rgba(91,168,212,.22), inset 0 1px 0 rgba(255,255,255,.55);
+            --clay-shadow-sm: 0 8px 20px rgba(91,168,212,.16), inset 0 1px 0 rgba(255,255,255,.5);
+            --clay-shadow-inset: inset 0 1px 2px rgba(91,168,212,.16);
+            --font-head: 'Manrope', 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+            --font-num: 'JetBrains Mono', 'Nunito', monospace;
+            --font-mono: 'JetBrains Mono', monospace;
+            --blue: var(--accent);
+            --blue-light: var(--accent-2);
+            --blue-bright: #5ba8d4;
+            --blue-dark: var(--accent-dark);
+            --blue-deep: #155a82;
+            --cyan: #2ec9b8;
+            --cyan-light: #5fdcc9;
+            --cyan-dark: #1ba8bc;
+            --indigo: #6b7eff;
+            --indigo-light: #94a5ff;
+            --indigo-dark: #4858d4;
+            --teal: #2ec9b8;
+            --teal-light: #5fdcc9;
+            --amber: #e8951a;
+            --amber-light: #f5a623;
+            --rose: #e04560;
+            --rose-light: #f4567a;
+            --text-soft: var(--muted);
+            --dim: #9ab0c8;
+            --bg-1: var(--bg-2);
+            --bg-3: #c0d4e6;
+            --panel-3: #d0e2f2;
+            --elevated: #d8e8f6;
+            --border-strong: rgba(91, 168, 212, 0.36);
+            --shadow-lg: 0 18px 48px rgba(91, 168, 212, 0.22);
+            --shadow-glow: 0 0 28px rgba(135, 206, 235, 0.18);
+            --blue-grad: linear-gradient(135deg, var(--accent-2) 0%, var(--accent) 100%);
+            --cyan-grad: linear-gradient(135deg, #5fdcc9 0%, #2ec9b8 100%);
+            --indigo-grad: linear-gradient(135deg, #94a5ff 0%, #6b7eff 100%);
+            --teal-grad: linear-gradient(135deg, #5fdcc9 0%, #2ec9b8 100%);
         }
         body.dark-mode {
             --bg: #050b18;
@@ -69,10 +100,41 @@
             --row-bg: rgba(138, 202, 255, 0.045);
             --row-bg-alt: rgba(0, 0, 0, 0.18);
             --ink: #e0eaf5;
-            --on-accent: #0a2540;
-            --clay-shadow: 10px 10px 22px rgba(0,0,0,.58), -8px -8px 18px rgba(138,202,255,.07), 0 0 26px rgba(74,158,255,.08), inset 2px 2px 5px rgba(138,202,255,.09), inset -3px -3px 6px rgba(0,0,0,.34);
-            --clay-shadow-sm: 6px 6px 14px rgba(0,0,0,.52), -5px -5px 12px rgba(138,202,255,.055), 0 0 18px rgba(74,158,255,.06), inset 1.5px 1.5px 3px rgba(138,202,255,.08), inset -2px -2px 4px rgba(0,0,0,.3);
-            --clay-shadow-inset: inset 5px 5px 10px rgba(0,0,0,.5), inset -5px -5px 10px rgba(138,202,255,.08);
+            --on-accent: #ffffff;
+            --clay-shadow: 0 16px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(138,202,255,.06);
+            --clay-shadow-sm: 0 12px 28px rgba(0,0,0,.42), inset 0 1px 0 rgba(138,202,255,.05);
+            --clay-shadow-inset: inset 0 1px 2px rgba(0,0,0,.3);
+            --blue: var(--accent);
+            --blue-light: #6bb5ff;
+            --blue-bright: #8acaff;
+            --blue-dark: #2d7ad9;
+            --blue-deep: #1a5aa8;
+            --cyan: #3dd4e8;
+            --cyan-light: #7ee8f5;
+            --cyan-dark: #1ba8bc;
+            --indigo: #6b7eff;
+            --indigo-light: #94a5ff;
+            --indigo-dark: #4858d4;
+            --teal: #2ec9b8;
+            --teal-light: #5fdcc9;
+            --amber: #f5a623;
+            --amber-light: #ffc05a;
+            --rose: #f4567a;
+            --rose-light: #f77894;
+            --text-soft: #a8bcdc;
+            --dim: #4a6088;
+            --bg-1: #0a1428;
+            --bg-3: #112341;
+            --panel-3: #1a3055;
+            --elevated: #162a4d;
+            --border-strong: rgba(74, 158, 255, 0.28);
+            --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.65);
+            --shadow-glow: 0 0 32px rgba(74, 158, 255, 0.16);
+            --blue-grad: linear-gradient(135deg, #6bb5ff 0%, #4a9eff 100%);
+            --cyan-grad: linear-gradient(135deg, #7ee8f5 0%, #3dd4e8 100%);
+            --indigo-grad: linear-gradient(135deg, #94a5ff 0%, #6b7eff 100%);
+            --teal-grad: linear-gradient(135deg, #5fdcc9 0%, #2ec9b8 100%);
+            --font-mono: 'JetBrains Mono', monospace;
             background:
                 radial-gradient(80% 60% at 100% 0%, rgba(74,158,255,.1), transparent 60%),
                 radial-gradient(70% 50% at 0% 100%, rgba(61,212,232,.07), transparent 60%),
