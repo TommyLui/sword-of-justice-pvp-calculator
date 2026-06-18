@@ -6,13 +6,89 @@
     <meta name="app-version" content="S2.2">
     <title>逆水寒 PVP 工具箱 - S2.2</title>
     <link rel="icon" type="image/jpeg" href="icon.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
-        :root { --bg: #0B1220; --bg-2: #101A2E; --panel: #141F33; --panel-2: #18243B; --text: #E8EEF9; --muted: #93A4C7; --accent: #D6A84A; --accent-2: #F2D38A; --border: rgba(214, 168, 74, 0.18); --shadow: 0 18px 40px rgba(0, 0, 0, 0.35); }
-        body.dark-mode { --bg: #08111d; --bg-2: #0d1626; --panel: #101a2d; --panel-2: #15213a; --text: #ecf2ff; --muted: #96a5c8; --accent: #d6a84a; --accent-2: #f2d38a; --border: rgba(214, 168, 74, 0.22); --shadow: 0 18px 40px rgba(0, 0, 0, 0.5); background: radial-gradient(circle at top, #101a2d 0%, var(--bg) 50%); }
+        :root {
+            --bg: #c8dcec;
+            --bg-2: #d4e6f5;
+            --panel: #e0eff9;
+            --panel-2: #d4e6f5;
+            --text: #1e3a5f;
+            --muted: #6a8aa8;
+            --accent: #87ceeb;
+            --accent-2: #b8e0f7;
+            --accent-dark: #1f6f9f;
+            --border: rgba(91, 168, 212, 0.22);
+            --shadow: 0 12px 32px rgba(91, 168, 212, 0.18);
+            --clay: #b8d8ee;
+            --clay-light: #dceef8;
+            --clay-dark: #88baea;
+            --surface-soft: rgba(255, 255, 255, 0.38);
+            --surface-strong: rgba(255, 255, 255, 0.58);
+            --field-bg: rgba(224, 239, 249, 0.72);
+            --field-bg-strong: rgba(255, 255, 255, 0.68);
+            --accent-soft: rgba(135, 206, 235, 0.24);
+            --accent-glow: rgba(91, 168, 212, 0.28);
+            --accent-border: rgba(91, 168, 212, 0.36);
+            --row-bg: rgba(255, 255, 255, 0.22);
+            --row-bg-alt: rgba(184, 224, 247, 0.18);
+            --ink: #1a3a5c;
+            --on-accent: #0a2540;
+            --clay-shadow: 8px 8px 16px rgba(91,168,212,.32), -8px -8px 16px rgba(255,255,255,.9), inset 2px 2px 4px rgba(255,255,255,.5), inset -2px -2px 4px rgba(91,168,212,.16);
+            --clay-shadow-sm: 5px 5px 10px rgba(91,168,212,.26), -5px -5px 10px rgba(255,255,255,.85), inset 1.5px 1.5px 3px rgba(255,255,255,.5), inset -1.5px -1.5px 3px rgba(91,168,212,.14);
+            --clay-shadow-inset: inset 4px 4px 8px rgba(91,168,212,.28), inset -4px -4px 8px rgba(255,255,255,.85);
+            --font-head: 'Quicksand', 'Plus Jakarta Sans', sans-serif;
+            --font-body: 'Plus Jakarta Sans', -apple-system, 'Segoe UI', sans-serif;
+            --font-num: 'Nunito', 'Plus Jakarta Sans', sans-serif;
+        }
+        body.dark-mode {
+            --bg: #050b18;
+            --bg-2: #0a1428;
+            --panel: #0f1d38;
+            --panel-2: #142849;
+            --text: #e0eaf5;
+            --muted: #8aa4c8;
+            --accent: #4a9eff;
+            --accent-2: #6bb5ff;
+            --accent-dark: #6bb5ff;
+            --border: rgba(74, 158, 255, 0.22);
+            --shadow: 0 18px 46px rgba(0, 0, 0, 0.62), 0 0 26px rgba(74, 158, 255, 0.08);
+            --clay: #142849;
+            --clay-light: #1c3560;
+            --clay-dark: #071123;
+            --surface-soft: rgba(74, 158, 255, 0.08);
+            --surface-strong: rgba(138, 202, 255, 0.13);
+            --field-bg: rgba(7, 17, 35, 0.72);
+            --field-bg-strong: rgba(10, 28, 56, 0.8);
+            --accent-soft: rgba(74, 158, 255, 0.18);
+            --accent-glow: rgba(74, 158, 255, 0.34);
+            --accent-border: rgba(107, 181, 255, 0.38);
+            --row-bg: rgba(138, 202, 255, 0.045);
+            --row-bg-alt: rgba(0, 0, 0, 0.18);
+            --ink: #e0eaf5;
+            --on-accent: #0a2540;
+            --clay-shadow: 10px 10px 22px rgba(0,0,0,.58), -8px -8px 18px rgba(138,202,255,.07), 0 0 26px rgba(74,158,255,.08), inset 2px 2px 5px rgba(138,202,255,.09), inset -3px -3px 6px rgba(0,0,0,.34);
+            --clay-shadow-sm: 6px 6px 14px rgba(0,0,0,.52), -5px -5px 12px rgba(138,202,255,.055), 0 0 18px rgba(74,158,255,.06), inset 1.5px 1.5px 3px rgba(138,202,255,.08), inset -2px -2px 4px rgba(0,0,0,.3);
+            --clay-shadow-inset: inset 5px 5px 10px rgba(0,0,0,.5), inset -5px -5px 10px rgba(138,202,255,.08);
+            background:
+                radial-gradient(80% 60% at 100% 0%, rgba(74,158,255,.1), transparent 60%),
+                radial-gradient(70% 50% at 0% 100%, rgba(61,212,232,.07), transparent 60%),
+                radial-gradient(60% 40% at 50% 50%, rgba(107,126,255,.05), transparent 70%),
+                var(--bg);
+        }
         * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; background: radial-gradient(circle at top, #13213b 0%, var(--bg) 50%); color: var(--text); }
-        .app { min-height: 100vh; display: flex; }
+        body {
+            margin: 0;
+            font-family: var(--font-body);
+            background: radial-gradient(circle at top, #dceaf5 0%, var(--bg) 50%);
+            color: var(--text);
+            position: relative;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app { min-height: 100vh; display: flex; position: relative; z-index: 1; }
         .view[hidden] { display: none !important; }
     </style>
 </head>
@@ -28,16 +104,56 @@
                 <a href="#/league" data-route="league">📊 聯賽數據分析</a>
                 <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
             </nav>
-            <div class="sidebar-footer">頂樓風很大<br>幫會內部使用</div>
+            <div class="sidebar-actions">
+                <button id="sidebarThemeToggle" class="sidebar-theme-toggle theme-mode-button" type="button" aria-label="切換至亮模式" title="切換至亮模式">
+                    <span class="theme-toggle-image" aria-hidden="true">
+                        <span class="theme-toggle-sun"></span>
+                        <span class="theme-toggle-moon"></span>
+                    </span>
+                    <span class="theme-toggle-label">亮模式</span>
+                </button>
+            </div>
         </aside>
         <main class="main">
-            <div class="topbar"><button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button><button class="mobile-nav-toggle" id="darkToggle">🌙 夜間模式</button></div>
+            <div class="topbar">
+                <button class="mobile-nav-toggle" id="navToggle" aria-expanded="false">☰ 選單</button>
+                <button class="mobile-nav-toggle theme-mode-button" id="darkToggle" type="button" aria-label="切換至亮模式" title="切換至亮模式">
+                    <span class="theme-toggle-image" aria-hidden="true">
+                        <span class="theme-toggle-sun"></span>
+                        <span class="theme-toggle-moon"></span>
+                    </span>
+                    <span class="theme-toggle-label">亮模式</span>
+                </button>
+            </div>
             <div id="view-home" class="view">
-                <section class="hero"><h2>逆水寒 PVP 工具箱</h2></section>
-                <section class="section">
-                    <div class="patch-image">
-                        <img src="https://r.res.easebar.com/pic/20260327/f5d9f947-6e36-409e-bcce-10c13ebba03f.jpg" alt="S2.2 版本更新" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);">
+                <section class="hero home-hero">
+                    <p class="hero-sub">S2.2 版本</p>
+                    <h2>逆水寒 PVP<br><span class="accent">工具箱</span></h2>
+                    <p class="hero-lead">為逆水寒 PVP 玩家整合計算、規劃、打造與聯賽分析的實用工具箱。</p>
+                    <div class="cta-row">
+                        <a class="cta" href="#/calculator">開始計算</a>
+                        <a class="cta cta-ghost" href="#/crafting">查看資料庫</a>
                     </div>
+                </section>
+                <section class="home-cards" aria-label="主要工具">
+                    <a class="home-card c-pink" href="#/calculator">
+                        <span class="home-ico">⚔</span>
+                        <h3>傷害計算器</h3>
+                        <p>雙進攻與雙防禦交叉比對，快速確認剩餘防禦、命中、會心與傷害差距。</p>
+                        <span class="home-tag">CORE</span>
+                    </a>
+                    <a class="home-card c-blue" href="#/attribute-planner">
+                        <span class="home-ico">↗</span>
+                        <h3>屬性規劃</h3>
+                        <p>用階梯增量比較攻擊、破防、命中、會心等屬性的投入效益。</p>
+                        <span class="home-tag">PLAN</span>
+                    </a>
+                    <a class="home-card c-yellow" href="#/league">
+                        <span class="home-ico">▦</span>
+                        <h3>聯賽數據</h3>
+                        <p>上傳 CSV 後整理公會、職業、輸出與治療資料，圖表配色會跟隨主題切換。</p>
+                        <span class="home-tag">DATA</span>
+                    </a>
                 </section>
                 <div class="footer">版本 S2.2</div>
             </div>
@@ -244,22 +360,42 @@
         window.addEventListener('hashchange', () => navigate(location.hash));
         const navToggle = document.getElementById('navToggle');
         const darkToggle = document.getElementById('darkToggle');
+        const sidebarThemeToggle = document.getElementById('sidebarThemeToggle');
         navToggle?.addEventListener('click', () => {
             const isOpen = document.body.classList.toggle('sidebar-open');
             navToggle.setAttribute('aria-expanded', String(isOpen));
         });
-        if (localStorage.getItem('darkMode') === 'true') {
+        if (localStorage.getItem('darkMode') !== 'false') {
             document.body.classList.add('dark-mode');
         }
-        darkToggle?.addEventListener('click', () => {
+        function updateThemeToggleLabels() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const nextLabel = isDark ? '切換至亮模式' : '切換至暗模式';
+            const visibleLabel = isDark ? '亮模式' : '暗模式';
+            [darkToggle, sidebarThemeToggle].forEach((button) => {
+                if (!button) return;
+                button.setAttribute('aria-label', nextLabel);
+                button.setAttribute('title', nextLabel);
+                const label = button.querySelector('.theme-toggle-label');
+                if (label) label.textContent = visibleLabel;
+            });
+            if (darkToggle && !darkToggle.querySelector('.theme-toggle-label')) {
+                darkToggle.textContent = visibleLabel;
+            }
+        }
+        function toggleTheme() {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('darkMode', isDark);
+            updateThemeToggleLabels();
             document.dispatchEvent(new CustomEvent('pvp:themechange', {
                 detail: {
                     darkMode: isDark
                 }
             }));
-        });
+        }
+        updateThemeToggleLabels();
+        darkToggle?.addEventListener('click', toggleTheme);
+        sidebarThemeToggle?.addEventListener('click', toggleTheme);
         document.querySelectorAll('.nav a, .bottom-nav a').forEach(link => {
             link.addEventListener('click', () => {
                 document.body.classList.remove('sidebar-open');

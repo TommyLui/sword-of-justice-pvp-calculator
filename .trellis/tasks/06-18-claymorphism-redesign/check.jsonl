@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend quality baseline for reviewing the redesign."}
+{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "Check visual consistency, accessibility, and component behavior."}
+{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Confirm changes respect the root static SPA structure."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Primary verification checklist for frontend changes."}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Verify theme persistence, localStorage, and event behavior."}

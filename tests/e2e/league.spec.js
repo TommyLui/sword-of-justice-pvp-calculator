@@ -81,6 +81,28 @@ test.describe('league upload flow', () => {
     await expect(page.locator('#league-class-section .league-chart-fallback')).toContainText('圖表套件未載入');
   });
 
+  test('updates chart palette when theme changes', async ({ page }) => {
+    await page.locator('#league-file').setInputFiles(fixturePath);
+    await expect(page.locator('#league-content')).toBeVisible();
+    await expect(page.locator('body')).toHaveClass(/dark-mode/);
+
+    const darkColor = await page.evaluate(() => {
+      const chart = window.Chart?.getChart(document.getElementById('league-comparison-chart'));
+      return chart?.data.datasets[0].backgroundColor || '';
+    });
+    expect(darkColor).toBeTruthy();
+
+    await page.evaluate(() => document.getElementById('darkToggle')?.click());
+    await expect(page.locator('body')).not.toHaveClass(/dark-mode/);
+
+    await expect.poll(async () => {
+      return page.evaluate(() => {
+        const chart = window.Chart?.getChart(document.getElementById('league-comparison-chart'));
+        return chart?.data.datasets[0].backgroundColor || '';
+      });
+    }).not.toBe(darkColor);
+  });
+
   test('renders summary cards with aggregated totals', async ({ page }) => {
     await page.locator('#league-file').setInputFiles(fixturePath);
     await expect(page.locator('#league-content')).toBeVisible();

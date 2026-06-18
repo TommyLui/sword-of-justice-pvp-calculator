@@ -47,6 +47,55 @@ function initLeague() {
         '龍吟': '#22C55E',
         '玄機': '#EAE86F'
     };
+    const CHART_COLORS_DARK = {
+        comparisonBg: [
+            'rgba(74, 158, 255, 0.82)',
+            'rgba(255, 111, 138, 0.82)',
+            'rgba(65, 211, 148, 0.72)',
+            'rgba(167, 139, 250, 0.72)',
+            'rgba(107, 181, 255, 0.58)',
+            'rgba(250, 204, 21, 0.58)'
+        ],
+        comparisonBorder: [
+            'rgba(138, 202, 255, 1)',
+            'rgba(255, 143, 164, 1)',
+            'rgba(110, 231, 183, 0.95)',
+            'rgba(196, 181, 253, 0.95)',
+            'rgba(107, 181, 255, 0.9)',
+            'rgba(253, 224, 71, 0.9)'
+        ],
+        roleFallback: '#6BB5FF',
+        roles: ROLE_COLORS
+    };
+    const CHART_COLORS_LIGHT = {
+        comparisonBg: [
+            'rgba(91, 168, 212, 0.82)',
+            'rgba(255, 127, 156, 0.82)',
+            'rgba(39, 174, 126, 0.72)',
+            'rgba(139, 116, 226, 0.72)',
+            'rgba(135, 206, 235, 0.62)',
+            'rgba(239, 184, 16, 0.62)'
+        ],
+        comparisonBorder: [
+            'rgba(36, 126, 181, 1)',
+            'rgba(214, 72, 104, 1)',
+            'rgba(20, 130, 91, 0.95)',
+            'rgba(96, 78, 184, 0.95)',
+            'rgba(91, 168, 212, 0.95)',
+            'rgba(190, 137, 0, 0.95)'
+        ],
+        roleFallback: '#5BA8D4',
+        roles: {
+            '九靈': '#8B74E2',
+            '素問': '#EC7AA7',
+            '神相': '#2E83D0',
+            '碎夢': '#25A7CF',
+            '血河': '#E15A57',
+            '鐵衣': '#C99A08',
+            '龍吟': '#1C9E63',
+            '玄機': '#B6A80A'
+        }
+    };
 
     // ── B. 純函式工具（格式化、CSV 解析、統計）───────────────────
     function formatNumber(n) {
@@ -159,8 +208,16 @@ function initLeague() {
         const style = getComputedStyle(document.body);
         const text = style.getPropertyValue('--text').trim() || '#E8EEF9';
         const muted = style.getPropertyValue('--muted').trim() || '#93A4C7';
-        const border = style.getPropertyValue('--border').trim() || 'rgba(214,168,74,0.1)';
-        return { text, muted, border };
+        const border = style.getPropertyValue('--border').trim() || 'rgba(74,158,255,0.18)';
+        const chart = document.body.classList.contains('dark-mode')
+            ? CHART_COLORS_DARK
+            : CHART_COLORS_LIGHT;
+        return { text, muted, border, chart };
+    }
+
+    function getRoleColor(role) {
+        const { chart } = getThemeColors();
+        return chart.roles[role] || chart.roleFallback;
     }
 
     function isChartAvailable() {
@@ -212,7 +269,7 @@ function initLeague() {
 
         select.value = roles.includes(activeFilter) ? activeFilter : '';
         if (!roles.includes(activeFilter)) activeFilter = '';
-        select.style.color = activeFilter ? (ROLE_COLORS[activeFilter] || 'var(--text)') : 'var(--text)';
+        select.style.color = activeFilter ? getRoleColor(activeFilter) : 'var(--text)';
     }
 
     function render() {
@@ -343,7 +400,7 @@ function initLeague() {
                     ? (WAN_COLUMNS.has(col.key) ? formatLargeNumber(p[col.key]) : formatNumber(p[col.key]))
                     : p[col.key];
                 if (col.key === 'role') {
-                    td.style.color = ROLE_COLORS[p[col.key]] || 'var(--text)';
+                    td.style.color = getRoleColor(p[col.key]);
                     td.style.fontWeight = '700';
                 }
                 tr.appendChild(td);
@@ -388,16 +445,8 @@ function initLeague() {
             keys.forEach(k => totals[k] += s[k]);
         });
 
-        const bgColors = [
-            'rgba(154,206,235,0.8)', 'rgba(255,105,97,0.8)',
-            'rgba(154,206,235,0.6)', 'rgba(255,105,97,0.6)',
-            'rgba(154,206,235,0.45)', 'rgba(255,105,97,0.45)'
-        ];
-        const bdColors = [
-            'rgba(154,206,235,1)', 'rgba(255,105,97,1)',
-            'rgba(154,206,235,0.9)', 'rgba(255,105,97,0.9)',
-            'rgba(154,206,235,0.75)', 'rgba(255,105,97,0.75)'
-        ];
+        const bgColors = theme.chart.comparisonBg;
+        const bdColors = theme.chart.comparisonBorder;
 
         const datasets = leagueData.guilds.map((g, i) => {
             const s = statsCache[g.name] || guildStats(g);
@@ -459,7 +508,7 @@ function initLeague() {
 
         const theme = getThemeColors();
         const labels = Object.keys(counts);
-        const chartColors = labels.map(role => ROLE_COLORS[role] || '#D6A84A');
+        const chartColors = labels.map(role => theme.chart.roles[role] || theme.chart.roleFallback);
 
         classChart = new Chart(canvas, {
             type: 'doughnut',
@@ -565,6 +614,8 @@ function initLeague() {
     document.addEventListener('pvp:themechange', () => {
         if (!leagueData || !leagueData.guilds?.length) return;
         if (document.getElementById('view-league')?.hidden) return;
+        populateRoleFilter();
+        renderTable();
         renderComparisonChart();
         renderClassChart();
     });
@@ -587,7 +638,7 @@ function initLeague() {
     // Filter handler
     document.getElementById('league-class-filter')?.addEventListener('change', (e) => {
         activeFilter = e.target.value;
-        e.target.style.color = activeFilter ? (ROLE_COLORS[activeFilter] || 'var(--text)') : 'var(--text)';
+        e.target.style.color = activeFilter ? getRoleColor(activeFilter) : 'var(--text)';
         renderTable();
     });
 

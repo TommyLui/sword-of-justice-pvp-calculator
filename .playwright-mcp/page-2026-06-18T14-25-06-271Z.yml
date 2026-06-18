@@ -1,0 +1,28 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]:
+      - img "Logo" [ref=e5]
+      - generic [ref=e6]:
+        - heading "逆水寒 PVP 工具箱" [level=1] [ref=e7]
+        - paragraph [ref=e8]: S2.2版本
+    - navigation [ref=e9]:
+      - link "🏠 首頁" [ref=e10] [cursor=pointer]:
+        - /url: "#/"
+      - link "⚔️ 傷害計算器" [ref=e11] [cursor=pointer]:
+        - /url: "#/calculator"
+      - link "📈 屬性規劃" [ref=e12] [cursor=pointer]:
+        - /url: "#/attribute-planner"
+      - link "🗂️ 打造資料庫" [ref=e13] [cursor=pointer]:
+        - /url: "#/crafting"
+      - link "📊 聯賽數據分析" [ref=e14] [cursor=pointer]:
+        - /url: "#/league"
+      - link "🛡️ 配裝比較器" [disabled]:
+        - /url: "#"
+    - generic [ref=e15]:
+      - text: 頂樓風很大
+      - text: 幫會內部使用
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - heading "逆水寒 PVP 工具箱" [level=2] [ref=e19]
+      - img "S2.2 版本更新" [ref=e22]
+      - generic [ref=e23]: 版本 S2.2
