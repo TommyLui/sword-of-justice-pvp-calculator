@@ -157,16 +157,30 @@
 <body>
     <div class="app">
         <aside class="sidebar" id="sidebar">
-            <div class="brand"><img src="icon.jpg" alt="Logo"><div><h1>逆水寒 PVP 工具箱</h1><p>S2.2版本</p></div></div>
+            <div class="brand">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2 L4 7 L4 17 L12 22 L20 17 L20 7 Z"/>
+                        <path d="M12 2 L12 22 M4 7 L20 17 M20 7 L4 17"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>逆水寒 PVP<br>工具箱</h1>
+                    <p>S2.2版本</p>
+                </div>
+            </div>
+            <p class="nav-label">NAVIGATION</p>
             <nav class="nav">
-                <a class="active" href="#/" data-route="">🏠 首頁</a>
-                <a href="#/calculator" data-route="calculator">⚔️ 傷害計算器</a>
-                <a href="#/attribute-planner" data-route="attribute-planner">📈 屬性規劃</a>
-                <a href="#/crafting" data-route="crafting">🗂️ 打造資料庫</a>
-                <a href="#/league" data-route="league">📊 聯賽數據分析</a>
-                <a href="#" class="disabled" aria-disabled="true" title="即將推出">🛡️ 配裝比較器</a>
+                <a class="active" href="#/" data-route=""><span class="nav-ico">🏠</span>首頁</a>
+                <a href="#/calculator" data-route="calculator"><span class="nav-ico">⚔️</span>傷害計算器</a>
+                <a href="#/attribute-planner" data-route="attribute-planner"><span class="nav-ico">📈</span>屬性規劃</a>
+                <a href="#/crafting" data-route="crafting"><span class="nav-ico">🗂️</span>打造資料庫</a>
+                <a href="#/league" data-route="league"><span class="nav-ico">📊</span>聯賽數據分析</a>
+                <a href="#" class="disabled" aria-disabled="true" title="即將推出"><span class="nav-ico">🛡️</span>配裝比較器</a>
             </nav>
-            <div class="sidebar-actions">
+            <div class="sidebar-footer">
+                <div class="status-row"><span class="status-dot"></span>SYSTEM ONLINE</div>
+                <div class="sys-meta">頂樓風很大<br>幫會內部使用</div>
                 <button id="sidebarThemeToggle" class="sidebar-theme-toggle theme-mode-button" type="button" aria-label="切換至亮模式" title="切換至亮模式">
                     <span class="theme-toggle-image" aria-hidden="true">
                         <span class="theme-toggle-sun"></span>
@@ -196,27 +210,37 @@
                         <a class="cta" href="#/calculator">開始計算</a>
                         <a class="cta cta-ghost" href="#/crafting">查看資料庫</a>
                     </div>
+                    <div class="stat-strip">
+                        <div class="stat-item"><div class="sv">2,840</div><div class="sl">ACTIVE NODES</div></div>
+                        <div class="stat-item"><div class="sv">99.8%</div><div class="sl">PRECISION</div></div>
+                        <div class="stat-item"><div class="sv">12ms</div><div class="sl">LATENCY</div></div>
+                    </div>
                 </section>
                 <section class="home-cards" aria-label="主要工具">
-                    <a class="home-card c-pink" href="#/calculator">
+                    <a class="home-card" href="#/calculator">
                         <span class="home-ico">⚔</span>
                         <h3>傷害計算器</h3>
                         <p>雙進攻與雙防禦交叉比對，快速確認剩餘防禦、命中、會心與傷害差距。</p>
                         <span class="home-tag">CORE</span>
                     </a>
-                    <a class="home-card c-blue" href="#/attribute-planner">
-                        <span class="home-ico">↗</span>
+                    <a class="home-card c-cyan" href="#/attribute-planner">
+                        <span class="home-ico">📈</span>
                         <h3>屬性規劃</h3>
                         <p>用階梯增量比較攻擊、破防、命中、會心等屬性的投入效益。</p>
                         <span class="home-tag">PLAN</span>
                     </a>
-                    <a class="home-card c-yellow" href="#/league">
-                        <span class="home-ico">▦</span>
+                    <a class="home-card c-indigo" href="#/league">
+                        <span class="home-ico">📊</span>
                         <h3>聯賽數據</h3>
                         <p>上傳 CSV 後整理公會、職業、輸出與治療資料，圖表配色會跟隨主題切換。</p>
                         <span class="home-tag">DATA</span>
                     </a>
                 </section>
+                <div class="patch-frame">
+                    <p class="patch-eyebrow">— S2.2 版本更新 —</p>
+                    <h3 class="patch-title">深藍 3D 風格工具箱</h3>
+                    <p class="patch-sub">// navy / electric-blue / cyan 三色譜，重鑄工具箱介面。</p>
+                </div>
                 <div class="footer">版本 S2.2</div>
             </div>
             <div id="view-calculator" class="view" hidden>
@@ -268,11 +292,11 @@
                 <div id="league-content" hidden>
                     <div class="league-summary">
                         <div class="league-card" id="summary-kills"><div class="league-card-icon">⚔️</div><div class="league-card-title">總擊敗</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
-                        <div class="league-card" id="summary-damage"><div class="league-card-icon">💥</div><div class="league-card-title">總對玩家傷害</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
-                        <div class="league-card" id="summary-healing"><div class="league-card-icon">💚</div><div class="league-card-title">總治療值</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
-                        <div class="league-card" id="summary-deaths"><div class="league-card-icon">💀</div><div class="league-card-title">總重傷</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
-                        <div class="league-card" id="summary-revive"><div class="league-card-icon">✨</div><div class="league-card-title">總化羽/清泉</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
-                        <div class="league-card" id="summary-burn"><div class="league-card-icon">🔥</div><div class="league-card-title">總焚骨</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card c-amber" id="summary-damage"><div class="league-card-icon">💥</div><div class="league-card-title">總對玩家傷害</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card c-cyan" id="summary-healing"><div class="league-card-icon">💚</div><div class="league-card-title">總治療值</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card c-indigo" id="summary-deaths"><div class="league-card-icon">💀</div><div class="league-card-title">總重傷</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card c-teal" id="summary-revive"><div class="league-card-icon">✨</div><div class="league-card-title">總化羽/清泉</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
+                        <div class="league-card c-rose" id="summary-burn"><div class="league-card-icon">🔥</div><div class="league-card-title">總焚骨</div><div class="league-card-value">0</div><div class="league-card-breakdown"></div></div>
                     </div>
                     <div class="league-tabs" id="league-tabs"></div>
                     <div class="league-table-section">
@@ -341,7 +365,7 @@
             </div>
             <div id="view-attribute-planner" class="view" hidden>
                 <div class="attribute-planner-header">
-                    <h2>屬性規劃</h2>
+                    <h2>屬性<span class="accent">規劃</span></h2>
                     <div class="attribute-planner-kpi">
                         基準有效傷害：<strong id="planner-kpi">0</strong>
                     </div>
