@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e8]:
+          - heading "逆水寒 PVP 工具箱" [level=1] [ref=e9]:
+            - text: 逆水寒 PVP
+            - text: 工具箱
+          - paragraph [ref=e10]: S2.2 · 自然元素
+      - paragraph [ref=e11]: 目錄
+      - navigation [ref=e12]:
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: ●
+          - text: 首頁
+        - generic [ref=e15] [cursor=pointer]:
+          - generic [ref=e16]: ⚔
+          - text: 傷害計算器
+        - generic [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 📈
+          - text: 屬性規劃
+        - generic [ref=e19] [cursor=pointer]:
+          - generic [ref=e20]: 🗂
+          - text: 打造資料庫
+        - generic [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 📊
+          - text: 聯賽數據
+        - generic:
+          - generic: 🛡
+          - text: 配裝比較器
+      - generic [ref=e25]:
+        - text: 頂樓風很大
+        - text: 幫會內部使用
+    - main [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - paragraph [ref=e29]: S2.2 版本 · 自然計算室
+          - heading "逆水寒 PVP 工具箱" [level=2] [ref=e30]:
+            - text: 逆水寒 PVP
+            - emphasis [ref=e31]: 工具箱
+          - paragraph [ref=e32]: 以苔蘚綠與陶土色重鑄的對戰計算室。有機曲線、紙質紋理、緩慢呼吸的元素,讓每一次屬性調校都如照料植物般從容而專注。
+          - generic [ref=e33]:
+            - button "開始計算 →" [ref=e34] [cursor=pointer]
+            - button "查看資料庫" [ref=e35] [cursor=pointer]
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - generic [ref=e38]: 2,840
+              - generic [ref=e39]: active nodes
+            - generic [ref=e40]:
+              - generic [ref=e41]: 99.8%
+              - generic [ref=e42]: precision
+            - generic [ref=e43]:
+              - generic [ref=e44]: 12ms
+              - generic [ref=e45]: latency
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]: ⚔
+            - heading "傷害計算器" [level=3] [ref=e49]
+            - paragraph [ref=e50]: 雙進攻 × 雙防禦交叉比對,如葉脈般清晰讀數。
+            - generic [ref=e51]: 主要工具
+          - generic [ref=e52]:
+            - generic [ref=e53]: 📈
+            - heading "屬性規劃" [level=3] [ref=e54]
+            - paragraph [ref=e55]: 三段式階梯規劃,量化每一份投入的邊際效益。
+            - generic [ref=e56]: 進階
+          - generic [ref=e57]:
+            - generic [ref=e58]: 📊
+            - heading "聯賽數據" [level=3] [ref=e59]
+            - paragraph [ref=e60]: 戰績以有機色塊陳列,公會角逐一覽無遺。
+            - generic [ref=e61]: 數據
+        - generic [ref=e62]:
+          - paragraph [ref=e63]: — S2.2 版本更新 —
+          - heading "自然元素風格外觀演示" [level=3] [ref=e64]
+          - paragraph [ref=e65]: moss / sage / terracotta / clay 大地色譜,重鑄工具箱介面。
+        - generic [ref=e66]: — 版本 S2.2 · 鑄於自然工坊 —
+  - generic [ref=e67]:
+    - generic [ref=e68]: ✓
+    - generic [ref=e69]:
+      - generic [ref=e70]: 同步完成
+      - generic [ref=e71]: 資料已同步至計算室

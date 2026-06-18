@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>逆水寒 PVP 工具箱 · 3D 元素風格演示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-1:#dceaf5;
+  --bg-2:#c8dcec;
+  --bg-3:#b8d0e8;
+  --surface:#e0eff9;
+  --surface-2:#d4e6f5;
+  --surface-3:#c8ddf2;
+  --clay:#b8d8ee;
+  --clay-light:#dceef8;
+  --clay-dark:#88baea;
+  --text:#1e3a5f;
+  --text-soft:#3a6890;
+  --muted:#6a8aa8;
+  --candy-pink:#ff8fb1;
+  --candy-pink-light:#ffb3cd;
+  --candy-pink-dark:#e06f96;
+  --candy-blue:#7ec8e3;
+  --candy-blue-light:#a8dcef;
+  --candy-blue-dark:#5ba8c9;
+  --candy-yellow:#ffd93d;
+  --candy-yellow-light:#ffe87a;
+  --candy-yellow-dark:#e0bc18;
+  --candy-green:#8ed6b8;
+  --candy-green-light:#b0e4cd;
+  --candy-green-dark:#62b894;
+  --candy-purple:#87ceeb;
+  --candy-purple-light:#b8e0f7;
+  --candy-purple-dark:#5ba8d4;
+  --candy-coral:#ff9d8a;
+  --candy-coral-light:#ffbbab;
+  --candy-coral-dark:#e07d6a;
+  --ink:#1a3a5c;
+  --ink-deep:#13243f;
+
+  /* Claymorphism shadow recipe:
+     outer dark drop + inner light top highlight + inner dark bottom depth */
+  --clay-shadow:
+    8px 8px 16px rgba(91,168,212,.35),
+    -8px -8px 16px rgba(255,255,255,.9),
+    inset 2px 2px 4px rgba(255,255,255,.5),
+    inset -2px -2px 4px rgba(91,168,212,.18);
+  --clay-shadow-sm:
+    5px 5px 10px rgba(91,168,212,.28),
+    -5px -5px 10px rgba(255,255,255,.85),
+    inset 1.5px 1.5px 3px rgba(255,255,255,.5),
+    inset -1.5px -1.5px 3px rgba(91,168,212,.15);
+  --clay-shadow-inset:
+    inset 4px 4px 8px rgba(91,168,212,.3),
+    inset -4px -4px 8px rgba(255,255,255,.85);
+  --clay-shadow-pressed:
+    inset 6px 6px 12px rgba(91,168,212,.4),
+    inset -6px -6px 12px rgba(255,255,255,.7);
+  --clay-shadow-float:
+    12px 12px 28px rgba(91,168,212,.45),
+    -10px -10px 24px rgba(255,255,255,.95),
+    inset 3px 3px 6px rgba(255,255,255,.55),
+    inset -3px -3px 6px rgba(91,168,212,.2);
+
+  --pink-grad:linear-gradient(145deg,var(--candy-pink-light),var(--candy-pink));
+  --blue-grad:linear-gradient(145deg,var(--candy-blue-light),var(--candy-blue));
+  --yellow-grad:linear-gradient(145deg,var(--candy-yellow-light),var(--candy-yellow));
+  --green-grad:linear-gradient(145deg,var(--candy-green-light),var(--candy-green));
+  --purple-grad:linear-gradient(145deg,var(--candy-purple-light),var(--candy-purple));
+  --coral-grad:linear-gradient(145deg,var(--candy-coral-light),var(--candy-coral));
+  --clay-grad:linear-gradient(145deg,var(--clay-light),var(--clay));
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+body{
+  font-family:'Plus Jakarta Sans',-apple-system,'Segoe UI',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(80% 60% at 20% 10%, rgba(255,143,177,.12), transparent 60%),
+    radial-gradient(70% 50% at 90% 90%, rgba(126,200,227,.12), transparent 60%),
+    radial-gradient(60% 40% at 50% 50%, rgba(135,206,235,.08), transparent 70%),
+    linear-gradient(135deg,var(--bg-1),var(--bg-2));
+  min-height:100vh;
+  position:relative;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* floating 3D blobs in background */
+body::before,body::after{
+  content:'';
+  position:fixed;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:0;
+  filter:blur(2px);
+}
+body::before{
+  top:8%;right:6%;
+  width:220px;height:220px;
+  background:radial-gradient(circle at 30% 30%,var(--candy-pink-light),var(--candy-pink) 60%,var(--candy-pink-dark));
+  box-shadow:
+    20px 20px 40px rgba(224,111,150,.35),
+    inset 15px 15px 30px rgba(255,255,255,.45),
+    inset -15px -15px 30px rgba(224,111,150,.3);
+  animation:float-a 12s ease-in-out infinite;
+}
+body::after{
+  bottom:10%;left:5%;
+  width:180px;height:180px;
+  background:radial-gradient(circle at 30% 30%,var(--candy-blue-light),var(--candy-blue) 60%,var(--candy-blue-dark));
+  box-shadow:
+    18px 18px 36px rgba(91,168,201,.35),
+    inset 12px 12px 24px rgba(255,255,255,.45),
+    inset -12px -12px 24px rgba(91,168,201,.3);
+  animation:float-b 14s ease-in-out infinite;
+}
+
+@keyframes float-a{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(-30px,20px) scale(1.06)}
+}
+@keyframes float-b{
+  0%,100%{transform:translate(0,0) scale(1)}
+  50%{transform:translate(25px,-20px) scale(1.08)}
+}
+@keyframes bob{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+
+.app{min-height:100vh;display:flex;position:relative;z-index:1}
+
+.view[hidden]{display:none!important}
+
+/* ===== Clay panel ===== */
+.clay-panel{
+  position:relative;
+  background:var(--surface);
+  border-radius:28px;
+  box-shadow:var(--clay-shadow);
+  border:1px solid rgba(255,255,255,.4);
+}
+
+.clay-card{
+  background:var(--clay-grad);
+  border-radius:24px;
+  box-shadow:var(--clay-shadow);
+  border:1px solid rgba(255,255,255,.45);
+}
+
+.clay-inset{
+  background:var(--surface-2);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-inset);
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:280px;
+  flex-shrink:0;
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:28px 22px 22px;
+  display:flex;
+  flex-direction:column;
+  background:
+    linear-gradient(180deg,rgba(135,206,235,.08),transparent 30%),
+    var(--surface);
+  border-right:none;
+  box-shadow:8px 0 24px rgba(91,168,212,.18);
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin-bottom:32px;
+  padding:14px;
+  border-radius:20px;
+  box-shadow:var(--clay-shadow-sm);
+  background:var(--clay-grad);
+}
+.brand .logo-mark{
+  width:48px;height:48px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:var(--purple-grad);
+  box-shadow:
+    4px 4px 8px rgba(91,168,212,.4),
+    inset 2px 2px 4px rgba(255,255,255,.55),
+    inset -2px -2px 4px rgba(74,139,184,.3);
+  color:#fff;
+  font-family:'Quicksand',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  animation:bob 3.5s ease-in-out infinite;
+}
+.brand h1{
+  margin:0;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  line-height:1.2;
+  color:var(--ink);
+  letter-spacing:-.01em;
+}
+.brand p{
+  margin:4px 0 0;
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  color:var(--candy-pink-dark);
+  letter-spacing:.08em;
+}
+
+.nav-label{
+  font-family:'Quicksand',sans-serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.22em;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin:0 6px 14px;
+}
+
+.nav{display:flex;flex-direction:column;gap:8px}
+
+.nav a,.nav .nav-item{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:13px 16px;
+  text-decoration:none;
+  color:var(--text-soft);
+  font-family:'Quicksand',sans-serif;
+  font-weight:600;
+  font-size:14.5px;
+  letter-spacing:.01em;
+  border-radius:16px;
+  cursor:pointer;
+  background:var(--surface);
+  box-shadow:var(--clay-shadow-sm);
+  border:1px solid rgba(255,255,255,.4);
+  transition:all .2s ease;
+}
+
+.nav .nav-ico{
+  width:28px;height:28px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:var(--clay-grad);
+  color:var(--candy-purple-dark);
+  flex-shrink:0;
+  font-size:14px;
+  box-shadow:inset 2px 2px 3px rgba(255,255,255,.5), inset -2px -2px 3px rgba(91,168,212,.18);
+}
+
+.nav a:hover,.nav .nav-item:hover{
+  color:var(--ink);
+  transform:translateY(-1px);
+}
+
+.nav a.active,.nav .nav-item.active{
+  color:#fff;
+  background:var(--purple-grad);
+  box-shadow:
+    6px 6px 14px rgba(74,139,184,.45),
+    inset 2px 2px 4px rgba(255,255,255,.3),
+    inset -2px -2px 4px rgba(46,107,150,.25);
+}
+.nav a.active .nav-ico,.nav .nav-item.active .nav-ico{
+  background:rgba(255,255,255,.25);
+  color:#fff;
+  box-shadow:inset 2px 2px 3px rgba(255,255,255,.3);
+}
+
+.nav .disabled{opacity:.45;pointer-events:none}
+
+.sidebar-footer{
+  margin-top:auto;
+  padding-top:20px;
+  text-align:center;
+}
+.sidebar-footer .seed-mark{
+  display:inline-grid;place-items:center;
+  width:44px;height:44px;border-radius:50%;
+  margin-bottom:12px;
+  background:var(--pink-grad);
+  box-shadow:
+    5px 5px 12px rgba(224,111,150,.4),
+    inset 2px 2px 4px rgba(255,255,255,.5),
+    inset -2px -2px 4px rgba(224,111,150,.25);
+  color:#fff;font-size:18px;
+  animation:bob 3s ease-in-out infinite;
+}
+.sidebar-footer .quote{
+  font-family:'Quicksand',sans-serif;
+  font-weight:600;
+  font-size:13px;
+  line-height:1.55;
+  color:var(--muted);
+}
+
+/* ===== Main ===== */
+.main{flex:1;padding:36px 44px;min-width:0}
+
+.topbar{display:none}
+
+.eyebrow{
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.22em;
+  color:var(--candy-pink-dark);
+  text-transform:uppercase;
+}
+
+/* ===== Home ===== */
+.hero{
+  position:relative;
+  padding:56px 52px 48px;
+  margin-bottom:28px;
+  overflow:visible;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-30px;right:40px;
+  width:120px;height:120px;
+  border-radius:50%;
+  background:var(--yellow-grad);
+  box-shadow:
+    12px 12px 24px rgba(224,188,24,.4),
+    inset 8px 8px 16px rgba(255,255,255,.5),
+    inset -8px -8px 16px rgba(224,188,24,.3);
+  animation:bob 4s ease-in-out infinite;
+  z-index:2;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  bottom:-20px;left:60px;
+  width:80px;height:80px;
+  border-radius:30% 70% 70% 30% / 30% 30% 70% 70%;
+  background:var(--green-grad);
+  box-shadow:
+    10px 10px 20px rgba(98,184,148,.35),
+    inset 6px 6px 12px rgba(255,255,255,.45),
+    inset -6px -6px 12px rgba(98,184,148,.3);
+  animation:bob 3.3s ease-in-out infinite reverse;
+  z-index:2;
+}
+
+.hero .sub{
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.26em;
+  color:var(--candy-pink-dark);
+  text-transform:uppercase;
+  margin:0 0 16px;
+  position:relative;z-index:3;
+}
+.hero h2{
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:clamp(38px,5vw,60px);
+  margin:0 0 18px;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  color:var(--ink);
+  position:relative;z-index:3;
+  max-width:680px;
+}
+.hero h2 .accent{
+  display:inline-block;
+  background:var(--purple-grad);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.hero .lead{
+  font-size:17px;
+  line-height:1.75;
+  color:var(--text-soft);
+  max-width:540px;
+  margin:0 0 32px;
+  position:relative;z-index:3;
+}
+.hero .cta-row{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  position:relative;z-index:3;
+}
+.hero .stat-strip{
+  display:flex;gap:18px;margin-top:36px;padding-top:28px;flex-wrap:wrap;
+  position:relative;z-index:3;
+}
+.hero .stat-pill{
+  padding:12px 20px;
+  border-radius:18px;
+  background:var(--clay-grad);
+  box-shadow:var(--clay-shadow-sm);
+}
+.hero .stat-pill .sv{
+  font-family:'Nunito',sans-serif;
+  font-size:22px;font-weight:800;color:var(--ink);
+}
+.hero .stat-pill .sl{
+  font-family:'Quicksand',sans-serif;
+  font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+}
+
+.home-cards{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+  margin:28px 0;
+}
+.home-card{
+  position:relative;
+  padding:30px 26px 28px;
+  overflow:hidden;
+  transition:transform .25s ease;
+}
+.home-card:hover{transform:translateY(-6px)}
+.home-card .home-ico{
+  width:56px;height:56px;
+  display:grid;place-items:center;
+  margin-bottom:18px;
+  color:#fff;
+  font-size:26px;
+  border-radius:50%;
+  animation:bob 3.2s ease-in-out infinite;
+}
+.home-card.c-pink .home-ico{
+  background:var(--pink-grad);
+  box-shadow:6px 6px 14px rgba(224,111,150,.4), inset 3px 3px 6px rgba(255,255,255,.45), inset -3px -3px 6px rgba(224,111,150,.25);
+}
+.home-card.c-blue .home-ico{
+  background:var(--blue-grad);
+  box-shadow:6px 6px 14px rgba(91,168,201,.4), inset 3px 3px 6px rgba(255,255,255,.45), inset -3px -3px 6px rgba(91,168,201,.25);
+}
+.home-card.c-yellow .home-ico{
+  background:var(--yellow-grad);
+  color:var(--candy-yellow-dark);
+  box-shadow:6px 6px 14px rgba(224,188,24,.4), inset 3px 3px 6px rgba(255,255,255,.45), inset -3px -3px 6px rgba(224,188,24,.25);
+}
+.home-card h3{
+  margin:0 0 8px;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:22px;
+  color:var(--ink);
+  letter-spacing:-.01em;
+}
+.home-card p{
+  margin:0 0 16px;
+  font-size:14px;
+  line-height:1.7;
+  color:var(--text-soft);
+}
+.home-card .home-tag{
+  display:inline-block;
+  padding:5px 14px;
+  font-family:'Quicksand',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  border-radius:999px;
+  background:var(--clay-grad);
+  color:var(--candy-purple-dark);
+  box-shadow:inset 2px 2px 3px rgba(255,255,255,.5), inset -2px -2px 3px rgba(91,168,212,.15);
+}
+
+.patch-frame{
+  position:relative;
+  padding:32px 36px;
+  background:var(--purple-grad);
+  border-radius:28px;
+  box-shadow:
+    12px 12px 28px rgba(74,139,184,.4),
+    inset 4px 4px 8px rgba(255,255,255,.25),
+    inset -4px -4px 8px rgba(46,107,150,.25);
+  color:#fff;
+  overflow:hidden;
+}
+.patch-frame::before{
+  content:'';
+  position:absolute;
+  top:-30px;right:-30px;
+  width:140px;height:140px;
+  border-radius:50%;
+  background:rgba(255,255,255,.15);
+  box-shadow:inset 4px 4px 8px rgba(255,255,255,.3), inset -4px -4px 8px rgba(46,107,150,.15);
+}
+.patch-eyebrow{
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:rgba(255,255,255,.85);
+  margin:0 0 12px;
+  position:relative;
+}
+.patch-title{
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:30px;
+  margin:0 0 8px;
+  letter-spacing:-.01em;
+  position:relative;
+}
+.patch-sub{
+  font-size:15px;
+  color:rgba(255,255,255,.85);
+  margin:0;
+  font-weight:500;
+  position:relative;
+}
+
+.footer{
+  text-align:center;
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.2em;
+  color:var(--muted);
+  padding:26px 0 96px;
+  text-transform:uppercase;
+}
+
+/* ===== Buttons (clay) ===== */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:13px 26px;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:.02em;
+  color:#fff;
+  background:var(--purple-grad);
+  border:none;
+  border-radius:16px;
+  cursor:pointer;
+  box-shadow:
+    6px 6px 14px rgba(74,139,184,.4),
+    inset 2px 2px 4px rgba(255,255,255,.35),
+    inset -2px -2px 4px rgba(46,107,150,.25);
+  transition:all .15s ease;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{
+  transform:translateY(0);
+  box-shadow:
+    inset 4px 4px 8px rgba(46,107,150,.4),
+    inset -2px -2px 4px rgba(255,255,255,.2);
+}
+.btn.btn-pink{background:var(--pink-grad);box-shadow:6px 6px 14px rgba(224,111,150,.4), inset 2px 2px 4px rgba(255,255,255,.35), inset -2px -2px 4px rgba(224,111,150,.25)}
+.btn.btn-blue{background:var(--blue-grad);box-shadow:6px 6px 14px rgba(91,168,201,.4), inset 2px 2px 4px rgba(255,255,255,.35), inset -2px -2px 4px rgba(91,168,201,.25)}
+.btn.btn-yellow{background:var(--yellow-grad);color:var(--candy-yellow-dark);box-shadow:6px 6px 14px rgba(224,188,24,.4), inset 2px 2px 4px rgba(255,255,255,.4), inset -2px -2px 4px rgba(224,188,24,.25)}
+.btn.btn-ghost{
+  color:var(--candy-purple-dark);
+  background:var(--clay-grad);
+  box-shadow:var(--clay-shadow-sm);
+}
+.btn.btn-ghost:active{box-shadow:var(--clay-shadow-pressed)}
+.btn.btn-sm{padding:9px 16px;font-size:13px;border-radius:12px}
+
+/* ===== Inputs (clay inset) ===== */
+.field-label{
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  color:var(--text-soft);
+  text-transform:uppercase;
+}
+.input{
+  width:100%;
+  padding:11px 16px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14.5px;
+  font-weight:600;
+  color:var(--ink);
+  background:var(--surface-2);
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:14px;
+  outline:none;
+  box-shadow:var(--clay-shadow-inset);
+  transition:box-shadow .2s ease;
+}
+.input::placeholder{color:var(--muted);font-weight:500}
+.input:focus{
+  box-shadow:var(--clay-shadow-inset), 0 0 0 3px rgba(135,206,235,.3);
+}
+.input:disabled{opacity:.65;color:var(--muted)}
+
+/* ===== Calculator ===== */
+.calc-toolbar{
+  display:flex;gap:10px;margin-bottom:22px;justify-content:flex-end;flex-wrap:wrap;
+}
+
+.results-row{
+  display:flex;gap:20px;margin-bottom:24px;
+}
+
+.result-panel{
+  flex:1;min-width:0;
+  padding:26px;
+}
+.result-panel > h3{
+  margin:0 0 20px;
+  text-align:center;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  padding-bottom:16px;
+  position:relative;
+}
+.result-panel > h3::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:50%;transform:translateX(-50%);
+  width:60px;height:6px;border-radius:999px;
+  background:var(--purple-grad);
+  box-shadow:inset 1px 1px 2px rgba(255,255,255,.4);
+}
+.result-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;
+}
+.result-card{
+  padding:18px;
+  background:var(--clay-grad);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-sm);
+  border:1px solid rgba(255,255,255,.4);
+}
+.result-card .rc-head{
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#fff;
+  text-align:center;
+  padding:7px 12px;
+  margin-bottom:12px;
+  border-radius:999px;
+  background:var(--pink-grad);
+  box-shadow:inset 1.5px 1.5px 3px rgba(255,255,255,.35), inset -1.5px -1.5px 3px rgba(224,111,150,.25);
+}
+.result-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 4px;
+  font-size:13.5px;
+  font-weight:500;
+}
+.result-row .k{color:var(--text-soft)}
+.result-row .v{
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  font-size:14px;
+  color:var(--ink);
+}
+.result-row.dmg .v{color:var(--candy-pink-dark)}
+.result-row.crit .v{color:var(--candy-green-dark)}
+
+.compare-box{
+  grid-column:1/-1;
+  margin-top:8px;
+  padding:18px 22px;
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  background:var(--yellow-grad);
+  color:var(--candy-yellow-dark);
+  border-radius:18px;
+  box-shadow:6px 6px 14px rgba(224,188,24,.35), inset 2px 2px 4px rgba(255,255,255,.45), inset -2px -2px 4px rgba(224,188,24,.25);
+}
+.compare-box .lbl{
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:14px;
+  letter-spacing:.04em;
+}
+.compare-box .val{
+  font-family:'Nunito',sans-serif;
+  font-weight:800;
+  font-size:26px;
+}
+
+.input-container{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:20px;
+}
+.input-section{
+  padding:26px;
+  min-height:380px;
+}
+.input-section .section-header{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  margin-bottom:18px;flex-wrap:wrap;
+  padding-bottom:14px;
+}
+.input-section h2{
+  margin:0;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:22px;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  display:flex;align-items:center;gap:10px;
+}
+.input-section h2::before{
+  content:'';
+  display:inline-block;
+  width:12px;height:12px;border-radius:50%;
+  background:var(--purple-grad);
+  box-shadow:inset 1.5px 1.5px 2px rgba(255,255,255,.4), 2px 2px 4px rgba(74,139,184,.35);
+}
+.input-section .header-buttons{display:flex;flex-wrap:wrap;gap:8px}
+
+.input-row{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  margin-bottom:12px;
+}
+.input-row .field-label{width:108px;flex-shrink:0}
+.input-row .input{width:100px;flex:1}
+
+/* ===== Planner ===== */
+.planner-header{
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  margin-bottom:24px;flex-wrap:wrap;
+}
+.planner-header h2{
+  margin:0;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;
+  font-size:36px;
+  letter-spacing:-.02em;
+  color:var(--ink);
+}
+.planner-header h2 .accent{
+  background:var(--pink-grad);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.planner-kpi{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:14px 24px;
+  background:var(--clay-grad);
+  border-radius:18px;
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-soft);
+  box-shadow:var(--clay-shadow-sm);
+}
+.planner-kpi strong{
+  font-family:'Nunito',sans-serif;
+  font-size:24px;font-weight:800;letter-spacing:0;color:var(--candy-purple-dark);text-transform:none;
+}
+
+.planner-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px;
+}
+.planner-step{
+  position:relative;
+  padding:24px 18px;
+  text-align:center;
+  background:var(--surface);
+  border-radius:22px;
+  box-shadow:var(--clay-shadow);
+  cursor:pointer;
+  transition:all .25s ease;
+  border:1px solid rgba(255,255,255,.4);
+}
+.planner-step .step-num{
+  display:inline-grid;place-items:center;
+  width:46px;height:46px;border-radius:50%;
+  margin-bottom:12px;
+  font-family:'Nunito',sans-serif;
+  font-size:20px;font-weight:800;
+  color:var(--candy-purple-dark);
+  background:var(--clay-grad);
+  box-shadow:inset 2px 2px 4px rgba(255,255,255,.5), inset -2px -2px 4px rgba(91,168,212,.2), 4px 4px 8px rgba(91,168,212,.25);
+}
+.planner-step .step-label{
+  font-family:'Quicksand',sans-serif;
+  font-size:16px;font-weight:700;color:var(--text-soft);letter-spacing:.02em;
+}
+.planner-step:hover{transform:translateY(-3px)}
+.planner-step.active{
+  background:var(--purple-grad);
+  box-shadow:8px 8px 18px rgba(74,139,184,.45), inset 3px 3px 6px rgba(255,255,255,.3), inset -3px -3px 6px rgba(46,107,150,.25);
+}
+.planner-step.active .step-num{
+  color:#fff;
+  background:rgba(255,255,255,.25);
+  box-shadow:inset 2px 2px 4px rgba(255,255,255,.3);
+}
+.planner-step.active .step-label{color:#fff}
+
+.planner-panels{padding:30px}
+.planner-panels h3{
+  margin:0 0 8px;
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;font-size:24px;letter-spacing:-.01em;color:var(--ink);
+}
+.planner-panels > p{
+  margin:0 0 24px;
+  color:var(--muted);
+  font-size:14.5px;
+  line-height:1.65;
+  font-weight:500;
+}
+.planner-fields{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:16px;
+}
+.planner-field{
+  padding:18px 20px;
+  background:var(--clay-grad);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-sm);
+  border:1px solid rgba(255,255,255,.4);
+}
+.planner-field .planner-field-label{
+  display:block;margin-bottom:12px;
+  font-family:'Quicksand',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--candy-purple-dark);
+}
+.planner-nav{
+  display:flex;justify-content:space-between;gap:14px;margin-top:24px;
+}
+
+/* ===== Crafting ===== */
+.crafting-toolbar{
+  display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;
+}
+.crafting-search{flex:1;min-width:220px}
+.crafting-filter{
+  padding:11px 18px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:14px;font-weight:600;color:var(--ink);
+  background:var(--surface);
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:14px;
+  cursor:pointer;
+  box-shadow:var(--clay-shadow-sm);
+}
+.crafting-filter:focus{outline:none;box-shadow:var(--clay-shadow-sm),0 0 0 3px rgba(135,206,235,.3)}
+
+.crafting-content{
+  display:grid;grid-template-columns:1fr 1fr;gap:20px;min-height:540px;
+}
+.crafting-list-section{padding:24px;display:flex;flex-direction:column}
+.crafting-list-head{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;
+  padding-bottom:14px;
+}
+.crafting-list-head h3{
+  margin:0;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--ink);
+}
+.crafting-count{
+  font-family:'Quicksand',sans-serif;font-size:12px;font-weight:700;color:var(--candy-pink-dark);letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 12px;border-radius:999px;background:var(--pink-grad);color:#fff;
+  box-shadow:inset 1.5px 1.5px 3px rgba(255,255,255,.35), inset -1.5px -1.5px 3px rgba(224,111,150,.25);
+}
+.crafting-list{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto;max-height:580px}
+.crafting-item{
+  padding:16px 18px;
+  background:var(--clay-grad);
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-sm);
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.crafting-item:hover{transform:translateX(4px) translateY(-2px)}
+.crafting-item.active{
+  background:var(--purple-grad);
+  box-shadow:6px 6px 14px rgba(74,139,184,.4), inset 2px 2px 4px rgba(255,255,255,.3), inset -2px -2px 4px rgba(46,107,150,.25);
+}
+.crafting-item.active .crafting-item-name,
+.crafting-item.active .crafting-item-source{color:#fff}
+.crafting-item.active .crafting-item-meta{color:rgba(255,255,255,.85)}
+.crafting-item.active .crafting-item-slot{background:rgba(255,255,255,.25);color:#fff;box-shadow:inset 1px 1px 2px rgba(255,255,255,.3)}
+.crafting-item-name{
+  font-family:'Quicksand',sans-serif;
+  font-weight:700;font-size:17px;color:var(--ink);margin-bottom:6px;letter-spacing:-.01em;
+}
+.crafting-item-meta{display:flex;gap:10px;font-size:12px;color:var(--muted);margin-bottom:5px;flex-wrap:wrap;font-weight:600}
+.crafting-item-slot{
+  padding:3px 10px;border-radius:999px;
+  background:var(--blue-grad);color:#fff;
+  font-family:'Quicksand',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  box-shadow:inset 1.5px 1.5px 3px rgba(255,255,255,.35), inset -1.5px -1.5px 3px rgba(91,168,201,.25);
+}
+.crafting-item-source{font-size:12.5px;color:var(--muted);font-weight:500}
+.crafting-tag{
+  display:inline-block;margin-top:8px;padding:4px 12px;border-radius:999px;
+  background:var(--green-grad);color:#fff;
+  font-family:'Quicksand',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  box-shadow:inset 1.5px 1.5px 3px rgba(255,255,255,.35), inset -1.5px -1.5px 3px rgba(98,184,148,.25);
+}
+
+.crafting-detail-section{padding:28px;overflow-y:auto;max-height:70vh}
+.crafting-detail-empty{
+  text-align:center;padding:80px 24px;color:var(--muted);font-weight:600;font-family:'Quicksand',sans-serif;
+}
+.crafting-detail-empty .empty-orb{
+  width:80px;height:80px;margin:0 auto 18px;border-radius:50%;
+  background:var(--clay-grad);
+  box-shadow:var(--clay-shadow);
+  animation:bob 3s ease-in-out infinite;
+}
+.crafting-detail-head{
+  display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap;
+  padding-bottom:18px;
+}
+.crafting-detail-head h2{
+  margin:0;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:28px;letter-spacing:-.02em;color:var(--ink);
+}
+.crafting-detail-row{
+  display:flex;padding:12px 0;
+}
+.crafting-detail-row .lbl{
+  width:90px;flex-shrink:0;
+  color:var(--muted);
+  font-family:'Quicksand',sans-serif;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+}
+.crafting-detail-row .val{flex:1;color:var(--ink);font-size:14.5px;font-weight:600}
+.crafting-detail-effect{
+  margin-top:20px;padding:20px 22px;
+  background:var(--surface-2);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-inset);
+}
+.crafting-detail-effect .et{
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;color:var(--candy-purple-dark);margin-bottom:12px;letter-spacing:.08em;text-transform:uppercase;
+}
+.crafting-detail-effect .ex{color:var(--ink);font-size:14.5px;line-height:1.75;font-weight:500}
+
+/* ===== League ===== */
+.league-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px;
+}
+.stat-card{
+  padding:24px 20px;
+  overflow:hidden;
+}
+.stat-card .stat-ico{
+  display:inline-grid;place-items:center;
+  width:50px;height:50px;border-radius:50%;
+  margin-bottom:16px;
+  color:#fff;font-size:22px;
+  animation:bob 3.2s ease-in-out infinite;
+}
+.stat-card.c-pink .stat-ico{background:var(--pink-grad);box-shadow:5px 5px 12px rgba(224,111,150,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(224,111,150,.25)}
+.stat-card.c-blue .stat-ico{background:var(--blue-grad);box-shadow:5px 5px 12px rgba(91,168,201,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(91,168,201,.25)}
+.stat-card.c-green .stat-ico{background:var(--green-grad);box-shadow:5px 5px 12px rgba(98,184,148,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(98,184,148,.25)}
+.stat-card.c-yellow .stat-ico{background:var(--yellow-grad);color:var(--candy-yellow-dark);box-shadow:5px 5px 12px rgba(224,188,24,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(224,188,24,.25)}
+.stat-card.c-coral .stat-ico{background:var(--coral-grad);box-shadow:5px 5px 12px rgba(224,125,106,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(224,125,106,.25)}
+.stat-card.c-purple .stat-ico{background:var(--purple-grad);box-shadow:5px 5px 12px rgba(74,139,184,.4), inset 2.5px 2.5px 5px rgba(255,255,255,.45), inset -2.5px -2.5px 5px rgba(46,107,150,.25)}
+.stat-card .stat-title{
+  font-family:'Quicksand',sans-serif;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+}
+.stat-card .stat-value{
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:32px;color:var(--ink);margin-bottom:6px;letter-spacing:-.02em;
+}
+.stat-card .stat-sub{font-size:13px;color:var(--muted);font-weight:600;line-height:1.5}
+
+.league-tabs{
+  display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;
+}
+.league-tab{
+  padding:10px 22px;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:13px;letter-spacing:.04em;
+  color:var(--text-soft);
+  background:var(--surface);
+  border:1px solid rgba(255,255,255,.4);
+  border-radius:999px;
+  cursor:pointer;
+  box-shadow:var(--clay-shadow-sm);
+  transition:all .2s ease;
+}
+.league-tab:hover{transform:translateY(-2px)}
+.league-tab.active{
+  color:#fff;
+  background:var(--purple-grad);
+  box-shadow:6px 6px 14px rgba(74,139,184,.4), inset 2px 2px 4px rgba(255,255,255,.3), inset -2px -2px 4px rgba(46,107,150,.25);
+}
+
+.league-table-section{padding:26px;margin-bottom:20px;overflow:hidden}
+.league-table-head{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px;
+}
+.league-table-head h3{
+  margin:0;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.01em;color:var(--ink);
+}
+.league-filter{
+  padding:9px 18px;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;color:var(--ink);
+  background:var(--surface);border:1px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;
+  box-shadow:var(--clay-shadow-sm);
+}
+.league-filter:focus{outline:none;box-shadow:var(--clay-shadow-sm),0 0 0 3px rgba(135,206,235,.3)}
+.league-table-wrap{overflow-x:auto;border-radius:16px;box-shadow:var(--clay-shadow-inset);background:var(--surface-2)}
+.league-table{width:100%;border-collapse:collapse;font-size:13.5px;font-family:'Plus Jakarta Sans',sans-serif}
+.league-table th{
+  padding:13px 12px;text-align:left;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:#fff;
+  background:var(--purple-grad);
+  white-space:nowrap;
+}
+.league-table th:first-child{border-top-left-radius:12px}
+.league-table th:last-child{border-top-right-radius:12px}
+.league-table td{
+  padding:12px 12px;
+  color:var(--text);white-space:nowrap;
+  font-weight:500;
+}
+.league-table tbody tr:nth-child(odd){background:rgba(255,255,255,.25)}
+.league-table tbody tr:hover{background:rgba(135,206,235,.18)}
+.league-table td.num{font-family:'Nunito',sans-serif;font-weight:800;color:var(--candy-pink-dark)}
+.league-table td.name{color:var(--candy-purple-dark);font-weight:800}
+
+.league-charts-row{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+}
+.league-chart-section{padding:24px}
+.league-chart-section h3{
+  margin:0 0 16px;
+  font-family:'Quicksand',sans-serif;font-weight:700;font-size:20px;letter-spacing:-.01em;color:var(--ink);
+}
+.chart-fallback{
+  height:260px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  border-radius:18px;
+  background:var(--clay-grad);
+  box-shadow:var(--clay-shadow-inset);
+  color:var(--muted);text-align:center;padding:24px;
+  font-family:'Quicksand',sans-serif;font-size:14px;line-height:1.6;font-weight:600;
+}
+.chart-fallback .clay-orb{
+  width:70px;height:70px;border-radius:50%;
+  background:var(--purple-grad);
+  box-shadow:6px 6px 14px rgba(74,139,184,.4), inset 3px 3px 6px rgba(255,255,255,.4), inset -3px -3px 6px rgba(46,107,150,.25);
+  animation:bob 3s ease-in-out infinite;
+}
+
+/* ===== Bottom nav ===== */
+.bottom-nav{display:none}
+
+/* ===== Notification sample ===== */
+.notif-sample{
+  position:fixed;top:22px;right:22px;z-index:50;
+  display:flex;align-items:center;gap:14px;
+  padding:16px 20px;max-width:340px;
+  background:var(--clay-grad);
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:18px;
+  box-shadow:var(--clay-shadow-float);
+}
+.notif-sample .nico{
+  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+  color:#fff;background:var(--green-grad);font-size:16px;
+  box-shadow:inset 2px 2px 4px rgba(255,255,255,.45), inset -2px -2px 4px rgba(98,184,148,.3);
+}
+.notif-sample .ntitle{font-family:'Quicksand',sans-serif;font-weight:700;font-size:15px;color:var(--ink);letter-spacing:-.01em}
+.notif-sample .nmsg{font-size:13px;color:var(--muted);font-weight:600;line-height:1.4}
+
+/* ===== Responsive ===== */
+@media (max-width:1100px){
+  .results-row{flex-direction:column}
+  .input-container{grid-template-columns:1fr}
+  .league-summary{grid-template-columns:repeat(2,1fr)}
+  .league-charts-row{grid-template-columns:1fr}
+  .crafting-content{grid-template-columns:1fr}
+  .planner-fields{grid-template-columns:1fr}
+  .home-cards{grid-template-columns:1fr}
+}
+@media (max-width:900px){
+  .app{display:block}
+  .sidebar{
+    position:fixed;left:0;top:0;height:100vh;width:280px;
+    transform:translateX(-100%);transition:transform .3s ease;z-index:40;
+  }
+  body.sidebar-open .sidebar{transform:translateX(0)}
+  .main{padding:22px 18px 100px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:10px}
+  .bottom-nav{
+    display:grid;grid-template-columns:repeat(5,1fr);
+    position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:var(--surface);
+    box-shadow:-6px -6px 14px rgba(255,255,255,.7), 6px -6px 14px rgba(91,168,212,.25);
+    padding:8px;
+    gap:6px;
+  }
+  .bottom-nav a{
+    color:var(--text-soft);text-decoration:none;text-align:center;
+    padding:10px 4px;
+    font-family:'Quicksand',sans-serif;font-size:11px;font-weight:700;letter-spacing:.02em;
+    border-radius:14px;
+    box-shadow:var(--clay-shadow-sm);
+    background:var(--clay-grad);
+  }
+  .bottom-nav a .bnav-ico{display:block;margin:0 auto 4px;color:var(--candy-purple-dark);font-size:18px}
+  .bottom-nav a.active{color:#fff;background:var(--purple-grad);box-shadow:inset 2px 2px 4px rgba(255,255,255,.3), inset -2px -2px 4px rgba(46,107,150,.25)}
+  .bottom-nav a.active .bnav-ico{color:#fff}
+  .home-cards{grid-template-columns:1fr}
+  .hero{padding:42px 26px}
+  .hero::before{width:80px;height:80px;top:-15px;right:20px}
+  .hero::after{width:60px;height:60px;bottom:-12px;left:30px}
+}
+@media (max-width:720px){
+  .league-summary{grid-template-columns:1fr}
+  .result-grid{grid-template-columns:1fr}
+  .input-row{flex-direction:column;align-items:stretch}
+  .input-row .field-label{width:auto}
+  .input-row .input{width:100%}
+  .crafting-toolbar{flex-direction:column;align-items:stretch}
+  .planner-steps{display:flex;overflow-x:auto;gap:10px;padding-bottom:8px}
+  .planner-step{flex:0 0 auto;min-width:150px}
+  .notif-sample{display:none}
+  body::before,body::after{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important}
+  body::before,body::after{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-mark">逆</div>
+      <div>
+        <h1>逆水寒 PVP<br>工具箱</h1>
+        <p>S2.2 · 3D CLAY</p>
+      </div>
+    </div>
+    <p class="nav-label">— 目錄 —</p>
+    <nav class="nav">
+      <a class="nav-item active" data-view="home"><span class="nav-ico">●</span>首頁</a>
+      <a class="nav-item" data-view="calculator"><span class="nav-ico">⚔</span>傷害計算器</a>
+      <a class="nav-item" data-view="planner"><span class="nav-ico">📈</span>屬性規劃</a>
+      <a class="nav-item" data-view="crafting"><span class="nav-ico">🗂</span>打造資料庫</a>
+      <a class="nav-item" data-view="league"><span class="nav-ico">📊</span>聯賽數據</a>
+      <a class="nav-item disabled"><span class="nav-ico">🛡</span>配裝比較器</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="seed-mark">♥</div>
+      <div class="quote">頂樓風很大<br>幫會內部使用</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="btn btn-ghost btn-sm" id="navToggle">☰ 選單</button>
+      <button class="btn btn-ghost btn-sm">🌙 燈火模式</button>
+    </div>
+
+    <!-- ===== HOME ===== -->
+    <section id="view-home" class="view">
+      <div class="hero clay-panel">
+        <p class="sub">S2.2 版本 · 黏土計算室</p>
+        <h2>逆水寒 PVP<br><span class="accent">工具箱</span></h2>
+        <p class="lead">以黏土元素與糖果色譜重鑄的對戰計算室。柔軟膨脹的 3D 介面、雙重陰影的觸感,讓每一次屬性調校都如捏塑黏土般直觀而愉悅。</p>
+        <div class="cta-row">
+          <button class="btn">開始計算 →</button>
+          <button class="btn btn-ghost">查看資料庫</button>
+        </div>
+        <div class="stat-strip">
+          <div class="stat-pill"><div class="sv">2,840</div><div class="sl">ACTIVE</div></div>
+          <div class="stat-pill"><div class="sv">99.8%</div><div class="sl">PRECISION</div></div>
+          <div class="stat-pill"><div class="sv">12ms</div><div class="sl">LATENCY</div></div>
+        </div>
+      </div>
+
+      <div class="home-cards">
+        <div class="home-card clay-panel c-pink">
+          <div class="home-ico">⚔</div>
+          <h3>傷害計算器</h3>
+          <p>雙進攻 × 雙防禦交叉比對,立體卡片陳列。</p>
+          <span class="home-tag">CORE</span>
+        </div>
+        <div class="home-card clay-panel c-blue">
+          <div class="home-ico">📈</div>
+          <h3>屬性規劃</h3>
+          <p>三段式階梯規劃,量化每一份投入的邊際效益。</p>
+          <span class="home-tag">ADVANCED</span>
+        </div>
+        <div class="home-card clay-panel c-yellow">
+          <div class="home-ico">📊</div>
+          <h3>聯賽數據</h3>
+          <p>戰績以糖果色塊陳列,公會角逐一覽無遺。</p>
+          <span class="home-tag">DATA</span>
+        </div>
+      </div>
+
+      <div class="patch-frame">
+        <p class="patch-eyebrow">— S2.2 版本更新 —</p>
+        <h3 class="patch-title">3D 元素風格外觀演示</h3>
+        <p class="patch-sub">claymorphism 雙陰影 + 糖果色譜,重鑄工具箱介面。</p>
+      </div>
+
+      <div class="footer">— 版本 S2.2 · 鑄於黏土工坊 —</div>
+    </section>
+
+    <!-- ===== CALCULATOR ===== -->
+    <section id="view-calculator" class="view" hidden>
+      <div class="calc-toolbar">
+        <button class="btn btn-ghost btn-sm">🗑 重置資料</button>
+        <button class="btn btn-ghost btn-sm">📥 匯入</button>
+        <button class="btn btn-sm">📤 匯出</button>
+      </div>
+
+      <div class="results-row">
+        <div class="result-panel clay-panel">
+          <h3>防禦數值 1</h3>
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="rc-head">vs 進攻數值 1</div>
+              <div class="result-row"><span class="k">剩餘防禦</span><span class="v">8,420</span></div>
+              <div class="result-row"><span class="k">防禦減免率</span><span class="v">38%</span></div>
+              <div class="result-row"><span class="k">剩餘氣盾</span><span class="v">1,250</span></div>
+              <div class="result-row"><span class="k">元抗減免率</span><span class="v">22%</span></div>
+              <div class="result-row"><span class="k">實際命中率</span><span class="v">96%</span></div>
+              <div class="result-row"><span class="k">實際會心率</span><span class="v">54%</span></div>
+              <div class="result-row dmg"><span class="k">傷害(未會心)</span><span class="v">12,480</span></div>
+              <div class="result-row crit"><span class="k">傷害(含會心)</span><span class="v">18,932</span></div>
+            </div>
+            <div class="result-card">
+              <div class="rc-head">vs 進攻數值 2</div>
+              <div class="result-row"><span class="k">剩餘防禦</span><span class="v">7,910</span></div>
+              <div class="result-row"><span class="k">防禦減免率</span><span class="v">35%</span></div>
+              <div class="result-row"><span class="k">剩餘氣盾</span><span class="v">1,180</span></div>
+              <div class="result-row"><span class="k">元抗減免率</span><span class="v">19%</span></div>
+              <div class="result-row"><span class="k">實際命中率</span><span class="v">93%</span></div>
+              <div class="result-row"><span class="k">實際會心率</span><span class="v">48%</span></div>
+              <div class="result-row dmg"><span class="k">傷害(未會心)</span><span class="v">13,602</span></div>
+              <div class="result-row crit"><span class="k">傷害(含會心)</span><span class="v">20,144</span></div>
+            </div>
+            <div class="compare-box">
+              <span class="lbl">傷害差距</span>
+              <span class="val">+6.4%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-panel clay-panel">
+          <h3>防禦數值 2</h3>
+          <div class="result-grid">
+            <div class="result-card">
+              <div class="rc-head">vs 進攻數值 1</div>
+              <div class="result-row"><span class="k">剩餘防禦</span><span class="v">9,180</span></div>
+              <div class="result-row"><span class="k">防禦減免率</span><span class="v">41%</span></div>
+              <div class="result-row"><span class="k">剩餘氣盾</span><span class="v">1,360</span></div>
+              <div class="result-row"><span class="k">元抗減免率</span><span class="v">25%</span></div>
+              <div class="result-row"><span class="k">實際命中率</span><span class="v">94%</span></div>
+              <div class="result-row"><span class="k">實際會心率</span><span class="v">51%</span></div>
+              <div class="result-row dmg"><span class="k">傷害(未會心)</span><span class="v">11,260</span></div>
+              <div class="result-row crit"><span class="k">傷害(含會心)</span><span class="v">17,058</span></div>
+            </div>
+            <div class="result-card">
+              <div class="rc-head">vs 進攻數值 2</div>
+              <div class="result-row"><span class="k">剩餘防禦</span><span class="v">8,650</span></div>
+              <div class="result-row"><span class="k">防禦減免率</span><span class="v">39%</span></div>
+              <div class="result-row"><span class="k">剩餘氣盾</span><span class="v">1,290</span></div>
+              <div class="result-row"><span class="k">元抗減免率</span><span class="v">22%</span></div>
+              <div class="result-row"><span class="k">實際命中率</span><span class="v">91%</span></div>
+              <div class="result-row"><span class="k">實際會心率</span><span class="v">45%</span></div>
+              <div class="result-row dmg"><span class="k">傷害(未會心)</span><span class="v">12,340</span></div>
+              <div class="result-row crit"><span class="k">傷害(含會心)</span><span class="v">18,210</span></div>
+            </div>
+            <div class="compare-box">
+              <span class="lbl">傷害差距</span>
+              <span class="val">+6.7%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-container">
+        <section class="input-section clay-panel">
+          <div class="section-header">
+            <h2>進攻數值 1</h2>
+            <div class="header-buttons">
+              <button class="btn btn-sm">從圖片讀取</button>
+              <button class="btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button class="btn btn-ghost btn-sm">從進攻2複製</button>
+            </div>
+          </div>
+          <div class="input-row"><label class="field-label">攻擊</label><input class="input" type="number" value="48200"></div>
+          <div class="input-row"><label class="field-label">破防</label><input class="input" type="number" value="12500"></div>
+          <div class="input-row"><label class="field-label">破盾</label><input class="input" type="number" value="6800"></div>
+          <div class="input-row"><label class="field-label">元素攻擊</label><input class="input" type="number" value="9200"></div>
+          <div class="input-row"><label class="field-label">流派克制</label><input class="input" type="number" value="3400"></div>
+          <div class="input-row"><label class="field-label">命中</label><input class="input" type="number" value="11800"></div>
+          <div class="input-row"><label class="field-label">會心</label><input class="input" type="number" value="8600"></div>
+          <div class="input-row"><label class="field-label">會傷-100%</label><input class="input" type="number" value="220"></div>
+          <div class="input-row"><label class="field-label">額外會心率</label><input class="input" type="number" value="0"></div>
+          <div class="input-row"><label class="field-label">克制百分比</label><input class="input" type="number" value="12"></div>
+          <div class="input-row"><label class="field-label">忽視元抗</label><input class="input" type="number" value="2100"></div>
+          <div class="input-row"><label class="field-label">技能增強</label><input class="input" type="number" value="8"></div>
+        </section>
+
+        <section class="input-section clay-panel">
+          <div class="section-header">
+            <h2>進攻數值 2</h2>
+            <div class="header-buttons">
+              <button class="btn btn-sm">從圖片讀取</button>
+              <button class="btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button class="btn btn-ghost btn-sm">從進攻1複製</button>
+            </div>
+          </div>
+          <div class="input-row"><label class="field-label">攻擊</label><input class="input" type="number" value="51000"></div>
+          <div class="input-row"><label class="field-label">破防</label><input class="input" type="number" value="13800"></div>
+          <div class="input-row"><label class="field-label">破盾</label><input class="input" type="number" value="7200"></div>
+          <div class="input-row"><label class="field-label">元素攻擊</label><input class="input" type="number" value="8800"></div>
+          <div class="input-row"><label class="field-label">流派克制</label><input class="input" type="number" value="3100"></div>
+          <div class="input-row"><label class="field-label">命中</label><input class="input" type="number" value="11200"></div>
+          <div class="input-row"><label class="field-label">會心</label><input class="input" type="number" value="7900"></div>
+          <div class="input-row"><label class="field-label">會傷-100%</label><input class="input" type="number" value="205"></div>
+          <div class="input-row"><label class="field-label">額外會心率</label><input class="input" type="number" value="0"></div>
+          <div class="input-row"><label class="field-label">克制百分比</label><input class="input" type="number" value="10"></div>
+          <div class="input-row"><label class="field-label">忽視元抗</label><input class="input" type="number" value="1900"></div>
+          <div class="input-row"><label class="field-label">技能增強</label><input class="input" type="number" value="6"></div>
+        </section>
+
+        <section class="input-section clay-panel">
+          <div class="section-header">
+            <h2>防禦數值 1</h2>
+            <div class="header-buttons">
+              <button class="btn btn-sm">從圖片讀取</button>
+              <button class="btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button class="btn btn-ghost btn-sm">從防禦2複製</button>
+            </div>
+          </div>
+          <div class="input-row"><label class="field-label">防禦</label><input class="input" type="number" value="24500"></div>
+          <div class="input-row"><label class="field-label">氣盾</label><input class="input" type="number" value="4200"></div>
+          <div class="input-row"><label class="field-label">元素抗性</label><input class="input" type="number" value="3800"></div>
+          <div class="input-row"><label class="field-label">流派抵禦</label><input class="input" type="number" value="2200"></div>
+          <div class="input-row"><label class="field-label">格擋</label><input class="input" type="number" value="1800"></div>
+          <div class="input-row"><label class="field-label">技能抵禦</label><input class="input" type="number" value="950"></div>
+          <div class="input-row"><label class="field-label">會心防禦</label><input class="input" type="number" value="2600"></div>
+          <div class="input-row"><label class="field-label">會心抵抗</label><input class="input" type="number" value="1400"></div>
+        </section>
+
+        <section class="input-section clay-panel">
+          <div class="section-header">
+            <h2>防禦數值 2</h2>
+            <div class="header-buttons">
+              <button class="btn btn-sm">從圖片讀取</button>
+              <button class="btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button class="btn btn-ghost btn-sm">從防禦1複製</button>
+            </div>
+          </div>
+          <div class="input-row"><label class="field-label">防禦</label><input class="input" type="number" value="26800"></div>
+          <div class="input-row"><label class="field-label">氣盾</label><input class="input" type="number" value="4500"></div>
+          <div class="input-row"><label class="field-label">元素抗性</label><input class="input" type="number" value="4100"></div>
+          <div class="input-row"><label class="field-label">流派抵禦</label><input class="input" type="number" value="2400"></div>
+          <div class="input-row"><label class="field-label">格擋</label><input class="input" type="number" value="2000"></div>
+          <div class="input-row"><label class="field-label">技能抵禦</label><input class="input" type="number" value="1100"></div>
+          <div class="input-row"><label class="field-label">會心防禦</label><input class="input" type="number" value="2800"></div>
+          <div class="input-row"><label class="field-label">會心抵抗</label><input class="input" type="number" value="1600"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===== PLANNER ===== -->
+    <section id="view-planner" class="view" hidden>
+      <div class="planner-header">
+        <h2>屬性<span class="accent">規劃</span></h2>
+        <div class="planner-kpi">基準有效傷害：<strong>18,932</strong></div>
+      </div>
+
+      <div class="planner-steps">
+        <div class="planner-step active"><div class="step-num">1</div><div class="step-label">基準</div></div>
+        <div class="planner-step"><div class="step-num">2</div><div class="step-label">增量</div></div>
+        <div class="planner-step"><div class="step-num">3</div><div class="step-label">比較</div></div>
+      </div>
+
+      <div class="planner-panels clay-panel">
+        <h3>基準屬性</h3>
+        <p>以下數值來自傷害計算器的「進攻數值 1」，會隨計算器即時同步，無法在此直接編輯。</p>
+        <div class="planner-fields">
+          <div class="planner-field"><span class="planner-field-label">攻擊</span><input class="input" type="number" value="48200" disabled></div>
+          <div class="planner-field"><span class="planner-field-label">破防</span><input class="input" type="number" value="12500" disabled></div>
+          <div class="planner-field"><span class="planner-field-label">破盾</span><input class="input" type="number" value="6800" disabled></div>
+          <div class="planner-field"><span class="planner-field-label">元素攻擊</span><input class="input" type="number" value="9200" disabled></div>
+          <div class="planner-field"><span class="planner-field-label">命中</span><input class="input" type="number" value="11800" disabled></div>
+          <div class="planner-field"><span class="planner-field-label">會心</span><input class="input" type="number" value="8600" disabled></div>
+        </div>
+        <div class="planner-nav">
+          <button class="btn btn-ghost">上一步</button>
+          <button class="btn">下一步 →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== CRAFTING ===== -->
+    <section id="view-crafting" class="view" hidden>
+      <div class="crafting-toolbar">
+        <input class="input crafting-search" type="text" placeholder="搜尋特技名稱、標籤、來源...">
+        <select class="crafting-filter"><option>全部賽季</option></select>
+        <select class="crafting-filter"><option>全部部位</option></select>
+        <select class="crafting-filter"><option>全部標籤</option></select>
+        <select class="crafting-filter"><option>賽季 (新→舊)</option></select>
+        <button class="btn btn-ghost btn-sm">重置</button>
+      </div>
+
+      <div class="crafting-content">
+        <div class="crafting-list-section clay-panel">
+          <div class="crafting-list-head">
+            <h3>特技列表</h3>
+            <span class="crafting-count">共 128 筆</span>
+          </div>
+          <div class="crafting-list">
+            <div class="crafting-item active">
+              <div class="crafting-item-name">破軍之鋒</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">武器</span><span>S2.2</span></div>
+              <div class="crafting-item-source">來源：幻境深淵 · 鍛造</div>
+              <span class="crafting-tag">輸出</span>
+            </div>
+            <div class="crafting-item">
+              <div class="crafting-item-name">鐵壁金鐘</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">護腕</span><span>S2.1</span></div>
+              <div class="crafting-item-source">來源：幫會商店</div>
+              <span class="crafting-tag">防禦</span>
+            </div>
+            <div class="crafting-item">
+              <div class="crafting-item-name">疾風驟雨</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">腰帶</span><span>S2.2</span></div>
+              <div class="crafting-item-source">來源：聯賽積分</div>
+              <span class="crafting-tag">機動</span>
+            </div>
+            <div class="crafting-item">
+              <div class="crafting-item-name">焚天烈焰</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">戒指</span><span>S2.0</span></div>
+              <div class="crafting-item-source">來源：世界首領</div>
+              <span class="crafting-tag">元素</span>
+            </div>
+            <div class="crafting-item">
+              <div class="crafting-item-name">凝冰訣</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">項鍊</span><span>S2.1</span></div>
+              <div class="crafting-item-source">來源：寒霜秘境</div>
+              <span class="crafting-tag">控制</span>
+            </div>
+            <div class="crafting-item">
+              <div class="crafting-item-name">歸元護體</div>
+              <div class="crafting-item-meta"><span class="crafting-item-slot">衣服</span><span>S2.2</span></div>
+              <div class="crafting-item-source">來源：鍛造台 · 大師</div>
+              <span class="crafting-tag">防禦</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="crafting-detail-section clay-panel">
+          <div class="crafting-detail-head">
+            <h2>破軍之鋒</h2>
+            <span class="crafting-tag">輸出</span>
+          </div>
+          <div class="crafting-detail-row"><span class="lbl">部位</span><span class="val">武器</span></div>
+          <div class="crafting-detail-row"><span class="lbl">賽季</span><span class="val">S2.2</span></div>
+          <div class="crafting-detail-row"><span class="lbl">來源</span><span class="val">幻境深淵 · 鍛造</span></div>
+          <div class="crafting-detail-row"><span class="lbl">稀有度</span><span class="val">金色 · 傳說</span></div>
+          <div class="crafting-detail-effect">
+            <div class="et">特技效果</div>
+            <div class="ex">攻擊時有 15% 機率觸發「破軍」，使下一次技能傷害提升 24%，並額外造成相當於自身攻擊力 180% 的真實傷害，持續 6 秒。觸發後 30 秒內不再觸發。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LEAGUE ===== -->
+    <section id="view-league" class="view" hidden>
+      <div class="league-summary">
+        <div class="stat-card clay-panel c-pink">
+          <div class="stat-ico">⚔</div>
+          <div class="stat-title">總擊敗</div>
+          <div class="stat-value">1,284</div>
+          <div class="stat-sub">藍方 672 · 紅方 612</div>
+        </div>
+        <div class="stat-card clay-panel c-yellow">
+          <div class="stat-ico">💥</div>
+          <div class="stat-title">總對玩家傷害</div>
+          <div class="stat-value">8.42 億</div>
+          <div class="stat-sub">藍方 4.51 · 紅方 3.91</div>
+        </div>
+        <div class="stat-card clay-panel c-green">
+          <div class="stat-ico">💚</div>
+          <div class="stat-title">總治療值</div>
+          <div class="stat-value">3.18 億</div>
+          <div class="stat-sub">藍方 1.72 · 紅方 1.46</div>
+        </div>
+        <div class="stat-card clay-panel c-purple">
+          <div class="stat-ico">💀</div>
+          <div class="stat-title">總重傷</div>
+          <div class="stat-value">986</div>
+          <div class="stat-sub">藍方 502 · 紅方 484</div>
+        </div>
+        <div class="stat-card clay-panel c-blue">
+          <div class="stat-ico">✨</div>
+          <div class="stat-title">總化羽/清泉</div>
+          <div class="stat-value">214</div>
+          <div class="stat-sub">藍方 118 · 紅方 96</div>
+        </div>
+        <div class="stat-card clay-panel c-coral">
+          <div class="stat-ico">🔥</div>
+          <div class="stat-title">總焚骨</div>
+          <div class="stat-value">452</div>
+          <div class="stat-sub">藍方 236 · 紅方 216</div>
+        </div>
+      </div>
+
+      <div class="league-tabs">
+        <div class="league-tab active">第 1 場</div>
+        <div class="league-tab">第 2 場</div>
+        <div class="league-tab">第 3 場</div>
+        <div class="league-tab">第 4 場</div>
+        <div class="league-tab">第 5 場</div>
+      </div>
+
+      <div class="league-table-section clay-panel">
+        <div class="league-table-head">
+          <h3>玩家數據</h3>
+          <select class="league-filter"><option>全部職業</option></select>
+        </div>
+        <div class="league-table-wrap">
+          <table class="league-table">
+            <thead><tr>
+              <th>玩家名字</th><th>職業</th><th>擊敗</th><th>助攻</th><th>資源</th>
+              <th>對玩家傷害</th><th>對建築傷害</th><th>治療值</th><th>承受傷害</th><th>重傷</th><th>化羽/清泉</th><th>焚骨</th>
+            </tr></thead>
+            <tbody>
+              <tr><td class="name">劍影·霜寒</td><td>劍</td><td class="num">14</td><td class="num">9</td><td class="num">320</td><td class="num">1,240萬</td><td class="num">86萬</td><td class="num">0</td><td class="num">680萬</td><td class="num">3</td><td class="num">2</td><td class="num">5</td></tr>
+              <tr><td class="name">醫仙·青囊</td><td>醫</td><td class="num">2</td><td class="num">21</td><td class="num">180</td><td class="num">210萬</td><td class="num">12萬</td><td class="num">4,820萬</td><td class="num">920萬</td><td class="num">5</td><td class="num">8</td><td class="num">1</td></tr>
+              <tr><td class="name">破軍·赤焰</td><td>刀</td><td class="num">18</td><td class="num">6</td><td class="num">410</td><td class="num">1,860萬</td><td class="num">142萬</td><td class="num">0</td><td class="num">540萬</td><td class="num">2</td><td class="num">1</td><td class="num">9</td></tr>
+              <tr><td class="name">琴音·流羽</td><td>琴</td><td class="num">7</td><td class="num">15</td><td class="num">260</td><td class="num">680萬</td><td class="num">34萬</td><td class="num">2,140萬</td><td class="num">420萬</td><td class="num">4</td><td class="num">3</td><td class="num">2</td></tr>
+              <tr><td class="name">鐵衣·金鐘</td><td>盾</td><td class="num">3</td><td class="num">12</td><td class="num">150</td><td class="num">320萬</td><td class="num">210萬</td><td class="num">180萬</td><td class="num">1,240萬</td><td class="num">1</td><td class="num">0</td><td class="num">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="league-charts-row">
+        <div class="league-chart-section clay-panel">
+          <h3>公會比較</h3>
+          <div class="chart-fallback">
+            <div class="clay-orb"></div>
+            <span>圖表區 · 以立體球體呈現<br>（演示外觀，未接 Chart.js）</span>
+          </div>
+        </div>
+        <div class="league-chart-section clay-panel">
+          <h3>職業分佈</h3>
+          <div class="chart-fallback">
+            <div class="clay-orb"></div>
+            <span>圖表區 · 以黏土色塊比例呈現<br>（演示外觀，未接 Chart.js）</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottom-nav">
+  <a class="active" data-view="home"><span class="bnav-ico">●</span>首頁</a>
+  <a data-view="calculator"><span class="bnav-ico">⚔</span>計算器</a>
+  <a data-view="planner"><span class="bnav-ico">📈</span>規劃</a>
+  <a data-view="crafting"><span class="bnav-ico">🗂</span>打造</a>
+  <a data-view="league"><span class="bnav-ico">📊</span>聯賽</a>
+</nav>
+
+<div class="notif-sample">
+  <div class="nico">✓</div>
+  <div>
+    <div class="ntitle">同步完成</div>
+    <div class="nmsg">資料已同步至計算室</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const views=['home','calculator','planner','crafting','league'];
+  function show(v){
+    views.forEach(id=>{
+      const el=document.getElementById('view-'+id);
+      if(el) el.hidden=(id!==v);
+    });
+    document.querySelectorAll('.nav .nav-item, .bottom-nav a').forEach(a=>{
+      a.classList.toggle('active', a.dataset.view===v);
+    });
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('.nav .nav-item, .bottom-nav a').forEach(a=>{
+    if(!a.dataset.view) return;
+    a.addEventListener('click',e=>{
+      e.preventDefault();
+      show(a.dataset.view);
+      document.body.classList.remove('sidebar-open');
+    });
+  });
+  document.querySelectorAll('.planner-step').forEach(s=>s.addEventListener('click',()=>{
+    document.querySelectorAll('.planner-step').forEach(x=>x.classList.remove('active'));
+    s.classList.add('active');
+  }));
+  document.querySelectorAll('.league-tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.league-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+  }));
+  document.querySelectorAll('.crafting-item').forEach(it=>it.addEventListener('click',()=>{
+    document.querySelectorAll('.crafting-item').forEach(x=>x.classList.remove('active'));
+    it.classList.add('active');
+  }));
+  const navToggle=document.getElementById('navToggle');
+  if(navToggle) navToggle.addEventListener('click',()=>{
+    document.body.classList.toggle('sidebar-open');
+  });
+})();
+</script>
+</body>
+</html>

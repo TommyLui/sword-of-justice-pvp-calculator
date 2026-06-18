@@ -1,0 +1,82 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 逆
+        - generic [ref=e6]:
+          - heading "逆水寒 PVP 工具箱" [level=1] [ref=e7]:
+            - text: 逆水寒 PVP
+            - text: 工具箱
+          - paragraph [ref=e8]: S2.2 · 3D CLAY
+      - paragraph [ref=e9]: — 目錄 —
+      - navigation [ref=e10]:
+        - generic [ref=e11] [cursor=pointer]:
+          - generic [ref=e12]: ●
+          - text: 首頁
+        - generic [ref=e13] [cursor=pointer]:
+          - generic [ref=e14]: ⚔
+          - text: 傷害計算器
+        - generic [ref=e15] [cursor=pointer]:
+          - generic [ref=e16]: 📈
+          - text: 屬性規劃
+        - generic [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: 🗂
+          - text: 打造資料庫
+        - generic [ref=e19] [cursor=pointer]:
+          - generic [ref=e20]: 📊
+          - text: 聯賽數據
+        - generic:
+          - generic: 🛡
+          - text: 配裝比較器
+      - generic [ref=e21]:
+        - generic [ref=e22]: ♥
+        - generic [ref=e23]:
+          - text: 頂樓風很大
+          - text: 幫會內部使用
+    - main [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]:
+          - paragraph [ref=e27]: S2.2 版本 · 黏土計算室
+          - heading "逆水寒 PVP 工具箱" [level=2] [ref=e28]:
+            - text: 逆水寒 PVP
+            - generic [ref=e29]: 工具箱
+          - paragraph [ref=e30]: 以黏土元素與糖果色譜重鑄的對戰計算室。柔軟膨脹的 3D 介面、雙重陰影的觸感,讓每一次屬性調校都如捏塑黏土般直觀而愉悅。
+          - generic [ref=e31]:
+            - button "開始計算 →" [ref=e32] [cursor=pointer]
+            - button "查看資料庫" [ref=e33] [cursor=pointer]
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - generic [ref=e36]: 2,840
+              - generic [ref=e37]: ACTIVE
+            - generic [ref=e38]:
+              - generic [ref=e39]: 99.8%
+              - generic [ref=e40]: PRECISION
+            - generic [ref=e41]:
+              - generic [ref=e42]: 12ms
+              - generic [ref=e43]: LATENCY
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: ⚔
+            - heading "傷害計算器" [level=3] [ref=e47]
+            - paragraph [ref=e48]: 雙進攻 × 雙防禦交叉比對,立體卡片陳列。
+            - generic [ref=e49]: CORE
+          - generic [ref=e50]:
+            - generic [ref=e51]: 📈
+            - heading "屬性規劃" [level=3] [ref=e52]
+            - paragraph [ref=e53]: 三段式階梯規劃,量化每一份投入的邊際效益。
+            - generic [ref=e54]: ADVANCED
+          - generic [ref=e55]:
+            - generic [ref=e56]: 📊
+            - heading "聯賽數據" [level=3] [ref=e57]
+            - paragraph [ref=e58]: 戰績以糖果色塊陳列,公會角逐一覽無遺。
+            - generic [ref=e59]: DATA
+        - generic [ref=e60]:
+          - paragraph [ref=e61]: — S2.2 版本更新 —
+          - heading "3D 元素風格外觀演示" [level=3] [ref=e62]
+          - paragraph [ref=e63]: claymorphism 雙陰影 + 糖果色譜,重鑄工具箱介面。
+        - generic [ref=e64]: — 版本 S2.2 · 鑄於黏土工坊 —
+  - generic [ref=e65]:
+    - generic [ref=e66]: ✓
+    - generic [ref=e67]:
+      - generic [ref=e68]: 同步完成
+      - generic [ref=e69]: 資料已同步至計算室

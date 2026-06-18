@@ -1,0 +1,66 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e8]:
+          - heading "逆水寒 PVP 工具箱" [level=1] [ref=e9]
+          - paragraph [ref=e10]: S2.2 · 蒸氣龐克演示
+      - generic [ref=e11]: — 儀器室目錄 —
+      - navigation [ref=e12]:
+        - generic [ref=e13] [cursor=pointer]:
+          - img [ref=e15]
+          - text: 首頁
+        - generic [ref=e17] [cursor=pointer]:
+          - generic [ref=e18]: ⚔
+          - text: 傷害計算器
+        - generic [ref=e19] [cursor=pointer]:
+          - generic [ref=e20]: 📈
+          - text: 屬性規劃
+        - generic [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: 🗂
+          - text: 打造資料庫
+        - generic [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 📊
+          - text: 聯賽數據
+        - generic:
+          - generic: 🛡
+          - text: 配裝比較器
+      - generic [ref=e25]:
+        - img [ref=e27]
+        - text: 頂樓風很大
+        - text: 幫會內部使用
+    - main [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - img [ref=e32]
+          - img [ref=e34]
+          - paragraph [ref=e36]: S2.2 版本 · 機械計算室
+          - heading "逆水寒 PVP 工具箱" [level=2] [ref=e37]
+          - generic [ref=e38]:
+            - separator [ref=e39]
+            - img [ref=e40]
+            - separator [ref=e42]
+          - paragraph [ref=e43]: 以黃銅齒輪與蒸汽儀表重鑄的對戰計算室。在此調校你的進攻與防禦數值，讓每一發會心都如機括咬合般精準。
+        - generic [ref=e44]:
+          - generic [ref=e45]:
+            - generic [ref=e46]: ⚔
+            - heading "傷害計算器" [level=3] [ref=e47]
+            - paragraph [ref=e48]: 雙進攻 × 雙防禦交叉比對，蒸氣壓力錶即時讀數。
+          - generic [ref=e49]:
+            - generic [ref=e50]: 📈
+            - heading "屬性規劃" [level=3] [ref=e51]
+            - paragraph [ref=e52]: 三段式齒輪盤規劃階梯增量，量化每一份投入。
+          - generic [ref=e53]:
+            - generic [ref=e54]: 📊
+            - heading "聯賽數據" [level=3] [ref=e55]
+            - paragraph [ref=e56]: 戰績以壓力錶陳列，公會角逐一目瞭然。
+        - generic [ref=e59]:
+          - strong [ref=e60]: S2.2 版本更新
+          - text: — 蒸氣龐克風格外觀演示 —
+        - generic [ref=e61]: — 版本 S2.2 · 鑄於黃銅工坊 —
+  - generic [ref=e62]:
+    - img [ref=e64]
+    - generic [ref=e66]:
+      - generic [ref=e67]: 齒輪咬合
+      - generic [ref=e68]: 資料已同步至計算室。

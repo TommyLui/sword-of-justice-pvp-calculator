@@ -1,0 +1,82 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e9]:
+          - heading "逆水寒 PVP 工具箱" [level=1] [ref=e10]:
+            - text: 逆水寒 PVP
+            - text: 工具箱
+          - paragraph [ref=e11]: S2.2 · DARK BLUE
+      - paragraph [ref=e12]: NAVIGATION
+      - navigation [ref=e13]:
+        - generic [ref=e14] [cursor=pointer]:
+          - generic [ref=e15]: ●
+          - text: 首頁
+        - generic [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: ⚔
+          - text: 傷害計算器
+        - generic [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 📈
+          - text: 屬性規劃
+        - generic [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: 🗂
+          - text: 打造資料庫
+        - generic [ref=e22] [cursor=pointer]:
+          - generic [ref=e23]: 📊
+          - text: 聯賽數據
+        - generic:
+          - generic: 🛡
+          - text: 配裝比較器
+      - generic [ref=e24]:
+        - generic [ref=e25]: SYSTEM ONLINE
+        - generic [ref=e27]:
+          - text: 頂樓風很大
+          - text: 幫會內部使用
+    - main [ref=e28]:
+      - generic [ref=e29]:
+        - generic [ref=e30]:
+          - paragraph [ref=e31]: S2.2 版本 · 深藍計算室
+          - heading "逆水寒 PVP 工具箱" [level=2] [ref=e32]:
+            - text: 逆水寒 PVP
+            - text: 工具箱
+          - paragraph [ref=e33]: 以深藍暗模式重鑄的對戰計算室。海軍藍底色、電光藍高亮、青藍點綴,在沈靜的夜色中精準命中每一次會心。
+          - generic [ref=e34]:
+            - button "開始計算 →" [ref=e35] [cursor=pointer]
+            - button "查看資料庫" [ref=e36] [cursor=pointer]
+          - generic [ref=e37]:
+            - generic [ref=e38]:
+              - generic [ref=e39]: 2,840
+              - generic [ref=e40]: ACTIVE NODES
+            - generic [ref=e41]:
+              - generic [ref=e42]: 99.8%
+              - generic [ref=e43]: PRECISION
+            - generic [ref=e44]:
+              - generic [ref=e45]: 12ms
+              - generic [ref=e46]: LATENCY
+        - generic [ref=e47]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: ⚔
+            - heading "傷害計算器" [level=3] [ref=e50]
+            - paragraph [ref=e51]: 雙進攻 × 雙防禦交叉比對,藍光面板即時讀數。
+            - generic [ref=e52]: CORE
+          - generic [ref=e53]:
+            - generic [ref=e54]: 📈
+            - heading "屬性規劃" [level=3] [ref=e55]
+            - paragraph [ref=e56]: 三段式階梯規劃,量化每一份投入的邊際效益。
+            - generic [ref=e57]: ADVANCED
+          - generic [ref=e58]:
+            - generic [ref=e59]: 📊
+            - heading "聯賽數據" [level=3] [ref=e60]
+            - paragraph [ref=e61]: 戰績以發光節點陳列,公會角逐一覽無遺。
+            - generic [ref=e62]: DATA
+        - generic [ref=e63]:
+          - paragraph [ref=e64]: — S2.2 版本更新 —
+          - heading "深藍暗模式風格外觀演示" [level=3] [ref=e65]
+          - paragraph [ref=e66]: // navy / electric-blue / cyan 三色譜,重鑄工具箱介面。
+        - generic [ref=e67]: — 版本 S2.2 · 鑄於深藍計算室 —
+  - generic [ref=e68]:
+    - generic [ref=e69]: ✓
+    - generic [ref=e70]:
+      - generic [ref=e71]: 同步完成
+      - generic [ref=e72]: // 資料已同步至計算室
