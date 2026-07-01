@@ -9,7 +9,7 @@ module.exports = defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: 'http://localhost:3101',
     browserName: 'chromium',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -26,8 +26,8 @@ module.exports = defineConfig({
     }
   ],
   webServer: {
-    command: 'npx serve . --listen 3000',
-    url: 'http://localhost:3000',
+    command: 'npm run start:test',
+    url: 'http://localhost:3101',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',

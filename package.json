@@ -2,6 +2,8 @@
   "name": "sword-of-justice-pvp-calculator-tests",
   "private": true,
   "scripts": {
+    "start": "node node_modules/serve/build/main.js . --listen 3099",
+    "start:test": "node node_modules/serve/build/main.js . --listen 3101",
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",

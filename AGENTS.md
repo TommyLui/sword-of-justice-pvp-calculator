@@ -10,7 +10,9 @@
 
 ## Commands
 - Install JS deps with npm only: `npm ci` for CI-equivalent clean installs, `npm install` for local updates. Keep `package-lock.json`.
-- Main verification: `npm test` (`playwright test`, Chromium, `tests/e2e`, uses/reuses `npx serve . --listen 3000`).
+- Manual app server: `npm start` serves the repo root on `http://localhost:3099`.
+- Playwright test server: `npm run start:test` serves the repo root on `http://localhost:3101`; `npm test` uses/reuses this port.
+- Main verification: `npm test` (`playwright test`, Chromium, `tests/e2e`).
 - Focused checks: `npm run test:single -- league`, or pass any Playwright grep string after `--`.
 - Debug UI tests: `npm run test:headed` or `npm run test:debug`.
 - Real OCR baseline is opt-in/manual: `npm run test:ocr-real`.
@@ -18,7 +20,7 @@
 
 ## Testing gotchas
 - Do not use `file://`; tests and app behavior expect HTTP. Manual servers: `npx serve .` or `python -m http.server 8000`.
-- If local Playwright behavior is odd, check for an existing `localhost:3000` server; local runs reuse it while CI starts fresh.
+- If local Playwright behavior is odd, check for an existing `localhost:3101` server; local test runs reuse it while CI starts fresh.
 - `playwright.config.js` intentionally has `fullyParallel: false`; CI uses one worker and one retry.
 - Default tests ignore `tests/e2e/ocr-real.spec.js`. The real OCR spec uses the base server plus its own `localhost:3100`, has a 180s timeout, depends on real Tesseract/CDN/runtime behavior, and skips when `CI` is truthy.
 - For OCR integration tests, mock `window.pvpOcr.recognizeFromFile` unless explicitly validating the real-image baseline under `ocr_example/`.

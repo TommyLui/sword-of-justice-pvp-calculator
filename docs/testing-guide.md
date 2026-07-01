@@ -78,7 +78,7 @@ Artifacts:
 
 ## Practical Notes
 
-- Use HTTP only; the suite assumes the app is served via `npx serve .`
+- Use HTTP only; `npm start` serves manual testing on `http://localhost:3099`, while Playwright starts its own server via `npm run start:test` on `http://localhost:3101`
 - `tests/e2e/ocr-real.spec.js` is intentionally skipped in normal CI and only meant for local/manual OCR regression checks
 - When adding new tests, prefer stable selectors (`id`, explicit route ids, fixed button ids)
 - When testing OCR integration, mock `window.pvpOcr.recognizeFromFile` unless the goal is a real-image baseline

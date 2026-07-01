@@ -24,11 +24,11 @@ To enable GitHub Pages deployment:
 2. Right-click `index.html` → **Open with Live Server**
 3. Changes to HTML/CSS/JS auto-reload in the browser on save
 
-### Option 2: npx serve
+### Option 2: npm start
 ```bash
-npx serve .
+npm start
 ```
-Then open `http://localhost:3000`. Manual refresh required after changes.
+Then open `http://localhost:3099`. Manual refresh required after changes.
 
 ### Option 3: Python
 ```bash
@@ -51,6 +51,8 @@ npm install
 ```bash
 npm test
 ```
+
+Playwright uses a separate test server on `http://localhost:3101`, so it can run while `npm start` is serving the app on port `3099`.
 
 ### Run headed mode
 
