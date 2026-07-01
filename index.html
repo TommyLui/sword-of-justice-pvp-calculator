@@ -362,51 +362,50 @@
                 </div>
             </div>
             <div id="view-attribute-planner" class="view" hidden>
-                <div class="attribute-planner-header">
-                    <h2>屬性<span class="accent">規劃</span></h2>
-                    <div class="attribute-planner-kpi">
-                        基準有效傷害：<strong id="planner-kpi">0</strong>
-                    </div>
-                </div>
+                <header class="planner-page-header">
+                    <p class="planner-eyebrow">屬性規劃</p>
+                    <h1>屬性規劃</h1>
+                    <div class="planner-badge"><span class="planner-badge-dot"></span>基準值來自傷害計算器的「進攻數值1 vs 防禦數值1」</div>
+                    <div class="planner-badge"><span class="planner-badge-dot"></span>呈現每級邊際提升與屬性間 CP 排序</div>
+                </header>
 
                 <div id="planner-loading" class="planner-loading">資料載入中...</div>
 
                 <div id="planner-app" class="planner-app" hidden>
-                    <div class="planner-steps" role="tablist" aria-label="屬性規劃步驟">
-                        <button type="button" class="planner-step active" data-step="1" id="planner-step-btn-1" role="tab" aria-selected="true" aria-controls="planner-panel-1">1. 基準</button>
-                        <button type="button" class="planner-step" data-step="2" id="planner-step-btn-2" role="tab" aria-selected="false" aria-controls="planner-panel-2">2. 增量</button>
-                        <button type="button" class="planner-step" data-step="3" id="planner-step-btn-3" role="tab" aria-selected="false" aria-controls="planner-panel-3">3. 比較</button>
-                    </div>
-
-                    <div class="planner-panels">
-                        <section class="planner-panel active" data-step-panel="1" id="planner-panel-1" role="tabpanel" aria-labelledby="planner-step-btn-1">
-                            <h3>基準屬性</h3>
-                            <p>以下數值來自傷害計算器的「進攻數值1」，會隨計算器即時同步，無法在此直接編輯。</p>
-                            <div id="planner-baseline-fields" class="planner-fields"></div>
-                        </section>
-
-                        <section class="planner-panel" data-step-panel="2" id="planner-panel-2" role="tabpanel" aria-labelledby="planner-step-btn-2" hidden>
-                            <div class="planner-panel-head">
-                                <h3>設定階梯增量</h3>
-                                <div class="planner-confirm-actions planner-confirm-actions-inline">
-                                    <button id="planner-reset-steps" type="button" class="planner-secondary-btn">重置所有增量</button>
-                                </div>
-                            </div>
-                            <p>為每個屬性輸入每次要增加多少；未設定（0 或空白）的屬性不會列入比較。</p>
+                    <div class="planner-grid">
+                        <section class="planner-panel" aria-label="階梯增量設定">
+                            <div class="planner-panel-title"><h2>階梯增量</h2><span class="planner-panel-hint">每次 +N</span></div>
+                            <p class="planner-panel-sub">為每個屬性輸入階梯量，0 的屬性不列入比較。</p>
                             <div id="planner-step-fields" class="planner-fields"></div>
+                            <details class="planner-baseline-detail">
+                                <summary>檢視基準屬性（來自計算器） <span class="planner-detail-chev">▾</span></summary>
+                                <div id="planner-baseline-fields" class="planner-baseline-fields"></div>
+                            </details>
+                            <div class="planner-toolbar">
+                                <button id="planner-reset-steps" type="button" class="planner-btn">重置增量</button>
+                            </div>
                         </section>
 
-                        <section class="planner-panel" data-step-panel="3" id="planner-panel-3" role="tabpanel" aria-labelledby="planner-step-btn-3" hidden>
-                            <h3>階梯比較結果</h3>
-                            <div id="planner-stepping-results"></div>
+                        <section aria-label="視覺化結果">
+                            <div id="planner-kpi-strip" class="planner-kpi-strip" aria-label="比較摘要"></div>
+                            <div class="planner-section-head">
+                                <h2>每級邊際增益排序</h2>
+                                <span class="planner-section-meta">比較同一等級下，各屬性整級增量帶來的傷害提升 %</span>
+                            </div>
+                            <div id="planner-summary" class="planner-summary" aria-label="每級邊際增益排序"></div>
+                            <div class="planner-section-head">
+                                <h2>邊際提升趨勢（10 級）</h2>
+                                <span class="planner-section-meta">斜率即邊際遞減速度</span>
+                            </div>
+                            <div id="planner-cards" class="planner-cards" aria-label="邊際提升趨勢"></div>
+                            <details class="planner-detail" open>
+                                <summary>展開精細數值表 <span class="planner-detail-chev">▾</span></summary>
+                                <div id="planner-stepping-results"></div>
+                            </details>
                             <div id="planner-notes" class="planner-notes"></div>
                         </section>
                     </div>
-
-                    <div class="planner-nav">
-                        <button type="button" id="planner-prev" class="planner-secondary-btn">上一步</button>
-                        <button type="button" id="planner-next" class="planner-primary-btn">下一步</button>
-                    </div>
+                    <span id="planner-kpi" hidden>0</span>
                 </div>
             </div>
         </main>

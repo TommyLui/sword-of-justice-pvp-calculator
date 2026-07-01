@@ -15,26 +15,55 @@ test.describe('attribute planner stepping comparison', () => {
   });
 
   test('syncs baseline from calculator and shows baseline damage', async ({ page }) => {
-    await expect(page.locator('.planner-step.active')).toContainText('1. 基準');
     await expect(page.locator('#planner-baseline-attack')).toHaveValue('20000');
     await expect(page.locator('#planner-baseline-crit')).toHaveValue('1000');
     await expect(page.locator('#planner-kpi')).not.toHaveText('0');
   });
 
-  test('stepping compare renders a single combined table with 10 rows', async ({ page }) => {
-    await page.click('#planner-next');
-    await expect(page.locator('[data-step-panel="2"]')).toBeVisible();
-
+  test('renders KPI strip, summary bars and cards after setting a step', async ({ page }) => {
     await page.fill('#planner-step-attack', '200');
     await page.dispatchEvent('#planner-step-attack', 'input');
 
-    await page.click('#planner-next');
-    await expect(page.locator('[data-step-panel="3"]')).toBeVisible();
+    await expect(page.locator('#planner-kpi-strip .planner-kpi')).toHaveCount(4);
+    await expect(page.getByText('第 1 級最佳 CP')).toBeVisible();
+    await expect(page.locator('#planner-summary .planner-level-row')).toHaveCount(10);
+    await expect(page.locator('#planner-cards .planner-card')).toHaveCount(1);
+  });
+
+  test('ranks attributes by whole-level marginal gain instead of per-unit gain', async ({ page }) => {
+    await page.fill('#planner-step-attack', '5000');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+    await page.fill('#planner-step-critDamage', '10');
+    await page.dispatchEvent('#planner-step-critDamage', 'input');
+
+    const table = page.locator('#planner-stepping-results table');
+    await expect(table).toBeVisible();
+
+    const firstTableRow = table.locator('tbody tr').first();
+    const attackLevelGain = await firstTableRow.locator('td').nth(2).textContent();
+    const critDamageLevelGain = await firstTableRow.locator('td').nth(5).textContent();
+
+    const levelOneRanking = page.locator('#planner-summary .planner-level-row').first();
+    await expect(levelOneRanking).toContainText('Lv.1');
+    await expect(levelOneRanking).toContainText(attackLevelGain.trim());
+    await expect(levelOneRanking).toContainText(critDamageLevelGain.trim());
+    const levelOneBest = levelOneRanking.locator('.planner-level-rank').first();
+    await expect(levelOneBest.locator('.planner-level-rank-no')).toHaveText('#1');
+    await expect(levelOneBest.locator('.planner-level-attr')).toHaveText('攻擊');
+
+    const firstLevelBestKpi = page.locator('#planner-kpi-strip .planner-kpi').filter({ hasText: '第 1 級最佳 CP' });
+    await expect(firstLevelBestKpi).toContainText('攻擊');
+    await expect(firstLevelBestKpi).toContainText(attackLevelGain.trim());
+  });
+
+  test('stepping compare renders a single combined table with 10 rows', async ({ page }) => {
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
 
     const table = page.locator('#planner-stepping-results table');
     await expect(table).toBeVisible();
     await expect(table.locator('tbody tr')).toHaveCount(10);
-    await expect(page.getByRole('columnheader', { name: '攻擊(增加數值)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '攻擊(累積增量)' })).toBeVisible();
 
     const firstRow = table.locator('tbody tr').first();
     await expect(firstRow.locator('td').nth(0)).toHaveText('1');
@@ -46,22 +75,18 @@ test.describe('attribute planner stepping comparison', () => {
   });
 
   test('attributes with no step size are omitted from compare table', async ({ page }) => {
-    await page.click('#planner-next');
     await page.fill('#planner-step-crit', '100');
     await page.dispatchEvent('#planner-step-crit', 'input');
-    await page.click('#planner-next');
 
-    await expect(page.getByRole('columnheader', { name: '會心(增加數值)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '會心(累積增量)' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: /^攻擊\(/ })).toHaveCount(0);
   });
 
   test('combined table renders multiple attributes side by side', async ({ page }) => {
-    await page.click('#planner-next');
     await page.fill('#planner-step-attack', '200');
     await page.dispatchEvent('#planner-step-attack', 'input');
     await page.fill('#planner-step-crit', '50');
     await page.dispatchEvent('#planner-step-crit', 'input');
-    await page.click('#planner-next');
 
     const table = page.locator('#planner-stepping-results table');
     await expect(table).toHaveCount(1);
@@ -70,39 +95,31 @@ test.describe('attribute planner stepping comparison', () => {
     const cells = table.locator('tbody tr').first().locator('td');
     await expect(cells).toHaveCount(7); // 1 level + 2 attrs * 3 metrics
 
-    await expect(page.getByRole('columnheader', { name: '攻擊(增加數值)' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: '會心(增加數值)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '攻擊(累積增量)' })).toBeVisible();
+    await expect(page.getByRole('columnheader', { name: '會心(累積增量)' })).toBeVisible();
   });
 
   test('reset steps clears step inputs and removes compare table', async ({ page }) => {
-    await page.click('#planner-next');
     await page.fill('#planner-step-attack', '500');
     await page.dispatchEvent('#planner-step-attack', 'input');
-    await page.click('#planner-next');
     await expect(page.locator('#planner-stepping-results table')).toHaveCount(1);
 
-    await page.click('#planner-prev');
     await page.click('#planner-reset-steps');
     await expect(page.locator('#planner-step-attack')).toHaveValue('');
-
-    await page.click('#planner-next');
     await expect(page.locator('#planner-stepping-results table')).toHaveCount(0);
   });
 
   test('persists step sizes after reload', async ({ page }) => {
-    await page.click('#planner-next');
     await page.fill('#planner-step-attack', '250');
     await page.dispatchEvent('#planner-step-attack', 'input');
 
     await page.reload();
     await page.waitForSelector('#planner-app:not([hidden])');
 
-    await page.click('#planner-next');
     await expect(page.locator('#planner-step-attack')).toHaveValue('250');
   });
 
   test('reset steps clears persisted step sizes', async ({ page }) => {
-    await page.click('#planner-next');
     await page.fill('#planner-step-attack', '500');
     await page.dispatchEvent('#planner-step-attack', 'input');
 
@@ -111,10 +128,7 @@ test.describe('attribute planner stepping comparison', () => {
     await page.reload();
     await page.waitForSelector('#planner-app:not([hidden])');
 
-    await page.click('#planner-next');
     await expect(page.locator('#planner-step-attack')).toHaveValue('');
-
-    await page.click('#planner-next');
     await expect(page.locator('#planner-stepping-results table')).toHaveCount(0);
   });
 

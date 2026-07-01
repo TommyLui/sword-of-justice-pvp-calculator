@@ -37,7 +37,6 @@ function initAttributePlanner() {
     const STEP_STORAGE_PREFIX = 'planner-step-';
 
     const state = {
-        wizardStep: 1,
         baseline: {},
         steps: {}
     };
@@ -51,10 +50,9 @@ function initAttributePlanner() {
     const steppingResultsEl = document.getElementById('planner-stepping-results');
     const notesEl = document.getElementById('planner-notes');
     const kpiEl = document.getElementById('planner-kpi');
-    const stepButtons = Array.from(document.querySelectorAll('#view-attribute-planner .planner-step'));
-    const panels = Array.from(document.querySelectorAll('#view-attribute-planner .planner-panel'));
-    const prevBtn = document.getElementById('planner-prev');
-    const nextBtn = document.getElementById('planner-next');
+    const kpiStripEl = document.getElementById('planner-kpi-strip');
+    const summaryEl = document.getElementById('planner-summary');
+    const cardsEl = document.getElementById('planner-cards');
     const resetStepsBtn = document.getElementById('planner-reset-steps');
 
     function toNumber(value, fallback = 0) {
@@ -162,7 +160,6 @@ function initAttributePlanner() {
                 const damage = combat.calculateCombatStats(stats).expectedDamage;
                 const marginalGain = previousDamage > 0 ? ((damage - previousDamage) / previousDamage) : 0;
                 const cumulativeGain = baselineDamage > 0 ? ((damage - baselineDamage) / baselineDamage) : 0;
-
                 rows.push({
                     level,
                     increment,
@@ -185,12 +182,155 @@ function initAttributePlanner() {
     }
 
 
+    function getLevelRankings(result) {
+        return Array.from({ length: STEP_LEVELS }, (_, index) => {
+            const level = index + 1;
+            const ranked = result.results
+                .map(group => {
+                    const row = group.rows[index];
+                    return {
+                        level,
+                        attr: group.attr,
+                        step: group.step,
+                        appliedIncrement: row.appliedIncrement,
+                        marginalGain: row.marginalGain,
+                        cumulativeGain: row.cumulativeGain
+                    };
+                })
+                .sort((a, b) => b.marginalGain - a.marginalGain);
+
+            return {
+                level,
+                ranked,
+                best: ranked[0] || null
+            };
+        });
+    }
+
+    function getTopLevelLeader(rankings) {
+        const counts = new Map();
+        rankings.forEach(levelRanking => {
+            if (!levelRanking.best) return;
+            const current = counts.get(levelRanking.best.attr.id) || {
+                attr: levelRanking.best.attr,
+                wins: 0
+            };
+            current.wins += 1;
+            counts.set(levelRanking.best.attr.id, current);
+        });
+
+        return Array.from(counts.values()).sort((a, b) => b.wins - a.wins)[0] || null;
+    }
+
+    function renderKPIStrip(result) {
+        if (!kpiStripEl) return;
+        const activeCount = result.results.length;
+        const rankings = getLevelRankings(result);
+        const firstLevelBest = rankings[0]?.best || null;
+        const topLeader = getTopLevelLeader(rankings);
+
+        const bestVal = firstLevelBest
+            ? `<span class="planner-kpi-val" style="color:${firstLevelBest.attr.color}">${firstLevelBest.attr.name}<small>${formatSignedPercent(firstLevelBest.marginalGain)}</small></span>`
+            : '<span class="planner-kpi-val">—</span>';
+        const leaderVal = topLeader
+            ? `<span class="planner-kpi-val" style="color:${topLeader.attr.color}">${topLeader.attr.name}<small>${topLeader.wins} / ${STEP_LEVELS}</small></span>`
+            : '<span class="planner-kpi-val">—</span>';
+
+        kpiStripEl.innerHTML = `
+            <div class="planner-kpi"><div class="planner-kpi-lbl">基準有效傷害</div><div class="planner-kpi-val">${formatInteger(result.baselineDamage)}</div></div>
+            <div class="planner-kpi"><div class="planner-kpi-lbl">比較中屬性</div><div class="planner-kpi-val">${activeCount}<small>/ ${ATTRIBUTES.length}</small></div></div>
+            <div class="planner-kpi"><div class="planner-kpi-lbl">第 1 級最佳 CP</div>${bestVal}</div>
+            <div class="planner-kpi"><div class="planner-kpi-lbl">10 級最佳次數</div>${leaderVal}</div>
+        `;
+    }
+
+    function renderSummaryBars(result) {
+        if (!summaryEl) return;
+        if (result.results.length === 0) {
+            summaryEl.innerHTML = '';
+            return;
+        }
+        const rankings = getLevelRankings(result);
+        summaryEl.innerHTML = rankings.map(levelRanking => `
+            <div class="planner-level-row">
+                <div class="planner-level-label">Lv.${levelRanking.level}</div>
+                <div class="planner-level-rank-list">
+                    ${levelRanking.ranked.map((entry, index) => `
+                        <span class="planner-level-rank" style="--rank-color:${entry.attr.color}">
+                            <span class="planner-level-rank-no">#${index + 1}</span>
+                            <span class="planner-swatch" style="background:${entry.attr.color}"></span>
+                            <span class="planner-level-attr">${entry.attr.name}</span>
+                            <span class="planner-level-gain">${formatSignedPercent(entry.marginalGain)}</span>
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderCards(result) {
+        if (!cardsEl) return;
+        if (result.results.length === 0) {
+            cardsEl.innerHTML = '';
+            return;
+        }
+        cardsEl.innerHTML = result.results.map(g => cardSVG(g)).join('');
+    }
+
+    function cardSVG(g) {
+        const W = 240, H = 120, P = 10;
+        const innerW = W - P * 2, innerH = H - P * 2;
+        const marginalPts = g.rows.map(r => r.marginalGain);
+        const maxM = Math.max(...marginalPts, 1e-9);
+        const minM = Math.min(...marginalPts, 0);
+        const span = Math.max(maxM - minM, 1e-9);
+        const x = i => P + (i / (STEP_LEVELS - 1)) * innerW;
+        const y = v => P + innerH - ((v - minM) / span) * innerH;
+
+        const linePath = g.rows.map((r, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(r.marginalGain).toFixed(1)}`).join(' ');
+        const areaPath = `${linePath} L${x(STEP_LEVELS - 1).toFixed(1)},${(P + innerH).toFixed(1)} L${x(0).toFixed(1)},${(P + innerH).toFixed(1)} Z`;
+        const dots = g.rows.map((r, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(r.marginalGain).toFixed(1)}" r="2.4" fill="${g.attr.color}"/>`).join('');
+
+        const first = g.rows[0].marginalGain, last = g.rows[g.rows.length - 1].marginalGain;
+        const dropPct = first > 0 ? ((first - last) / first * 100) : 0;
+        let trendCls = 'flat', trendTxt = '持平', trendArrow = '→';
+        if (dropPct > 2) { trendCls = 'down'; trendTxt = `遞減 ${dropPct.toFixed(0)}%`; trendArrow = '↘'; }
+        else if (dropPct < -1) { trendCls = 'up'; trendTxt = `遞增 ${Math.abs(dropPct).toFixed(0)}%`; trendArrow = '↗'; }
+
+        const gridLines = [0.25, 0.5, 0.75].map(f =>
+            `<line x1="${P}" y1="${(P + innerH * f).toFixed(1)}" x2="${P + innerW}" y2="${(P + innerH * f).toFixed(1)}" stroke="rgba(74,158,255,.08)" stroke-width="1"/>`
+        ).join('');
+
+        return `
+            <div class="planner-card">
+                <div class="planner-card-head">
+                    <div class="planner-card-ttl"><span class="planner-swatch" style="background:${g.attr.color}"></span>${g.attr.name}</div>
+                    <div class="planner-card-step">+${formatIncrement(g.step)} / 級</div>
+                </div>
+                <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${g.attr.name}邊際提升折線">
+                    ${gridLines}
+                    <path d="${areaPath}" fill="${g.attr.color}1a"/>
+                    <path d="${linePath}" fill="none" stroke="${g.attr.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    ${dots}
+                </svg>
+                <div class="planner-card-foot">
+                    <span class="planner-card-lbl">第 1 級增益 <span class="planner-card-v">${formatSignedPercent(first)}</span></span>
+                    <span class="planner-card-trend ${trendCls}">${trendArrow} ${trendTxt}</span>
+                </div>
+            </div>
+        `;
+    }
+
     function renderComparison() {
         const result = calculateSteppingComparison();
 
         kpiEl.textContent = formatInteger(result.baselineDamage);
         steppingResultsEl.innerHTML = '';
         notesEl.innerHTML = '';
+
+        renderKPIStrip(result);
+        renderSummaryBars(result);
+        renderCards(result);
 
         if (result.baselineDamage <= 0) {
             const empty = document.createElement('p');
@@ -208,7 +348,7 @@ function initAttributePlanner() {
 
         if (result.results.length === 0) {
             const empty = document.createElement('p');
-            empty.textContent = '請在「增量」步驟為至少一項屬性設定階梯增量。';
+            empty.textContent = '請為至少一項屬性設定階梯增量。';
             empty.className = 'planner-empty-note';
             steppingResultsEl.appendChild(empty);
         } else {
@@ -226,7 +366,7 @@ function initAttributePlanner() {
             headerRow.appendChild(thLevel);
 
             result.results.forEach(group => {
-                ['增加數值', '邊際提升', '累積提升'].forEach(label => {
+                ['累積增量', '本級提升', '累積提升'].forEach(label => {
                     const th = document.createElement('th');
                     th.textContent = `${group.attr.name}(${label})`;
                     headerRow.appendChild(th);
@@ -279,12 +419,12 @@ function initAttributePlanner() {
 
     function createBaselineField(attr) {
         const wrap = document.createElement('div');
-        wrap.className = 'planner-field';
+        wrap.className = 'planner-field planner-field-readonly';
 
         const label = document.createElement('label');
         label.className = 'planner-field-label';
         label.setAttribute('for', `planner-baseline-${attr.id}`);
-        label.textContent = attr.name;
+        label.innerHTML = `<span class="planner-swatch" style="background:${attr.color}"></span>${attr.name}`;
 
         const input = document.createElement('input');
         input.id = `planner-baseline-${attr.id}`;
@@ -305,7 +445,7 @@ function initAttributePlanner() {
         const label = document.createElement('label');
         label.className = 'planner-field-label';
         label.setAttribute('for', `planner-step-${attr.id}`);
-        label.textContent = attr.name;
+        label.innerHTML = `<span class="planner-swatch" style="background:${attr.color}"></span>${attr.name}`;
 
         const input = document.createElement('input');
         input.id = `planner-step-${attr.id}`;
@@ -313,7 +453,8 @@ function initAttributePlanner() {
         input.min = '0';
         input.step = String(attr.step || 1);
         input.value = state.steps[attr.id] ? String(state.steps[attr.id]) : '';
-        input.placeholder = '例如：200';
+        input.placeholder = '0';
+        input.inputMode = 'numeric';
 
         function normalizeStepInputDisplay() {
             const next = Math.max(0, toNumber(input.value, 0));
@@ -378,48 +519,7 @@ function initAttributePlanner() {
         renderComparison();
     }
 
-    function setStep(nextStep) {
-        state.wizardStep = Math.min(3, Math.max(1, nextStep));
-
-        stepButtons.forEach(btn => {
-            const step = Number(btn.dataset.step);
-            const isActive = step === state.wizardStep;
-            btn.classList.toggle('active', isActive);
-            btn.setAttribute('aria-selected', String(isActive));
-        });
-
-        panels.forEach(panel => {
-            const step = Number(panel.dataset.stepPanel);
-            const isActive = step === state.wizardStep;
-            panel.hidden = !isActive;
-            panel.classList.toggle('active', isActive);
-        });
-
-        prevBtn.disabled = state.wizardStep === 1;
-        nextBtn.textContent = state.wizardStep === 3 ? '完成' : '下一步';
-
-        if (state.wizardStep === 3) {
-            renderComparison();
-        }
-    }
-
     function bindEvents() {
-        stepButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const target = Number(btn.dataset.step);
-                setStep(target);
-            });
-        });
-
-        prevBtn?.addEventListener('click', () => setStep(state.wizardStep - 1));
-        nextBtn?.addEventListener('click', () => {
-            if (state.wizardStep < 3) {
-                setStep(state.wizardStep + 1);
-                return;
-            }
-            notify({ type: 'info', title: '完成', message: '你可以返回前面步驟持續微調。', duration: 2500 });
-        });
-
         resetStepsBtn?.addEventListener('click', () => {
             state.steps = createZeroStats();
             clearStepsStorage();
@@ -456,7 +556,6 @@ function initAttributePlanner() {
             renderComparison();
         }
 
-        setStep(1);
         bindEvents();
 
         loadingEl.hidden = true;

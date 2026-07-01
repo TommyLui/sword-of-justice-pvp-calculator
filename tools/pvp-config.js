@@ -15,14 +15,14 @@
     };
     const BASELINE_SYNC_KEYS = Object.keys(BRIDGE_FIELD_MAP);
     const PLANNER_ATTRIBUTES = [
-        { id: 'attack', name: '攻擊', min: 0, max: 999999, step: 1 },
-        { id: 'elementalAttack', name: '元素攻擊', min: 0, max: 999999, step: 1 },
-        { id: 'defenseBreak', name: '破防', min: 0, max: 999999, step: 1 },
-        { id: 'shieldBreak', name: '破盾', min: 0, max: 999999, step: 1 },
-        { id: 'accuracy', name: '命中', min: 0, max: 999999, step: 1 },
-        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1 },
-        { id: 'critDamage', name: '會傷', min: 0, max: 999999, step: 1 },
-        { id: 'elementalBreak', name: '忽視元抗', min: 0, max: 999999, step: 1 }
+        { id: 'attack', name: '攻擊', min: 0, max: 999999, step: 1, color: '#4a9eff' },
+        { id: 'elementalAttack', name: '元素攻擊', min: 0, max: 999999, step: 1, color: '#3dd4e8' },
+        { id: 'defenseBreak', name: '破防', min: 0, max: 999999, step: 1, color: '#6b7eff' },
+        { id: 'shieldBreak', name: '破盾', min: 0, max: 999999, step: 1, color: '#2ec9b8' },
+        { id: 'accuracy', name: '命中', min: 0, max: 999999, step: 1, color: '#f5a623' },
+        { id: 'crit', name: '會心', min: 0, max: 999999, step: 1, color: '#f4567a' },
+        { id: 'critDamage', name: '會傷', min: 0, max: 999999, step: 1, color: '#3dd47a' },
+        { id: 'elementalBreak', name: '忽視元抗', min: 0, max: 999999, step: 1, color: '#b58bff' }
     ];
 
     window.pvpConfig = {
