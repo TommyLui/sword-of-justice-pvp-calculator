@@ -1,5 +1,0 @@
-{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend implementation baseline for the static SPA redesign."}
-{"file": ".trellis/spec/frontend/component-guidelines.md", "reason": "UI component and styling guidance for the claymorphism redesign."}
-{"file": ".trellis/spec/frontend/directory-structure.md", "reason": "Static SPA file ownership and routing structure constraints."}
-{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Verification expectations for frontend visual and behavioral changes."}
-{"file": ".trellis/spec/frontend/state-management.md", "reason": "Theme persistence, event, and localStorage behavior guidance."}

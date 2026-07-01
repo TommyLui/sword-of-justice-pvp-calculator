@@ -1,4 +1,0 @@
-{"file":".trellis/spec/frontend/index.md","reason":"Review against frontend overview and static SPA checklist."}
-{"file":".trellis/spec/frontend/directory-structure.md","reason":"Verify no architecture, script-order, or feature ownership drift."}
-{"file":".trellis/spec/frontend/state-management.md","reason":"Verify localStorage and feature-local state contracts remain stable."}
-{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Verify required patterns and OCR test coverage are satisfied."}
