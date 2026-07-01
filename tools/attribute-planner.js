@@ -55,6 +55,59 @@ function initAttributePlanner() {
     const cardsEl = document.getElementById('planner-cards');
     const resetStepsBtn = document.getElementById('planner-reset-steps');
 
+    // ---- tab group elements ----
+    const tabGroupEl = document.getElementById('planner-tab-group');
+    const tabButtons = tabGroupEl ? Array.from(tabGroupEl.querySelectorAll('[role="tab"]')) : [];
+    const badgeSummaryEl = document.getElementById('planner-badge-summary');
+    const badgeTrendEl = document.getElementById('planner-badge-trend');
+    const badgeDetailEl = document.getElementById('planner-badge-detail');
+    const metaSummaryEl = document.getElementById('planner-meta-summary');
+    const metaTrendEl = document.getElementById('planner-meta-trend');
+    const metaDetailEl = document.getElementById('planner-meta-detail');
+    const tabPanelMap = {
+        'planner-tab-summary': { panel: 'planner-panel-summary', meta: metaSummaryEl },
+        'planner-tab-trend': { panel: 'planner-panel-trend', meta: metaTrendEl },
+        'planner-tab-detail': { panel: 'planner-panel-detail', meta: metaDetailEl }
+    };
+
+    function activateTab(tabId, { focus = false } = {}) {
+        const target = tabPanelMap[tabId];
+        if (!target) return;
+        tabButtons.forEach(btn => {
+            const isActive = btn.id === tabId;
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.setAttribute('tabindex', isActive ? '0' : '-1');
+            const panelId = tabPanelMap[btn.id]?.panel;
+            const panelEl = panelId ? document.getElementById(panelId) : null;
+            if (panelEl) panelEl.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+        });
+        Object.values(tabPanelMap).forEach(t => {
+            if (t.meta) t.meta.hidden = !(t === target);
+        });
+        if (focus) {
+            const btn = document.getElementById(tabId);
+            if (btn) btn.focus();
+        }
+    }
+
+    if (tabGroupEl) {
+        tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.id)));
+        tabGroupEl.addEventListener('keydown', (event) => {
+            const idx = tabButtons.findIndex(b => b === document.activeElement);
+            const activeIdx = idx !== -1 ? idx : tabButtons.findIndex(b => b.getAttribute('aria-selected') === 'true');
+            if (activeIdx === -1) return;
+            let next = null;
+            if (event.key === 'ArrowRight') next = (activeIdx + 1) % tabButtons.length;
+            else if (event.key === 'ArrowLeft') next = (activeIdx - 1 + tabButtons.length) % tabButtons.length;
+            else if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = tabButtons.length - 1;
+            if (next !== null) {
+                event.preventDefault();
+                activateTab(tabButtons[next].id, { focus: true });
+            }
+        });
+    }
+
     function toNumber(value, fallback = 0) {
         const n = Number(value);
         return Number.isFinite(n) ? n : fallback;
@@ -246,8 +299,9 @@ function initAttributePlanner() {
 
     function renderSummaryBars(result) {
         if (!summaryEl) return;
+        if (badgeSummaryEl) badgeSummaryEl.textContent = result.results.length;
         if (result.results.length === 0) {
-            summaryEl.innerHTML = '';
+            summaryEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量。</p>';
             return;
         }
         const rankings = getLevelRankings(result);
@@ -270,8 +324,9 @@ function initAttributePlanner() {
 
     function renderCards(result) {
         if (!cardsEl) return;
+        if (badgeTrendEl) badgeTrendEl.textContent = result.results.length;
         if (result.results.length === 0) {
-            cardsEl.innerHTML = '';
+            cardsEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量。</p>';
             return;
         }
         cardsEl.innerHTML = result.results.map(g => cardSVG(g)).join('');
@@ -331,12 +386,17 @@ function initAttributePlanner() {
         renderKPIStrip(result);
         renderSummaryBars(result);
         renderCards(result);
+        if (badgeDetailEl) badgeDetailEl.textContent = result.results.length;
 
         if (result.baselineDamage <= 0) {
             const empty = document.createElement('p');
             empty.textContent = '目前基準傷害為 0，請先在傷害計算器設定可造成傷害的比較情境。';
             empty.className = 'planner-empty-note';
             steppingResultsEl.appendChild(empty);
+            if (summaryEl) summaryEl.innerHTML = '';
+            if (summaryEl) summaryEl.appendChild(empty.cloneNode(true));
+            if (cardsEl) cardsEl.innerHTML = '';
+            if (cardsEl) cardsEl.appendChild(empty.cloneNode(true));
 
             result.notes.forEach(note => {
                 const p = document.createElement('p');

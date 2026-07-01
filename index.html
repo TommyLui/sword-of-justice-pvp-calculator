@@ -388,20 +388,40 @@
 
                         <section aria-label="視覺化結果">
                             <div id="planner-kpi-strip" class="planner-kpi-strip" aria-label="比較摘要"></div>
-                            <div class="planner-section-head">
-                                <h2>每級邊際增益排序</h2>
-                                <span class="planner-section-meta">比較同一等級下，各屬性整級增量帶來的傷害提升 %</span>
+                            <div class="planner-tab-group" id="planner-tab-group">
+                                <div class="planner-tab-list" role="tablist" aria-label="屬性規劃檢視分頁">
+                                    <button class="planner-tab-btn" role="tab" id="planner-tab-summary" aria-selected="true" aria-controls="planner-panel-summary" tabindex="0" type="button">
+                                        <span class="planner-tab-ico">📊</span>每級邊際增益排序<span class="planner-tab-badge" id="planner-badge-summary">—</span>
+                                    </button>
+                                    <button class="planner-tab-btn" role="tab" id="planner-tab-trend" aria-selected="false" aria-controls="planner-panel-trend" tabindex="-1" type="button">
+                                        <span class="planner-tab-ico">📈</span>邊際提升趨勢（10 級）<span class="planner-tab-badge" id="planner-badge-trend">—</span>
+                                    </button>
+                                    <button class="planner-tab-btn" role="tab" id="planner-tab-detail" aria-selected="false" aria-controls="planner-panel-detail" tabindex="-1" type="button">
+                                        <span class="planner-tab-ico">🔢</span>精細數值表<span class="planner-tab-badge" id="planner-badge-detail">—</span>
+                                    </button>
+                                </div>
+                                <div class="planner-tab-meta" id="planner-meta-summary">
+                                    <h2>每級邊際增益排序</h2>
+                                    <span class="planner-section-meta">比較同一等級下，各屬性整級增量帶來的傷害提升 %</span>
+                                </div>
+                                <div class="planner-tab-meta" id="planner-meta-trend" hidden>
+                                    <h2>邊際提升趨勢（10 級）</h2>
+                                    <span class="planner-section-meta">斜率即邊際遞減速度</span>
+                                </div>
+                                <div class="planner-tab-meta" id="planner-meta-detail" hidden>
+                                    <h2>精細數值表</h2>
+                                    <span class="planner-section-meta">每級邊際 / 累積提升</span>
+                                </div>
+                                <div class="planner-tab-panel" role="tabpanel" id="planner-panel-summary" aria-labelledby="planner-tab-summary" aria-hidden="false">
+                                    <div id="planner-summary" class="planner-summary" aria-label="每級邊際增益排序"></div>
+                                </div>
+                                <div class="planner-tab-panel" role="tabpanel" id="planner-panel-trend" aria-labelledby="planner-tab-trend" aria-hidden="true">
+                                    <div id="planner-cards" class="planner-cards" aria-label="邊際提升趨勢"></div>
+                                </div>
+                                <div class="planner-tab-panel planner-tab-panel-detail" role="tabpanel" id="planner-panel-detail" aria-labelledby="planner-tab-detail" aria-hidden="true">
+                                    <div id="planner-stepping-results"></div>
+                                </div>
                             </div>
-                            <div id="planner-summary" class="planner-summary" aria-label="每級邊際增益排序"></div>
-                            <div class="planner-section-head">
-                                <h2>邊際提升趨勢（10 級）</h2>
-                                <span class="planner-section-meta">斜率即邊際遞減速度</span>
-                            </div>
-                            <div id="planner-cards" class="planner-cards" aria-label="邊際提升趨勢"></div>
-                            <details class="planner-detail" open>
-                                <summary>展開精細數值表 <span class="planner-detail-chev">▾</span></summary>
-                                <div id="planner-stepping-results"></div>
-                            </details>
                             <div id="planner-notes" class="planner-notes"></div>
                         </section>
                     </div>
