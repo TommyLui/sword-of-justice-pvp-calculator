@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聯賽數據分析 · 總覽與診斷</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg-0:#070d1a;
+  --bg-1:#0c1424;
+  --panel:#111c33;
+  --panel-2:#16243f;
+  --panel-3:#1c2d4d;
+  --elevated:#1a2a48;
+  --border:rgba(99,159,255,.16);
+  --border-strong:rgba(99,159,255,.32);
+  --text:#e6eef9;
+  --text-soft:#aebfd8;
+  --muted:#7188aa;
+  --dim:#4a5f82;
+  --accent:#5b9dff;
+  --accent-bright:#7fb3ff;
+  --accent-deep:#2f6fd0;
+  --cyan:#3dd4e8;
+  --teal:#2ec9b8;
+  --amber:#f5a623;
+  --rose:#f4567a;
+  --green:#34d399;
+  --red:#f87171;
+  --yellow:#fbbf24;
+  --shadow:0 16px 40px rgba(0,0,0,.45);
+  --shadow-sm:0 4px 12px rgba(0,0,0,.35);
+  --radius:14px;
+  --radius-sm:9px;
+  --tank:#2ec9b8;
+  --heal:#34d399;
+  --dps:#f4567a;
+  --accent-grad:linear-gradient(135deg,#7fb3ff 0%,#5b9dff 100%);
+}
+body.light{
+  --bg-0:#eef2f8;
+  --bg-1:#e3eaf4;
+  --panel:#ffffff;
+  --panel-2:#f7f9fc;
+  --panel-3:#eef3fa;
+  --elevated:#ffffff;
+  --border:rgba(47,111,208,.16);
+  --border-strong:rgba(47,111,208,.3);
+  --text:#0e1a2e;
+  --text-soft:#3d4f6e;
+  --muted:#6a7e9c;
+  --dim:#9aaec9;
+  --shadow:0 16px 40px rgba(20,40,80,.12);
+  --shadow-sm:0 4px 12px rgba(20,40,80,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans TC',-apple-system,'Segoe UI',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(91,157,255,.10), transparent 60%),
+    radial-gradient(70% 50% at 0% 100%, rgba(61,212,232,.06), transparent 60%),
+    var(--bg-0);
+  min-height:100vh;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px}
+
+/* Header */
+header.bar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  padding:18px 22px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--panel) 0%,var(--panel-2) 100%);
+  border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:20px;
+}
+.bar-title h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.5px}
+.bar-title h1 .dot{color:var(--accent);margin-right:6px}
+.bar-title p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.bar-title p .scen{color:var(--accent-bright);font-weight:600}
+.bar-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--bg-1);border:1px solid var(--border);border-radius:999px;padding:3px}
+.seg button{
+  border:0;background:transparent;color:var(--text-soft);font:inherit;font-size:13px;font-weight:600;
+  padding:7px 14px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.seg button.active{background:var(--accent-grad);color:#fff;box-shadow:0 2px 8px rgba(91,157,255,.4)}
+.seg button:hover:not(.active){color:var(--text)}
+.iconbtn{
+  border:1px solid var(--border-strong);background:var(--bg-1);color:var(--text);
+  width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;
+  display:inline-flex;align-items:center;justify-content:center;transition:.15s;
+}
+.iconbtn:hover{background:var(--panel-3);border-color:var(--accent)}
+.iconbtn:focus-visible,.seg button:focus-visible,.subtab-btn:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---- Sub-tab strip (planner pattern, adapted to dark-glass aesthetic) ---- */
+.subtab-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:14px 18px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--panel) 0%,var(--panel-2) 100%);
+  border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:20px;
+}
+.subtab-helper{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.02em;margin-right:4px}
+.subtab-list{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;flex:1;min-width:200px}
+.subtab-list::-webkit-scrollbar{height:6px}
+.subtab-list::-webkit-scrollbar-thumb{background:rgba(91,157,255,.2);border-radius:3px}
+.subtab-btn{
+  appearance:none;border:1px solid var(--border);background:var(--bg-1);color:var(--text-soft);
+  font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;border-radius:999px;
+  cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;flex-shrink:0;
+  transition:color .15s,background .15s,border-color .15s,box-shadow .15s;
+}
+.subtab-btn:hover:not([aria-selected="true"]){color:var(--text);border-color:var(--accent)}
+.subtab-btn[aria-selected="true"]{
+  background:var(--accent-grad);color:#fff;border-color:transparent;
+  box-shadow:0 2px 10px rgba(91,157,255,.35);
+}
+
+/* Content panel */
+.panel-host{outline:none}
+.card{
+  background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow-sm);
+}
+.card h2{margin:0 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .ic{font-size:18px}
+.card .sub{color:var(--muted);font-size:12px;margin:0 0 16px}
+.section-gap{margin-top:20px}
+
+/* Layout grid */
+.grid{display:grid;gap:20px}
+.cols-2{grid-template-columns:1.1fr .9fr}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-1-2{grid-template-columns:.9fr 1.1fr}
+@media(max-width:960px){.cols-2,.cols-3,.cols-1-2{grid-template-columns:1fr}}
+
+/* Stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:6px}
+.tile{padding:13px 14px;border-radius:var(--radius-sm);background:var(--bg-1);border:1px solid var(--border)}
+.tile .tlabel{font-size:11px;color:var(--muted);font-weight:600}
+.tile .tval{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-top:3px;color:var(--accent-bright)}
+.tile .tbrk{display:flex;flex-direction:column;gap:2px;margin-top:7px;font-size:11px;color:var(--text-soft)}
+.tile .tbrk .g{display:flex;justify-content:space-between}
+.tile .tbrk .g .gn{color:var(--muted)}
+
+/* Chart wrapper */
+.chart-wrap{position:relative;height:300px;margin-top:8px}
+.chart-wrap.tall{height:340px}
+.chart-wrap.radar{height:340px}
+.chart-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:780px}
+thead th{
+  background:var(--panel-3);color:var(--text-soft);font-weight:600;text-align:left;
+  padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+  position:sticky;top:0;
+}
+thead th:hover{color:var(--accent-bright)}
+thead th .arr{font-size:10px;margin-left:3px;opacity:.6}
+thead th.sort-asc .arr::after{content:"▲"}
+thead th.sort-desc .arr::after{content:"▼"}
+thead th .arr::after{content:"↕"}
+thead th.numeric,tbody td.numeric{text-align:right;font-family:'JetBrains Mono',monospace}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel-3)}
+tbody tr.mvp-row{background:rgba(91,157,255,.1)}
+tbody tr.mvp-row:hover{background:rgba(91,157,255,.16)}
+.role-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.role-九靈{background:rgba(167,139,250,.18);color:#a78bfa}
+.role-素問{background:rgba(52,211,153,.18);color:var(--green)}
+.role-神相{background:rgba(91,157,255,.18);color:var(--accent-bright)}
+.role-碎夢{background:rgba(244,86,122,.18);color:var(--rose)}
+.role-血河{background:rgba(248,113,113,.18);color:var(--red)}
+.role-鐵衣{background:rgba(46,201,184,.18);color:var(--teal)}
+.role-龍吟{background:rgba(61,212,232,.18);color:var(--cyan)}
+.role-玄機{background:rgba(251,191,36,.18);color:var(--yellow)}
+.contrib{font-weight:700;color:var(--accent-bright)}
+
+/* Health gauge */
+.health-wrap{display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.gauge-canvas{position:relative;width:200px;height:200px;flex-shrink:0}
+.gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.gauge-score{font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:800;line-height:1}
+.gauge-grade{font-size:18px;font-weight:800;letter-spacing:2px;margin-top:4px}
+.gauge-grade.S{color:var(--green)}
+.gauge-grade.A{color:var(--accent-bright)}
+.gauge-grade.B{color:var(--cyan)}
+.gauge-grade.C{color:var(--amber)}
+.gauge-grade.D{color:var(--red)}
+.gauge-meta{flex:1;min-width:220px}
+.gauge-meta .label{color:var(--muted);font-size:12px;font-weight:600;margin-bottom:4px}
+.gauge-meta .verdict{font-size:18px;font-weight:700;margin-bottom:10px}
+.gauge-meta .sev-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+.sev-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border)}
+.sev-pill .dot{width:8px;height:8px;border-radius:50%}
+.sev-pill.critical{color:var(--red);border-color:rgba(248,113,113,.4)}
+.sev-pill.critical .dot{background:var(--red)}
+.sev-pill.warning{color:var(--amber);border-color:rgba(245,166,35,.4)}
+.sev-pill.warning .dot{background:var(--amber)}
+.sev-pill.ok{color:var(--green);border-color:rgba(52,211,153,.4)}
+.sev-pill.ok .dot{background:var(--green)}
+.sev-pill.info{color:var(--accent-bright);border-color:rgba(91,157,255,.4)}
+.sev-pill.info .dot{background:var(--accent-bright)}
+.sev-pill .ct{font-family:'JetBrains Mono',monospace;font-weight:800}
+
+/* Priority overview */
+.prio-bars{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.prio-bar{display:flex;align-items:center;gap:12px}
+.prio-bar .lbl{width:34px;font-weight:800;font-family:'JetBrains Mono',monospace;font-size:13px;flex-shrink:0}
+.prio-bar .lbl.P0{color:var(--red)}
+.prio-bar .lbl.P1{color:var(--amber)}
+.prio-bar .lbl.P2{color:var(--yellow)}
+.prio-bar .lbl.P3{color:var(--muted)}
+.prio-bar .track{flex:1;height:14px;border-radius:999px;background:var(--bg-1);overflow:hidden;border:1px solid var(--border)}
+.prio-bar .fill{height:100%;border-radius:999px;transition:width .5s ease}
+.prio-bar .fill.P0{background:linear-gradient(90deg,var(--red),#dc4747)}
+.prio-bar .fill.P1{background:linear-gradient(90deg,var(--amber),var(--rose))}
+.prio-bar .fill.P2{background:linear-gradient(90deg,var(--yellow),var(--amber))}
+.prio-bar .fill.P3{background:linear-gradient(90deg,var(--muted),var(--dim))}
+.prio-bar .num{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;min-width:24px;text-align:right}
+
+/* Diagnosis cards */
+.diag-group{margin-top:18px}
+.diag-group-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;font-weight:700;color:var(--text-soft)}
+.diag-group-head .count{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);font-weight:600}
+.diag-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.diag-card{
+  position:relative;border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 16px 16px 20px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.diag-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--accent)}
+.diag-card.critical{border-color:rgba(248,113,113,.4)}
+.diag-card.critical::before{background:linear-gradient(180deg,var(--red),#c0392b)}
+.diag-card.warning{border-color:rgba(245,166,35,.38)}
+.diag-card.warning::before{background:linear-gradient(180deg,var(--amber),#e67e22)}
+.diag-card.ok{border-color:rgba(52,211,153,.35)}
+.diag-card.ok::before{background:linear-gradient(180deg,var(--green),var(--teal))}
+.diag-card.info{border-color:rgba(91,157,255,.32)}
+.diag-card.info::before{background:linear-gradient(180deg,var(--accent-bright),var(--accent-deep))}
+.diag-card.critical{box-shadow:0 8px 24px rgba(248,113,113,.18),var(--shadow-sm)}
+.diag-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.sev-badge{font-size:11px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:4px;text-transform:uppercase}
+.sev-badge.critical{background:rgba(248,113,113,.18);color:var(--red)}
+.sev-badge.warning{background:rgba(245,166,35,.18);color:var(--amber)}
+.sev-badge.ok{background:rgba(52,211,153,.18);color:var(--green)}
+.sev-badge.info{background:rgba(91,157,255,.18);color:var(--accent-bright)}
+.cat-tag{font-size:11px;font-weight:600;color:var(--muted);padding:3px 9px;border-radius:4px;background:var(--bg-1);border:1px solid var(--border)}
+.prio-chip{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;padding:3px 8px;border-radius:4px;margin-left:auto}
+.prio-chip.P0{background:rgba(248,113,113,.2);color:var(--red)}
+.prio-chip.P1{background:rgba(245,166,35,.2);color:var(--amber)}
+.prio-chip.P2{background:rgba(251,191,36,.2);color:var(--yellow)}
+.prio-chip.P3{background:rgba(113,136,170,.2);color:var(--muted)}
+.diag-title{font-size:15px;font-weight:700;margin:2px 0 4px;color:var(--text)}
+.diag-guild{font-size:11px;color:var(--dim);font-weight:600;margin-bottom:6px}
+.diag-desc{font-size:13px;color:var(--text-soft);margin:0 0 8px}
+.diag-impact{font-size:12px;color:var(--amber);margin:0 0 8px;display:flex;gap:6px;align-items:flex-start}
+.diag-impact .ic{flex-shrink:0}
+.diag-card.ok .diag-impact{color:var(--green)}
+.diag-card.info .diag-impact{color:var(--accent-bright)}
+.diag-rec{
+  font-size:12px;color:var(--text);padding:9px 11px;border-radius:var(--radius-sm);
+  background:var(--bg-1);border:1px solid var(--border);display:flex;gap:8px;align-items:flex-start;
+}
+.diag-rec .ic{color:var(--accent-bright);flex-shrink:0;font-weight:800}
+
+/* Guild tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{
+  border:1px solid var(--border);background:var(--bg-1);color:var(--text-soft);
+  font:inherit;font-weight:600;font-size:13px;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.tab.active{background:var(--accent-grad);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(91,157,255,.35)}
+.tab:hover:not(.active){border-color:var(--accent);color:var(--text)}
+.tab .ct{font-size:11px;opacity:.8;margin-left:4px}
+
+.guild-radar-wrap{display:flex;flex-direction:column;align-items:center}
+.guild-radar-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-soft);justify-content:center}
+.guild-radar-legend span{display:inline-flex;align-items:center;gap:6px}
+.guild-radar-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+footer.ft{margin-top:32px;color:var(--dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body class="">
+<div class="wrap">
+
+  <!-- 1. Header -->
+  <header class="bar">
+    <div class="bar-title">
+      <h1><span class="dot">◆</span>聯賽數據分析</h1>
+      <p>總覽與診斷 · 目前情境：<span class="scen" id="scen-label">健康陣容</span></p>
+    </div>
+    <div class="bar-controls">
+      <div class="seg" id="scenario-seg">
+        <button class="active" data-scen="healthy">健康陣容</button>
+        <button data-scen="problematic">問題陣容</button>
+      </div>
+      <button class="iconbtn" id="theme-btn" title="切換主題">🌙</button>
+    </div>
+  </header>
+
+  <!-- 2. Sub-tab strip -->
+  <div class="subtab-bar">
+    <span class="subtab-helper">分析視角</span>
+    <div class="subtab-list" role="tablist" id="view-subtabs" aria-label="分析視角子分頁">
+      <button class="subtab-btn" role="tab" id="subtab-overview" data-view="overview" aria-selected="true" aria-controls="view-panel" tabindex="0" type="button">數據總覽</button>
+      <button class="subtab-btn" role="tab" id="subtab-diag" data-view="diag" aria-selected="false" aria-controls="view-panel" tabindex="-1" type="button">診斷建議</button>
+    </div>
+  </div>
+
+  <!-- 3. Content panel (re-rendered on sub-tab switch) -->
+  <div id="view-panel" class="panel-host" role="tabpanel" aria-labelledby="subtab-overview" tabindex="0"></div>
+
+  <footer class="ft">靜態演示原型 · 嵌入式範例資料 · 整合描述性總覽與處方性診斷</footer>
+</div>
+
+<script>
+// ============ Role mapping ============
+const ROLES_ALL = ['九靈','素問','神相','碎夢','血河','鐵衣','龍吟','玄機'];
+const ROLE_CAT = {
+  '鐵衣':'坦', '素問':'補',
+  '九靈':'輸出','神相':'輸出','碎夢':'輸出','血河':'輸出','龍吟':'輸出','玄機':'輸出'
+};
+const CAT_COLOR = { '坦':'#2ec9b8', '補':'#34d399', '輸出':'#f4567a' };
+const ROLE_COLOR = {
+  '神相':'#5b9dff','碎夢':'#f4567a','素問':'#34d399','鐵衣':'#2ec9b8',
+  '血河':'#f87171','龍吟':'#3dd4e8','玄機':'#fbbf24','九靈':'#a78bfa'
+};
+const COLUMNS = [
+  { key:'name', label:'玩家名字', numeric:false },
+  { key:'role', label:'職業', numeric:false },
+  { key:'kills', label:'擊敗', numeric:true },
+  { key:'assists', label:'助攻', numeric:true },
+  { key:'resources', label:'資源', numeric:true },
+  { key:'playerDamage', label:'對玩家傷害', numeric:true, wan:true },
+  { key:'buildingDamage', label:'對建築傷害', numeric:true, wan:true },
+  { key:'healing', label:'治療值', numeric:true, wan:true },
+  { key:'damageTaken', label:'承受傷害', numeric:true, wan:true },
+  { key:'deaths', label:'重傷', numeric:true },
+  { key:'revive', label:'化羽/清泉', numeric:true },
+  { key:'burn', label:'焚骨', numeric:true }
+];
+const SUMMARY_KEYS = ['kills','assists','resources','playerDamage','buildingDamage','healing','damageTaken','deaths','revive','burn'];
+const NUM_KEYS = SUMMARY_KEYS;
+const COMPARE_KEYS = ['kills','playerDamage','healing','deaths','revive','burn'];
+const COMPARE_LABELS = ['擊敗','對玩家傷害','治療值','重傷','化羽/清泉','焚骨'];
+
+// ============ Sample data (8 roles × 12 fields, healthy / problematic) ============
+const SCENARIOS = {
+  healthy: {
+    label:'健康陣容',
+    guilds:[
+      { name:'蒼穹閣', declared:10, players:[
+        { name:'雲天', role:'鐵衣', kills:3, assists:9, resources:120, playerDamage:85000, buildingDamage:60000, healing:8000, damageTaken:320000, deaths:3, revive:2, burn:1 },
+        { name:'青衣', role:'素問', kills:1, assists:14, resources:95, playerDamage:30000, buildingDamage:8000, healing:380000, damageTaken:140000, deaths:2, revive:5, burn:0 },
+        { name:'白露', role:'素問', kills:0, assists:11, resources:88, playerDamage:20000, buildingDamage:5000, healing:320000, damageTaken:120000, deaths:1, revive:6, burn:0 },
+        { name:'赤焰', role:'神相', kills:11, assists:6, resources:110, playerDamage:420000, buildingDamage:90000, healing:12000, damageTaken:160000, deaths:3, revive:1, burn:1 },
+        { name:'紫電', role:'碎夢', kills:9, assists:5, resources:105, playerDamage:380000, buildingDamage:40000, healing:6000, damageTaken:180000, deaths:2, revive:1, burn:0 },
+        { name:'寒山', role:'血河', kills:7, assists:7, resources:90, playerDamage:290000, buildingDamage:120000, healing:5000, damageTaken:220000, deaths:3, revive:0, burn:1 },
+        { name:'驚鴻', role:'龍吟', kills:8, assists:4, resources:92, playerDamage:260000, buildingDamage:30000, healing:4000, damageTaken:150000, deaths:2, revive:1, burn:0 },
+        { name:'星河', role:'玄機', kills:6, assists:8, resources:98, playerDamage:240000, buildingDamage:70000, healing:7000, damageTaken:130000, deaths:2, revive:1, burn:0 },
+        { name:'墨羽', role:'九靈', kills:5, assists:9, resources:85, playerDamage:210000, buildingDamage:20000, healing:15000, damageTaken:110000, deaths:2, revive:1, burn:0 },
+        { name:'風行', role:'神相', kills:4, assists:10, resources:80, playerDamage:180000, buildingDamage:25000, healing:9000, damageTaken:100000, deaths:2, revive:0, burn:0 }
+      ]},
+      { name:'碧落盟', declared:9, players:[
+        { name:'磐石', role:'鐵衣', kills:2, assists:8, resources:100, playerDamage:70000, buildingDamage:55000, healing:6000, damageTaken:300000, deaths:2, revive:3, burn:1 },
+        { name:'月華', role:'素問', kills:1, assists:13, resources:92, playerDamage:25000, buildingDamage:4000, healing:360000, damageTaken:130000, deaths:1, revive:7, burn:0 },
+        { name:'焰靈', role:'九靈', kills:10, assists:5, resources:108, playerDamage:400000, buildingDamage:85000, healing:14000, damageTaken:170000, deaths:3, revive:1, burn:1 },
+        { name:'霜刃', role:'碎夢', kills:8, assists:6, resources:96, playerDamage:350000, buildingDamage:38000, healing:5000, damageTaken:190000, deaths:2, revive:1, burn:0 },
+        { name:'雷鳴', role:'龍吟', kills:7, assists:5, resources:90, playerDamage:280000, buildingDamage:35000, healing:4000, damageTaken:150000, deaths:2, revive:1, burn:0 },
+        { name:'影舞', role:'玄機', kills:6, assists:7, resources:94, playerDamage:230000, buildingDamage:60000, healing:7000, damageTaken:120000, deaths:2, revive:0, burn:0 },
+        { name:'赤血', role:'血河', kills:5, assists:8, resources:88, playerDamage:250000, buildingDamage:110000, healing:4000, damageTaken:200000, deaths:3, revive:0, burn:1 },
+        { name:'青冥', role:'神相', kills:5, assists:9, resources:86, playerDamage:200000, buildingDamage:22000, healing:8000, damageTaken:110000, deaths:2, revive:1, burn:0 },
+        { name:'無名', role:'素問', kills:0, assists:9, resources:78, playerDamage:18000, buildingDamage:3000, healing:280000, damageTaken:100000, deaths:1, revive:4, burn:0 }
+      ]}
+    ]
+  },
+  problematic: {
+    label:'問題陣容',
+    guilds:[
+      { name:'殘月會', declared:10, players:[
+        { name:'靈犀', role:'素問', kills:1, assists:8, resources:40, playerDamage:30000, buildingDamage:6000, healing:120000, damageTaken:260000, deaths:5, revive:0, burn:0 },
+        { name:'幻夜', role:'神相', kills:24, assists:3, resources:35, playerDamage:1850000, buildingDamage:80000, healing:8000, damageTaken:140000, deaths:6, revive:0, burn:0 },
+        { name:'影殺', role:'碎夢', kills:2, assists:2, resources:30, playerDamage:90000, buildingDamage:10000, healing:3000, damageTaken:120000, deaths:5, revive:0, burn:0 },
+        { name:'殘陽', role:'血河', kills:1, assists:1, resources:25, playerDamage:70000, buildingDamage:20000, healing:2000, damageTaken:160000, deaths:4, revive:0, burn:0 },
+        { name:'鬼哭', role:'九靈', kills:0, assists:1, resources:20, playerDamage:60000, buildingDamage:8000, healing:5000, damageTaken:90000, deaths:4, revive:0, burn:0 },
+        { name:'寒月', role:'玄機', kills:1, assists:0, resources:18, playerDamage:50000, buildingDamage:12000, healing:3000, damageTaken:80000, deaths:3, revive:0, burn:0 },
+        { name:'孤鴻', role:'龍吟', kills:1, assists:2, resources:15, playerDamage:45000, buildingDamage:6000, healing:2000, damageTaken:100000, deaths:3, revive:0, burn:0 },
+        { name:'', role:'神相', kills:1, assists:1, resources:12, playerDamage:40000, buildingDamage:5000, healing:2000, damageTaken:70000, deaths:2, revive:0, burn:0 }
+      ]},
+      { name:'破軍堂', declared:8, players:[
+        { name:'銅牆', role:'鐵衣', kills:1, assists:6, resources:60, playerDamage:60000, buildingDamage:50000, healing:4000, damageTaken:280000, deaths:4, revive:0, burn:2 },
+        { name:'甘露', role:'素問', kills:0, assists:9, resources:70, playerDamage:20000, buildingDamage:3000, healing:310000, damageTaken:380000, deaths:2, revive:3, burn:0 },
+        { name:'裂空', role:'神相', kills:8, assists:4, resources:30, playerDamage:520000, buildingDamage:90000, healing:6000, damageTaken:150000, deaths:3, revive:0, burn:1 },
+        { name:'斬月', role:'碎夢', kills:6, assists:3, resources:25, playerDamage:180000, buildingDamage:30000, healing:3000, damageTaken:130000, deaths:3, revive:0, burn:0 },
+        { name:'焚天', role:'血河', kills:4, assists:2, resources:20, playerDamage:140000, buildingDamage:70000, healing:2000, damageTaken:200000, deaths:3, revive:0, burn:0 },
+        { name:'流光', role:'龍吟', kills:3, assists:2, resources:18, playerDamage:100000, buildingDamage:15000, healing:2000, damageTaken:120000, deaths:2, revive:0, burn:0 },
+        { name:'機巧', role:'玄機', kills:2, assists:1, resources:15, playerDamage:80000, buildingDamage:25000, healing:2000, damageTaken:90000, deaths:2, revive:0, burn:0 },
+        { name:'幽冥', role:'九靈', kills:1, assists:1, resources:10, playerDamage:60000, buildingDamage:8000, healing:4000, damageTaken:80000, deaths:2, revive:0, burn:0 }
+      ]},
+      { name:'無名眾', declared:6, players:[
+        { name:'甲一', role:'神相', kills:2, assists:1, resources:8, playerDamage:90000, buildingDamage:10000, healing:3000, damageTaken:100000, deaths:3, revive:0, burn:0 },
+        { name:'甲二', role:'神相', kills:1, assists:1, resources:6, playerDamage:70000, buildingDamage:8000, healing:2000, damageTaken:90000, deaths:3, revive:0, burn:0 },
+        { name:'乙一', role:'碎夢', kills:1, assists:0, resources:5, playerDamage:60000, buildingDamage:5000, healing:1000, damageTaken:80000, deaths:2, revive:0, burn:0 },
+        { name:'乙二', role:'碎夢', kills:0, assists:1, resources:4, playerDamage:50000, buildingDamage:4000, healing:1000, damageTaken:70000, deaths:2, revive:0, burn:0 },
+        { name:'丙一', role:'神相', kills:0, assists:0, resources:3, playerDamage:40000, buildingDamage:3000, healing:1000, damageTaken:60000, deaths:2, revive:0, burn:0 }
+      ]}
+    ]
+  }
+};
+
+// ============ State ============
+let state = {
+  scenario:'healthy',
+  guilds:[],
+  activeGuild:null,
+  theme:'dark',
+  diags:[],
+  view:'overview',          // 'overview' | 'diag'
+  // overview-view local UI state
+  sortCol:'contrib',
+  sortAsc:false,
+  cmpMode:'percent',
+  roleAgg:'sum',
+  roleType:'bar'
+};
+// charts keyed by view so switching destroys the previous view's charts
+let charts = { overview:{ cmp:null, role:null }, diag:{ gauge:null, radar:null } };
+const SEV_ORDER = ['critical','warning','ok','info'];
+const SEV_LABELS = { critical:'嚴重', warning:'警示', ok:'正常', info:'資訊' };
+const PRIO_LIST = ['P0','P1','P2','P3'];
+
+// ============ Helpers ============
+function fmt(n){ return Number(n).toLocaleString('zh-TW'); }
+function fmtWan(n){
+  n = Number(n)||0;
+  if(n>=100000000){ const yi=Math.floor(n/100000000); const wan=Math.floor((n%100000000)/10000); return wan>0?`${yi}億${fmt(wan)}萬`:`${yi}億`; }
+  if(n>=10000){ return `${fmt(Math.floor(n/10000))}萬`; }
+  return fmt(n);
+}
+function fmtCol(key,val){ const c=COLUMNS.find(x=>x.key===key); return c&&c.wan?fmtWan(val):fmt(val); }
+function num(v){ const n=Number(String(v).replace(/,/g,'')); return isNaN(n)?0:n; }
+function contrib(p){
+  return p.kills*1 + p.assists*0.5 + p.playerDamage/100000 + p.healing/100000 + p.revive*2 - p.deaths*0.5;
+}
+function guildStats(g){
+  const s={}; NUM_KEYS.forEach(k=>s[k]=0);
+  g.players.forEach(p=>NUM_KEYS.forEach(k=>s[k]+=num(p[k])));
+  return s;
+}
+function allStats(){
+  const s={}; SUMMARY_KEYS.forEach(k=>s[k]=0);
+  state.guilds.forEach(g=>{ const gs=guildStats(g); SUMMARY_KEYS.forEach(k=>s[k]+=gs[k]); });
+  return s;
+}
+function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+function chartColors(){
+  const dark = state.theme==='dark';
+  return {
+    text: dark? '#aebfd8' : '#3d4f6e',
+    grid: dark? 'rgba(99,159,255,.08)' : 'rgba(47,111,208,.1)',
+    guilds:['#5b9dff','#f4567a','#34d399','#f5a623','#3dd4e8','#a78bfa']
+  };
+}
+
+// ============ Diagnostic engine (10+ rules, unchanged) ============
+function runDiagnostics(guilds){
+  const diags = [];
+  let diagId = 0;
+  const push = (d)=>{ d.id='D'+(++diagId); diags.push(d); };
+
+  guilds.forEach(g=>{
+    const players = g.players;
+    const n = players.length || 1;
+    const cats = { '坦':0,'補':0,'輸出':0 };
+    const roleCount = {};
+    players.forEach(p=>{ const c=ROLE_CAT[p.role]; if(c) cats[c]++; roleCount[p.role]=(roleCount[p.role]||0)+1; });
+    const distinctRoles = Object.keys(roleCount).length;
+
+    // Rule 1: 陣容缺角
+    if(cats['坦']===0){
+      push({severity:'critical',category:'陣容',priority:'P0',guild:g.name,
+        title:'缺坦（坦克職業）',
+        description:`${g.name} 陣容中無任何鐵衣，前排完全失守。`,
+        impact:'缺坦導致前排崩潰，後排承受壓力倍增。',
+        recommendation:'補入鐵衣或調整站位由血河兼任臨時承傷。'});
+    } else if(cats['坦']>=3){
+      push({severity:'warning',category:'陣容',priority:'P1',guild:g.name,
+        title:'坦位過多',
+        description:`${g.name} 坦位 ${cats['坦']} 人，輸出位比例偏低。`,
+        impact:'輸出總量受限，可能難以在時限內擊潰對手。',
+        recommendation:'調整 1 名鐵衣為輸出職或改採推進戰術。'});
+    }
+    if(cats['補']===0){
+      push({severity:'critical',category:'陣容',priority:'P0',guild:g.name,
+        title:'缺補（治療職業）',
+        description:`${g.name} 陣容中無任何素問，續戰力歸零。`,
+        impact:'缺補導致續戰力不足，長時間會戰必敗。',
+        recommendation:'補入素問或大幅強化走位與減傷策略。'});
+    } else if(cats['補']===1 && n>=8){
+      push({severity:'info',category:'陣容',priority:'P3',guild:g.name,
+        title:'補位單薄',
+        description:`${g.name} 僅 1 名素問支撐 ${n} 人，容錯率偏低。`,
+        impact:'單一治療倒下即補線斷裂。',
+        recommendation:'可考慮增配副補或強化治療者生存裝備。'});
+    }
+
+    // Rule 2: 陣亡控制
+    const totalDeaths = players.reduce((a,p)=>a+num(p.deaths),0);
+    const avgDeaths = totalDeaths/n;
+    const totalKills = players.reduce((a,p)=>a+num(p.kills),0);
+    const deathsKillsRatio = totalKills>0? totalDeaths/totalKills : totalDeaths;
+    if(avgDeaths>=4){
+      push({severity:'critical',category:'生存',priority:'P0',guild:g.name,
+        title:'陣亡過高（平均重傷 ≥4）',
+        description:`${g.name} 平均重傷 ${avgDeaths.toFixed(1)} 次／人，戰線嚴重流失。`,
+        impact:'頻繁重傷壓縮輸出時間，整體戰力空窗過長。',
+        recommendation:'強化走位與承傷分攤，檢討化羽使用時機。'});
+    } else if(avgDeaths>=3 || deathsKillsRatio>1.5){
+      push({severity:'warning',category:'生存',priority:'P1',guild:g.name,
+        title:'陣亡偏高',
+        description:`${g.name} 平均重傷 ${avgDeaths.toFixed(1)} 次／人，重傷／擊敗比 ${deathsKillsRatio.toFixed(2)}。`,
+        impact:'重傷頻率高於擊敗，輸出節奏被中斷。',
+        recommendation:'檢討前排承傷分配與化羽時機，提升走位意識。'});
+    } else {
+      push({severity:'ok',category:'生存',priority:'P3',guild:g.name,
+        title:'陣亡控制良好',
+        description:`${g.name} 平均重傷 ${avgDeaths.toFixed(1)} 次／人，重傷／擊敗比 ${deathsKillsRatio.toFixed(2)}。`,
+        impact:'戰線穩定，輸出時間充裕。',
+        recommendation:'維持現有走位與化羽節奏。'});
+    }
+
+    // Rule 3: 傷害集中度
+    const totalPD = players.reduce((a,p)=>a+num(p.playerDamage),0);
+    const top1 = players.reduce((mx,p)=>Math.max(mx,num(p.playerDamage)),0);
+    const topPct = totalPD>0? top1/totalPD : 0;
+    const hhi = totalPD>0? players.reduce((s,p)=>{ const sh=num(p.playerDamage)/totalPD; return s+sh*sh; },0) : 0;
+    if(topPct>0.7){
+      push({severity:'critical',category:'輸出',priority:'P0',guild:g.name,
+        title:'輸出極度集中（單人 >70%）',
+        description:`${g.name} 單一玩家佔總對玩家傷害 ${(topPct*100).toFixed(1)}%，集中度指數 ${(hhi*10000).toFixed(0)}。`,
+        impact:'核心倒下即輸出崩盤，戰術可預測性高。',
+        recommendation:'分散輸出點，培養副手，調整集火目標順序。'});
+    } else if(topPct>0.5){
+      push({severity:'warning',category:'輸出',priority:'P1',guild:g.name,
+        title:'輸出集中（單人 >50%）',
+        description:`${g.name} 單一玩家佔總對玩家傷害 ${(topPct*100).toFixed(1)}%，集中度指數 ${(hhi*10000).toFixed(0)}。`,
+        impact:'核心倒下即輸出大幅下滑。',
+        recommendation:'培養第二輸出點，避免單核依賴。'});
+    } else {
+      push({severity:'ok',category:'輸出',priority:'P3',guild:g.name,
+        title:'輸出分布均衡',
+        description:`${g.name} 輸出集中度指數 ${(hhi*10000).toFixed(0)}，最高單人佔比 ${(topPct*100).toFixed(1)}%。`,
+        impact:'多點輸出，戰術彈性高。',
+        recommendation:'維持多元輸出結構。'});
+    }
+
+    // Rule 4: 資源效率
+    const totalRes = players.reduce((a,p)=>a+num(p.resources),0);
+    const resPerKill = totalKills>0? totalRes/totalKills : totalRes;
+    const resPerPlayer = totalRes/n;
+    if(totalKills>0 && (resPerKill<10 || resPerPlayer<50)){
+      push({severity:'warning',category:'資源',priority:'P2',guild:g.name,
+        title:'資源轉換效率低',
+        description:`${g.name} 資源／擊敗比 ${resPerKill.toFixed(1)}，每人資源 ${resPerPlayer.toFixed(0)}。`,
+        impact:'資源採集未能有效轉化為戰果。',
+        recommendation:'檢討資源採集分工與路線，集中採集至主力輸出。'});
+    } else {
+      push({severity:'ok',category:'資源',priority:'P3',guild:g.name,
+        title:'資源效率正常',
+        description:`${g.name} 資源／擊敗比 ${resPerKill.toFixed(1)}，每人資源 ${resPerPlayer.toFixed(0)}。`,
+        impact:'資源運用到位，支撐戰術執行。',
+        recommendation:'維持現有採集節奏。'});
+    }
+
+    // Rule 5: 治療承傷比
+    const totalHeal = players.reduce((a,p)=>a+num(p.healing),0);
+    const totalTaken = players.reduce((a,p)=>a+num(p.damageTaken),0);
+    const healTaken = totalTaken>0? totalHeal/totalTaken : 1;
+    if(healTaken<0.5){
+      push({severity:'warning',category:'輔助',priority:'P1',guild:g.name,
+        title:'治療不足以覆蓋承傷',
+        description:`${g.name} 治療／承傷比 ${healTaken.toFixed(2)}（治療 ${fmtWan(totalHeal)}／承傷 ${fmtWan(totalTaken)}）。`,
+        impact:'治療量不足以覆蓋承傷，生存壓力大。',
+        recommendation:'提升治療者裝備／數量，或調整減傷策略。'});
+    } else if(healTaken>=0.8){
+      push({severity:'ok',category:'輔助',priority:'P3',guild:g.name,
+        title:'治療覆蓋充足',
+        description:`${g.name} 治療／承傷比 ${healTaken.toFixed(2)}，補線穩固。`,
+        impact:'承傷被有效覆蓋，生存穩定。',
+        recommendation:'維持補線配置。'});
+    } else {
+      push({severity:'info',category:'輔助',priority:'P2',guild:g.name,
+        title:'治療覆蓋尚可',
+        description:`${g.name} 治療／承傷比 ${healTaken.toFixed(2)}，略低於理想值 0.8。`,
+        impact:'高壓會戰時可能出現補線缺口。',
+        recommendation:'留意高承傷時段的減傷協調。'});
+    }
+
+    // Rule 6: 化羽/焚骨使用
+    const totalRevive = players.reduce((a,p)=>a+num(p.revive),0);
+    const totalBurn = players.reduce((a,p)=>a+num(p.burn),0);
+    if(totalRevive+totalBurn===0){
+      push({severity:'info',category:'輔助',priority:'P3',guild:g.name,
+        title:'化羽／焚骨皆未使用',
+        description:`${g.name} 全場化羽 0、焚骨 0。`,
+        impact:'化羽未使用導致重傷後戰力空窗。',
+        recommendation:'練習化羽時機與焚骨壓制，提升復戰效率。'});
+    } else if(totalRevive===0 && avgDeaths>=3){
+      push({severity:'warning',category:'輔助',priority:'P2',guild:g.name,
+        title:'化羽未使用但重傷頻繁',
+        description:`${g.name} 化羽 0，平均重傷 ${avgDeaths.toFixed(1)} 次／人。`,
+        impact:'化羽未使用導致重傷後戰力空窗。',
+        recommendation:'建立化羽使用流程，重傷後立即復戰。'});
+    } else {
+      push({severity:'ok',category:'輔助',priority:'P3',guild:g.name,
+        title:'化羽／焚骨運用正常',
+        description:`${g.name} 化羽 ${totalRevive} 次、焚骨 ${totalBurn} 次。`,
+        impact:'復戰機制有效運用。',
+        recommendation:'維持化羽節奏。'});
+    }
+
+    // Rule 7: 宣告人數不符
+    if(num(g.declared)!==players.length){
+      push({severity:'critical',category:'資料',priority:'P0',guild:g.name,
+        title:'宣告人數與實際不符',
+        description:`${g.name} 宣告 ${num(g.declared)} 人，實際 ${players.length} 人。`,
+        impact:'資料或缺，分析可信度下降。',
+        recommendation:'重新匯入或補齊名單，確認未到者狀態。'});
+    } else {
+      push({severity:'ok',category:'資料',priority:'P3',guild:g.name,
+        title:'宣告人數一致',
+        description:`${g.name} 宣告 ${num(g.declared)} 人，實際 ${players.length} 人。`,
+        impact:'資料完整，分析可信。',
+        recommendation:'維持名單管理流程。'});
+    }
+
+    // Rule 8: 空名字/無效欄位
+    const emptyNames = players.filter(p=>!p.name || !String(p.name).trim());
+    const nanFields = [];
+    players.forEach(p=>{ NUM_KEYS.forEach(k=>{ const raw=p[k]; if(raw===undefined||raw===null||raw===''||isNaN(Number(String(raw).replace(/,/g,'')))) nanFields.push({p,k}); }); });
+    if(emptyNames.length){
+      push({severity:'critical',category:'資料',priority:'P0',guild:g.name,
+        title:'存在空名字玩家',
+        description:`${g.name} 有 ${emptyNames.length} 名玩家名字為空。`,
+        impact:'個別玩家無法追蹤。',
+        recommendation:'補齊原始 CSV 中的名字欄位。'});
+    } else if(nanFields.length){
+      push({severity:'warning',category:'資料',priority:'P1',guild:g.name,
+        title:'存在無效數值欄位',
+        description:`${g.name} 偵測到 ${nanFields.length} 個無效數值欄位。`,
+        impact:'彙總統計可能失真。',
+        recommendation:'檢查原始 CSV 數值欄位格式。'});
+    } else {
+      push({severity:'ok',category:'資料',priority:'P3',guild:g.name,
+        title:'資料欄位完整',
+        description:`${g.name} 全體玩家名字與數值欄位皆有效。`,
+        impact:'資料完整可追蹤。',
+        recommendation:'維持資料匯入品質。'});
+    }
+
+    // Rule 9: MVP 與副手差距
+    const scored = players.map(p=>({...p,_s:contrib(p)})).sort((a,b)=>b._s-a._s);
+    if(scored.length>=2){
+      const mvp = scored[0], sub = scored[1];
+      const gap = mvp._s - sub._s;
+      const ratio = sub._s>0? mvp._s/sub._s : 99;
+      if(ratio>2 && mvp._s>5){
+        push({severity:'warning',category:'輸出',priority:'P2',guild:g.name,
+          title:'MVP 與副手差距過大',
+          description:`${g.name} MVP ${mvp.name||'(無名)'}（${mvp.role}）貢獻分 ${mvp._s.toFixed(1)}，副手 ${sub.name||'(無名)'} ${sub._s.toFixed(1)}，差距 ${gap.toFixed(1)}（${ratio.toFixed(2)}×）。`,
+          impact:'過度依賴單核。',
+          recommendation:'培養第二得分點，分散戰術重心。'});
+      } else {
+        push({severity:'info',category:'輸出',priority:'P3',guild:g.name,
+          title:'MVP 與副手差距',
+          description:`${g.name} MVP ${mvp.name||'(無名)'}（${mvp.role}）貢獻分 ${mvp._s.toFixed(1)}，副手 ${sub.name||'(無名)'} ${sub._s.toFixed(1)}，差距 ${gap.toFixed(1)}。`,
+          impact:'得分分布尚屬均衡。',
+          recommendation:'持續觀察核心與副手表現。'});
+      }
+    }
+
+    // Rule 10: 職業多樣性
+    if(distinctRoles<4){
+      push({severity:'warning',category:'陣容',priority:'P2',guild:g.name,
+        title:'職業多樣性不足',
+        description:`${g.name} 僅出現 ${distinctRoles} 種職業（${Object.keys(roleCount).join('、')}）。`,
+        impact:'陣容單一易被克制。',
+        recommendation:'引入不同定位職業，提升戰術彈性。'});
+    } else {
+      push({severity:'info',category:'陣容',priority:'P3',guild:g.name,
+        title:'職業多樣性',
+        description:`${g.name} 出現 ${distinctRoles} 種職業。`,
+        impact:'陣容多元，戰術選擇豐富。',
+        recommendation:'維持多元職業配置。'});
+    }
+  });
+
+  return diags;
+}
+
+// ============ Health score ============
+function computeHealth(diags){
+  let score = 100;
+  diags.forEach(d=>{
+    if(d.severity==='critical') score -= 25;
+    else if(d.severity==='warning') score -= 8;
+    else if(d.severity==='info') score -= 2;
+    else if(d.severity==='ok') score += 2;
+  });
+  score = Math.max(0, Math.min(100, score));
+  let grade;
+  if(score>=90) grade='S';
+  else if(score>=80) grade='A';
+  else if(score>=65) grade='B';
+  else if(score>=45) grade='C';
+  else grade='D';
+  return {score:Math.round(score), grade};
+}
+function verdictText(score, grade){
+  if(grade==='S') return '陣容健康，戰術執行無重大隱患。';
+  if(grade==='A') return '大致健康，少數項目可優化。';
+  if(grade==='B') return '存在若干警訊，建議逐一改善。';
+  if(grade==='C') return '多項問題並存，需排程處理。';
+  return '多處關鍵失守，應優先處理 P0 項目。';
+}
+
+// ============ Per-guild radar sub-scores ============
+function guildRadarScores(g){
+  const players = g.players;
+  const n = players.length || 1;
+  const cats = { '坦':0,'補':0,'輸出':0 };
+  const roleCount = {};
+  players.forEach(p=>{ const c=ROLE_CAT[p.role]; if(c) cats[c]++; roleCount[p.role]=(roleCount[p.role]||0)+1; });
+  const distinct = Object.keys(roleCount).length;
+
+  let comp = 0;
+  if(cats['坦']>0) comp += 35;
+  if(cats['補']>0) comp += 35;
+  comp += Math.min(30, distinct/8*30);
+  comp = Math.round(comp);
+
+  const totalDeaths = players.reduce((a,p)=>a+num(p.deaths),0);
+  const totalKills = players.reduce((a,p)=>a+num(p.kills),0);
+  const avgDeaths = totalDeaths/n;
+  const ratio = totalKills>0? totalDeaths/totalKills : totalDeaths;
+  let surv = 100 - avgDeaths*15 - Math.max(0,(ratio-1))*20;
+  surv = Math.max(0, Math.min(100, Math.round(surv)));
+
+  const totalPD = players.reduce((a,p)=>a+num(p.playerDamage),0);
+  const hhi = totalPD>0? players.reduce((s,p)=>{ const sh=num(p.playerDamage)/totalPD; return s+sh*sh; },0) : 0;
+  const minHhi = 1/n;
+  let out = 100*(1 - (hhi - minHhi)/(1 - minHhi));
+  out = Math.max(0, Math.min(100, Math.round(out)));
+
+  const totalRes = players.reduce((a,p)=>a+num(p.resources),0);
+  const resPerKill = totalKills>0? totalRes/totalKills : totalRes;
+  const resPerPlayer = totalRes/n;
+  let res = 0;
+  if(totalKills===0) res = resPerPlayer>=50? 60:30;
+  else { res = 50 + (resPerKill>=10?25:resPerKill/10*25) + (resPerPlayer>=50?25:resPerPlayer/50*25); }
+  res = Math.max(0, Math.min(100, Math.round(res)));
+
+  const totalHeal = players.reduce((a,p)=>a+num(p.healing),0);
+  const totalTaken = players.reduce((a,p)=>a+num(p.damageTaken),0);
+  const healTaken = totalTaken>0? totalHeal/totalTaken : 1;
+  const totalRevive = players.reduce((a,p)=>a+num(p.revive),0);
+  let sup = 0;
+  sup += Math.min(60, healTaken*60);
+  sup += Math.min(40, totalRevive/n*20);
+  sup = Math.max(0, Math.min(100, Math.round(sup)));
+
+  return { 陣容:comp, 生存:surv, 輸出:out, 資源:res, 輔助:sup };
+}
+
+// ============ Chart lifecycle ============
+function destroyViewCharts(view){
+  const bag = charts[view];
+  if(!bag) return;
+  Object.keys(bag).forEach(k=>{ if(bag[k]){ try{ bag[k].destroy(); }catch(e){} bag[k]=null; } });
+}
+
+// =====================================================================
+// VIEW 1: 「數據總覽」 — descriptive analysis (ported from league-dashboard)
+// =====================================================================
+function renderOverviewView(){
+  const host = document.getElementById('view-panel');
+  host.innerHTML = `
+    <section class="card">
+      <h2><span class="ic">🔢</span>全欄位摘要</h2>
+      <p class="sub">全 12 項指標總計，下方依公會拆分</p>
+      <div class="tiles" id="tiles"></div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">⚔️</span>公會比較</h2>
+      <p class="sub">支援「百分比 / 原始數值」切換，tooltip 同時顯示兩者</p>
+      <div class="chart-controls">
+        <div class="seg" id="cmp-seg">
+          <button class="active" data-mode="percent">百分比</button>
+          <button data-mode="raw">原始數值</button>
+        </div>
+      </div>
+      <div class="chart-wrap tall"><canvas id="cmp-chart"></canvas></div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">🎯</span>職業類別表現</h2>
+      <p class="sub">依 坦 / 補 / 輸出 分類彙整，可切換加總／平均與圖型</p>
+      <div class="chart-controls">
+        <div class="seg" id="role-seg">
+          <button class="active" data-agg="sum">加總</button>
+          <button data-agg="avg">平均</button>
+        </div>
+        <div class="seg" id="role-type-seg">
+          <button class="active" data-type="bar">長條圖</button>
+          <button data-type="radar">雷達圖</button>
+        </div>
+      </div>
+      <div class="chart-wrap tall"><canvas id="role-chart"></canvas></div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">📑</span>玩家資料表</h2>
+      <p class="sub">完整 12 欄位 + 貢獻分，可排序，MVP 列高亮</p>
+      <div class="tbl-wrap">
+        <table id="player-table">
+          <thead id="player-thead"></thead>
+          <tbody id="player-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  `;
+
+  // wire up this view's controls
+  document.getElementById('cmp-seg').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#cmp-seg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); state.cmpMode=b.dataset.mode; renderCmp();
+  });
+  document.getElementById('role-seg').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#role-seg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); state.roleAgg=b.dataset.agg; renderRole();
+  });
+  document.getElementById('role-type-seg').addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#role-type-seg button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); state.roleType=b.dataset.type; renderRole();
+  });
+
+  renderTiles();
+  renderCmp();
+  renderRole();
+  renderTable();
+}
+
+function renderTiles(){
+  const tiles=document.getElementById('tiles'); if(!tiles) return;
+  tiles.innerHTML='';
+  const tot=allStats();
+  const perGuild={}; state.guilds.forEach(g=>perGuild[g.name]=guildStats(g));
+  // render all 12 columns: name/role are categorical, rest numeric
+  const allCols = COLUMNS;
+  allCols.forEach(c=>{
+    const t=document.createElement('div'); t.className='tile';
+    let brk='';
+    if(c.key==='name' || c.key==='role'){
+      // show per-guild distinct counts
+      state.guilds.forEach(g=>{
+        const set = new Set(g.players.map(p=>p[c.key]));
+        brk+=`<div class="g"><span class="gn">${g.name}</span><span>${set.size} 種</span></div>`;
+      });
+      t.innerHTML=`<div class="tlabel">${c.label}</div><div class="tval">${ c.key==='name'
+        ? state.guilds.reduce((a,g)=>a+g.players.length,0)+' 人'
+        : ROLES_ALL.length+' 類'}</div><div class="tbrk">${brk}</div>`;
+    } else {
+      state.guilds.forEach(g=>{ brk+=`<div class="g"><span class="gn">${g.name}</span><span>${fmtCol(c.key,perGuild[g.name][c.key])}</span></div>`; });
+      t.innerHTML=`<div class="tlabel">${c.label}</div><div class="tval">${fmtCol(c.key,tot[c.key])}</div><div class="tbrk">${brk}</div>`;
+    }
+    tiles.appendChild(t);
+  });
+}
+
+function renderCmp(){
+  const cv=document.getElementById('cmp-chart'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const cc=chartColors();
+  const totals={}; COMPARE_KEYS.forEach(k=>totals[k]=0);
+  state.guilds.forEach(g=>{ const s=guildStats(g); COMPARE_KEYS.forEach(k=>totals[k]+=s[k]); });
+  const datasets=state.guilds.map((g,i)=>{
+    const s=guildStats(g);
+    const data=COMPARE_KEYS.map(k=>{
+      const raw=s[k]; const t=totals[k]||1;
+      return state.cmpMode==='percent'? Math.round(raw/t*100): raw;
+    });
+    return { label:g.name, data, backgroundColor:cc.guilds[i]+'cc', borderColor:cc.guilds[i], borderWidth:1,
+      _raw:COMPARE_KEYS.map(k=>s[k]), _pct:COMPARE_KEYS.map(k=>Math.round(s[k]/(totals[k]||1)*100)) };
+  });
+  if(charts.overview.cmp) charts.overview.cmp.destroy();
+  charts.overview.cmp=new Chart(ctx,{
+    type:'bar',
+    data:{ labels:COMPARE_LABELS, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:cc.text}},
+        tooltip:{
+          callbacks:{
+            label:(c)=>{
+              const ds=c.chart.data.datasets[c.datasetIndex];
+              const raw=ds._raw[c.dataIndex], pct=ds._pct[c.dataIndex];
+              const k=COMPARE_KEYS[c.dataIndex];
+              return ` ${ds.label}: ${fmtCol(k,raw)} （${pct}%）`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:cc.text},grid:{color:cc.grid}},
+        y:{ticks:{color:cc.text, callback:v=>state.cmpMode==='percent'?v+'%':fmtWan(v)}, grid:{color:cc.grid}}
+      }
+    }
+  });
+}
+
+function renderRole(){
+  const cv=document.getElementById('role-chart'); if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const cc=chartColors();
+  const cats=['坦','補','輸出'];
+  const metrics=[{k:'kills',l:'擊敗'},{k:'playerDamage',l:'對玩家傷害'},{k:'healing',l:'治療'},{k:'damageTaken',l:'承受傷害'}];
+  const byCat={}; cats.forEach(c=>byCat[c]=[]);
+  state.guilds.forEach(g=>g.players.forEach(p=>{ const c=ROLE_CAT[p.role]; if(c) byCat[c].push(p); }));
+  const datasets=cats.map((c)=>({
+    label:c, backgroundColor:CAT_COLOR[c]+'cc', borderColor:CAT_COLOR[c], borderWidth:1,
+    data:metrics.map(m=>{
+      const arr=byCat[c]; if(!arr.length) return 0;
+      const sum=arr.reduce((a,p)=>a+(Number(p[m.k])||0),0);
+      return state.roleAgg==='avg'? Math.round(sum/arr.length): sum;
+    })
+  }));
+  if(charts.overview.role) charts.overview.role.destroy();
+  const type=state.roleType==='radar'?'radar':'bar';
+  const opt = type==='radar'? {
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:cc.text}}},
+    scales:{r:{ticks:{color:cc.text,backdropColor:'transparent'},grid:{color:cc.grid},angleLines:{color:cc.grid},pointLabels:{color:cc.text}}}
+  }:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:cc.text}}},
+    scales:{x:{ticks:{color:cc.text},grid:{color:cc.grid}},y:{ticks:{color:cc.text,callback:fmtWan},grid:{color:cc.grid}}}
+  };
+  charts.overview.role=new Chart(ctx,{ type, data:{labels:metrics.map(m=>m.l),datasets}, options:opt });
+}
+
+function renderTable(){
+  const thead=document.getElementById('player-thead'); if(!thead) return;
+  thead.innerHTML='';
+  const tr=document.createElement('tr');
+  const cols=[...COLUMNS,{key:'contrib',label:'貢獻分',numeric:true}];
+  cols.forEach(c=>{
+    const th=document.createElement('th');
+    th.dataset.col=c.key;
+    if(c.numeric) th.classList.add('numeric');
+    if(state.sortCol===c.key) th.classList.add(state.sortAsc?'sort-asc':'sort-desc');
+    th.innerHTML=`${c.label}<span class="arr"></span>`;
+    th.onclick=()=>{ if(state.sortCol===c.key){state.sortAsc=!state.sortAsc;} else {state.sortCol=c.key; state.sortAsc=!c.numeric;} renderTable(); };
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+
+  let rows=[]; state.guilds.forEach(g=>g.players.forEach(p=>rows.push({...p,guild:g.name,_s:contrib(p)})));
+  const cur=cols.find(c=>c.key===state.sortCol);
+  rows.sort((a,b)=>{
+    if(state.sortCol==='contrib'){ return state.sortAsc?a._s-b._s:b._s-a._s; }
+    if(!cur||!cur.numeric){ return state.sortAsc? String(a[state.sortCol]??'').localeCompare(String(b[state.sortCol]??''),'zh-TW') : String(b[state.sortCol]??'').localeCompare(String(a[state.sortCol]??''),'zh-TW'); }
+    const av=Number(a[state.sortCol])||0, bv=Number(b[state.sortCol])||0; return state.sortAsc?av-bv:bv-av;
+  });
+  const mvpScore = rows.length ? Math.max(...rows.map(r=>r._s)) : 0;
+  const tb=document.getElementById('player-tbody'); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr'); if(r._s===mvpScore) tr.classList.add('mvp-row');
+    cols.forEach(c=>{
+      const td=document.createElement('td'); if(c.numeric) td.classList.add('numeric');
+      if(c.key==='contrib'){ td.textContent=r._s.toFixed(2); td.classList.add('contrib'); }
+      else if(c.key==='role'){ td.innerHTML=`<span class="role-pill role-${r.role||''}">${r.role||'-'}</span>`; }
+      else if(c.key==='name'){ td.textContent=r.name||'(無名)'; }
+      else { td.textContent=fmtCol(c.key,r[c.key]); }
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+
+// =====================================================================
+// VIEW 2: 「診斷建議」 — prescriptive analysis (existing engine)
+// =====================================================================
+function renderDiagView(){
+  const host = document.getElementById('view-panel');
+  host.innerHTML = `
+    <section class="card">
+      <h2><span class="ic">❤️</span>整體健康分</h2>
+      <p class="sub">依嚴重程度加權計算（critical −25 / warning −8 / info −2 / ok +2），分級 S/A/B/C/D</p>
+      <div class="health-wrap">
+        <div class="gauge-canvas">
+          <canvas id="health-gauge"></canvas>
+          <div class="gauge-center">
+            <div class="gauge-score" id="gauge-score">--</div>
+            <div class="gauge-grade" id="gauge-grade">--</div>
+          </div>
+        </div>
+        <div class="gauge-meta">
+          <div class="label">綜合評語</div>
+          <div class="verdict" id="gauge-verdict">--</div>
+          <div class="sev-row" id="gauge-sev-row"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">🚦</span>優先級總覽</h2>
+      <p class="sub">依 P0（立即處理）至 P3（知會）排列，條長代表該級別診斷數量</p>
+      <div class="prio-bars" id="prio-bars"></div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">🩺</span>診斷清單</h2>
+      <p class="sub">由診斷引擎依樣本資料即時計算，依嚴重程度分組（critical → warning → ok → info）</p>
+      <div id="diag-container"></div>
+    </section>
+
+    <section class="card section-gap">
+      <h2><span class="ic">🏰</span>公會診斷切換</h2>
+      <p class="sub">單一公會診斷 + 五軸雷達（陣容／生存／輸出／資源／輔助，0-100）</p>
+      <div class="tabs" id="guild-tabs"></div>
+      <div class="cols-1-2">
+        <div class="guild-radar-wrap">
+          <div class="chart-wrap radar"><canvas id="guild-radar"></canvas></div>
+          <div class="guild-radar-legend" id="guild-radar-legend"></div>
+        </div>
+        <div id="guild-diag-list"></div>
+      </div>
+    </section>
+  `;
+
+  // wire guild tabs
+  const el=document.getElementById('guild-tabs'); el.innerHTML='';
+  state.guilds.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='tab'+(g.name===state.activeGuild?' active':'');
+    b.innerHTML=`${g.name} <span class="ct">(${g.players.length})</span>`;
+    b.onclick=()=>{ state.activeGuild=g.name; renderGuildView(); };
+    el.appendChild(b);
+  });
+
+  renderHealthGauge();
+  renderPriority();
+  renderDiagList();
+  renderGuildView();
+}
+
+function renderHealthGauge(){
+  const {score, grade} = computeHealth(state.diags);
+  document.getElementById('gauge-score').textContent = score;
+  const gradeEl = document.getElementById('gauge-grade');
+  gradeEl.textContent = grade+' 級';
+  gradeEl.className = 'gauge-grade '+grade;
+  document.getElementById('gauge-verdict').textContent = verdictText(score, grade);
+
+  const counts = { critical:0, warning:0, ok:0, info:0 };
+  state.diags.forEach(d=>counts[d.severity]++);
+  const sevRow = document.getElementById('gauge-sev-row'); sevRow.innerHTML='';
+  Object.keys(counts).forEach(k=>{
+    const el = document.createElement('span');
+    el.className = 'sev-pill '+k;
+    el.innerHTML = `<span class="dot"></span>${SEV_LABELS[k]} <span class="ct">${counts[k]}</span>`;
+    sevRow.appendChild(el);
+  });
+
+  const ctx = document.getElementById('health-gauge').getContext('2d');
+  const gradeColor = { S:cssVar('--green'), A:cssVar('--accent-bright'), B:cssVar('--cyan'), C:cssVar('--amber'), D:cssVar('--red') }[grade];
+  const trackBg = state.theme==='dark' ? 'rgba(99,159,255,.08)' : 'rgba(47,111,208,.1)';
+  if(charts.diag.gauge) charts.diag.gauge.destroy();
+  charts.diag.gauge = new Chart(ctx,{
+    type:'doughnut',
+    data:{ datasets:[{
+      data:[score, 100-score],
+      backgroundColor:[gradeColor, trackBg],
+      borderWidth:0,
+      circumference:270,
+      rotation:225,
+      cutout:'78%'
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:600} }
+  });
+  const cv = document.getElementById('health-gauge');
+  cv.style.width='200px'; cv.style.height='200px';
+}
+
+function renderPriority(){
+  const counts = { P0:0,P1:0,P2:0,P3:0 };
+  state.diags.forEach(d=>counts[d.priority]++);
+  const max = Math.max(1, ...Object.values(counts));
+  const el = document.getElementById('prio-bars'); el.innerHTML='';
+  PRIO_LIST.forEach(p=>{
+    const c = counts[p];
+    const row = document.createElement('div'); row.className='prio-bar';
+    row.innerHTML = `<span class="lbl ${p}">${p}</span>
+      <div class="track"><div class="fill ${p}" style="width:${(c/max*100)}%"></div></div>
+      <span class="num">${c}</span>`;
+    el.appendChild(row);
+  });
+}
+
+function renderDiagList(){
+  const container = document.getElementById('diag-container'); container.innerHTML='';
+  const grouped = { critical:[], warning:[], ok:[], info:[] };
+  state.diags.forEach(d=>grouped[d.severity].push(d));
+  const prioRank = { P0:0,P1:1,P2:2,P3:3 };
+  Object.keys(grouped).forEach(k=>grouped[k].sort((a,b)=>prioRank[a.priority]-prioRank[b.priority] || a.guild.localeCompare(b.guild,'zh-TW')));
+
+  SEV_ORDER.forEach(sev=>{
+    const list = grouped[sev];
+    if(!list.length) return;
+    const grp = document.createElement('div'); grp.className='diag-group';
+    grp.innerHTML = `<div class="diag-group-head"><span class="sev-badge ${sev}">${SEV_LABELS[sev]}</span>　${SEV_LABELS[sev]}級診斷 <span class="count">(${list.length})</span></div>`;
+    const grid = document.createElement('div'); grid.className='diag-list';
+    list.forEach(d=>{
+      const card = document.createElement('div'); card.className='diag-card '+sev;
+      card.innerHTML = `
+        <div class="diag-head">
+          <span class="sev-badge ${sev}">${SEV_LABELS[sev]}</span>
+          <span class="cat-tag">${d.category}</span>
+          <span class="prio-chip ${d.priority}">${d.priority}</span>
+        </div>
+        <div class="diag-guild">${d.guild}</div>
+        <div class="diag-title">${d.title}</div>
+        <p class="diag-desc">${d.description}</p>
+        <p class="diag-impact"><span class="ic">⚠</span><span>影響：${d.impact}</span></p>
+        <div class="diag-rec"><span class="ic">→</span><span>建議：${d.recommendation}</span></div>`;
+      grid.appendChild(card);
+    });
+    grp.appendChild(grid);
+    container.appendChild(grp);
+  });
+  if(!state.diags.length){
+    container.innerHTML = '<p style="color:var(--muted)">無診斷資料。</p>';
+  }
+}
+
+function renderGuildView(){
+  const g = state.guilds.find(x=>x.name===state.activeGuild);
+  const ctxEl = document.getElementById('guild-radar');
+  if(!g || !ctxEl) return;
+  const scores = guildRadarScores(g);
+  const axes = ['陣容','生存','輸出','資源','輔助'];
+  const ctx = ctxEl.getContext('2d');
+  const cc = chartColors();
+  if(charts.diag.radar) charts.diag.radar.destroy();
+  charts.diag.radar = new Chart(ctx,{
+    type:'radar',
+    data:{ labels:axes,
+      datasets:[{ label:g.name, data:axes.map(a=>scores[a]),
+        backgroundColor:'rgba(91,157,255,.18)', borderColor:cssVar('--accent'), borderWidth:2,
+        pointBackgroundColor:cssVar('--accent-bright'), pointRadius:4 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{r:{ min:0,max:100,
+        ticks:{color:cc.text, backdropColor:'transparent', stepSize:25},
+        grid:{color:cc.grid}, angleLines:{color:cc.grid},
+        pointLabels:{color:cc.text, font:{size:13,weight:'600'}} }}}
+  });
+  const leg = document.getElementById('guild-radar-legend'); leg.innerHTML='';
+  axes.forEach(a=>{
+    const v = scores[a];
+    const color = v>=80?cssVar('--green'):v>=60?cssVar('--accent-bright'):v>=40?cssVar('--amber'):cssVar('--red');
+    const s = document.createElement('span');
+    s.innerHTML = `<i style="background:${color}"></i>${a}：<b style="color:${color}">${v}</b>`;
+    leg.appendChild(s);
+  });
+
+  const filtered = state.diags.filter(d=>d.guild===g.name);
+  const container = document.getElementById('guild-diag-list'); container.innerHTML='';
+  const grouped = { critical:[], warning:[], ok:[], info:[] };
+  filtered.forEach(d=>grouped[d.severity].push(d));
+  const prioRank = { P0:0,P1:1,P2:2,P3:3 };
+  Object.keys(grouped).forEach(k=>grouped[k].sort((a,b)=>prioRank[a.priority]-prioRank[b.priority]));
+
+  const head = document.createElement('div');
+  head.style.marginBottom='10px';
+  head.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--text)">${g.name} 專屬診斷</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:2px">共 ${filtered.length} 項診斷（雷達分數：陣容 ${scores.陣容}／生存 ${scores.生存}／輸出 ${scores.輸出}／資源 ${scores.資源}／輔助 ${scores.輔助}）</div>`;
+  container.appendChild(head);
+
+  const grid = document.createElement('div'); grid.className='diag-list';
+  let any = false;
+  SEV_ORDER.forEach(sev=>{
+    grouped[sev].forEach(d=>{
+      any = true;
+      const card = document.createElement('div'); card.className='diag-card '+sev;
+      card.innerHTML = `
+        <div class="diag-head">
+          <span class="sev-badge ${sev}">${SEV_LABELS[sev]}</span>
+          <span class="cat-tag">${d.category}</span>
+          <span class="prio-chip ${d.priority}">${d.priority}</span>
+        </div>
+        <div class="diag-title">${d.title}</div>
+        <p class="diag-desc">${d.description}</p>
+        <p class="diag-impact"><span class="ic">⚠</span><span>影響：${d.impact}</span></p>
+        <div class="diag-rec"><span class="ic">→</span><span>建議：${d.recommendation}</span></div>`;
+      grid.appendChild(card);
+    });
+  });
+  if(!any){ grid.innerHTML = '<p style="color:var(--muted)">此公會無診斷。</p>'; }
+  container.appendChild(grid);
+}
+
+// =====================================================================
+// Sub-tab strip — planner pattern (role=tab, aria-selected, roving tabindex)
+// =====================================================================
+const SUBTAB_ORDER = ['overview','diag'];
+
+function updateSubtabStates(){
+  const buttons = document.querySelectorAll('#view-subtabs .subtab-btn');
+  buttons.forEach(btn=>{
+    const isActive = btn.dataset.view === state.view;
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.setAttribute('tabindex', isActive ? '0' : '-1');
+  });
+  const panel = document.getElementById('view-panel');
+  const activeBtn = document.querySelector(`#view-subtabs .subtab-btn[data-view="${state.view}"]`);
+  if(activeBtn && panel) panel.setAttribute('aria-labelledby', activeBtn.id);
+}
+
+function renderActiveView(){
+  // destroy the previous view's charts before swapping DOM
+  destroyViewCharts(state.view === 'overview' ? 'diag' : 'overview');
+  if(state.view === 'overview') renderOverviewView();
+  else renderDiagView();
+}
+
+function switchSubtab(target, focusBtn){
+  state.view = target;
+  updateSubtabStates();
+  renderActiveView();
+  if(focusBtn !== false){
+    const btn = document.querySelector(`#view-subtabs .subtab-btn[data-view="${target}"]`);
+    if(btn) btn.focus();
+  }
+}
+
+function cycleSubtab(delta){
+  const idx = SUBTAB_ORDER.indexOf(state.view);
+  if(idx < 0) return;
+  switchSubtab(SUBTAB_ORDER[(idx + delta + SUBTAB_ORDER.length) % SUBTAB_ORDER.length]);
+}
+function jumpSubtab(target){ switchSubtab(target); }
+
+document.getElementById('view-subtabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.subtab-btn'); if(!btn) return;
+  switchSubtab(btn.dataset.view);
+});
+document.getElementById('view-subtabs').addEventListener('keydown', event=>{
+  switch(event.key){
+    case 'ArrowRight': event.preventDefault(); event.stopPropagation(); cycleSubtab(1); break;
+    case 'ArrowLeft':  event.preventDefault(); event.stopPropagation(); cycleSubtab(-1); break;
+    case 'Home':      event.preventDefault(); event.stopPropagation(); jumpSubtab(SUBTAB_ORDER[0]); break;
+    case 'End':       event.preventDefault(); event.stopPropagation(); jumpSubtab(SUBTAB_ORDER[SUBTAB_ORDER.length-1]); break;
+  }
+});
+
+// =====================================================================
+// Scenario + theme + master render
+// =====================================================================
+function renderAll(){
+  document.getElementById('scen-label').textContent = SCENARIOS[state.scenario].label;
+  state.diags = runDiagnostics(state.guilds);
+  renderActiveView();
+}
+
+function loadScenario(name){
+  state.scenario = name;
+  state.guilds = JSON.parse(JSON.stringify(SCENARIOS[name].guilds));
+  state.activeGuild = state.guilds[0].name;
+  renderAll();
+}
+
+document.getElementById('scenario-seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.scen === state.scenario) return;
+  document.querySelectorAll('#scenario-seg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  loadScenario(b.dataset.scen);
+});
+
+document.getElementById('theme-btn').addEventListener('click', ()=>{
+  state.theme = state.theme==='dark'?'light':'dark';
+  document.body.classList.toggle('light', state.theme==='light');
+  document.getElementById('theme-btn').textContent = state.theme==='dark'?'🌙':'☀️';
+  // re-render active view's charts with new colors
+  if(state.view === 'overview'){ renderCmp(); renderRole(); }
+  else { renderHealthGauge(); renderGuildView(); }
+});
+
+// init: default sub-tab = 「數據總覽」
+updateSubtabStates();
+loadScenario('healthy');
+</script>
+</body>
+</html>

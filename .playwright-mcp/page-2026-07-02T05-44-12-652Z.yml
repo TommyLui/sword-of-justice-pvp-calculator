@@ -1,0 +1,118 @@
+- generic [ref=f8e2]:
+  - complementary [ref=f8e3]:
+    - generic [ref=f8e4]:
+      - img [ref=f8e6]
+      - generic [ref=f8e9]:
+        - heading "逆水寒 PVP 工具箱" [level=1] [ref=f8e10]:
+          - text: 逆水寒 PVP
+          - text: 工具箱
+        - paragraph [ref=f8e11]: S2.2版本
+    - paragraph [ref=f8e12]: NAVIGATION
+    - navigation [ref=f8e13]:
+      - link "🏠 首頁" [ref=f8e14] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f8e15]: 🏠
+        - text: 首頁
+      - link "⚔️ 傷害計算器" [ref=f8e16] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f8e17]: ⚔️
+        - text: 傷害計算器
+      - link "📈 屬性規劃" [ref=f8e18] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f8e19]: 📈
+        - text: 屬性規劃
+      - link "🗂️ 打造資料庫" [ref=f8e20] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f8e21]: 🗂️
+        - text: 打造資料庫
+      - link "📊 聯賽數據分析" [ref=f8e22] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f8e23]: 📊
+        - text: 聯賽數據分析
+    - generic [ref=f8e25]: SYSTEM ONLINE
+  - main [ref=f8e27]:
+    - generic [ref=f8e28]: // DEMO · 傷害計算機重設計（比照屬性規劃雙欄 + planner-tab-group，一般文件流、頁面自然捲動）
+    - generic [ref=f8e29]:
+      - button "🗑️ 重置資料" [ref=f8e30] [cursor=pointer]
+      - button "📥 匯入" [ref=f8e31] [cursor=pointer]
+      - button "📤 匯出" [ref=f8e32] [cursor=pointer]
+    - generic [ref=f8e33]:
+      - complementary "判決摘要" [ref=f8e34]:
+        - generic [ref=f8e35]:
+          - paragraph [ref=f8e36]: 判決 · VERDICT
+          - generic [ref=f8e37]: 20,144預期傷害
+          - generic [ref=f8e38]:
+            - generic [ref=f8e39]: 命中率 93%
+            - generic [ref=f8e40]: 會心率 48%
+            - generic [ref=f8e41]: 較次佳 +6.4%
+        - generic [ref=f8e42]:
+          - generic [ref=f8e43]:
+            - generic [ref=f8e44]: 進攻2 vs 防禦1
+            - generic [ref=f8e45]: 20,144
+          - generic [ref=f8e46]:
+            - generic [ref=f8e47]: 進攻1 vs 防禦1
+            - generic [ref=f8e48]: 18,932
+          - generic [ref=f8e49]:
+            - generic [ref=f8e50]: 進攻2 vs 防禦2
+            - generic [ref=f8e51]: 18,210
+          - generic [ref=f8e52]:
+            - generic [ref=f8e53]: 進攻1 vs 防禦2
+            - generic [ref=f8e54]: 17,058
+        - generic [ref=f8e55]:
+          - generic [ref=f8e56]:
+            - text: 進攻
+            - generic [ref=f8e58]: 數值 2
+            - text: 為最佳進攻
+          - generic [ref=f8e59]:
+            - text: 防禦
+            - generic [ref=f8e61]: 數值 1
+            - text: 為較弱目標
+      - region "計算機區段" [ref=f8e62]:
+        - tablist "計算機區段" [ref=f8e63]:
+          - tab "⊞ 對陣矩陣 4" [selected] [ref=f8e64] [cursor=pointer]:
+            - generic [ref=f8e65]: ⊞
+            - text: 對陣矩陣
+            - generic [ref=f8e66]: "4"
+          - tab "▤ 傷害貢獻分解 4" [ref=f8e67] [cursor=pointer]:
+            - generic [ref=f8e68]: ▤
+            - text: 傷害貢獻分解
+            - generic [ref=f8e69]: "4"
+          - tab "↘ 防禦削減瀑布 6" [ref=f8e70] [cursor=pointer]:
+            - generic [ref=f8e71]: ↘
+            - text: 防禦削減瀑布
+            - generic [ref=f8e72]: "6"
+          - tab "✎ 輸入編輯 2×2" [ref=f8e73] [cursor=pointer]:
+            - generic [ref=f8e74]: ✎
+            - text: 輸入編輯
+            - generic [ref=f8e75]: 2×2
+          - tab "≡ 完整明細 4" [ref=f8e76] [cursor=pointer]:
+            - generic [ref=f8e77]: ≡
+            - text: 完整明細
+            - generic [ref=f8e78]: "4"
+        - generic [ref=f8e79]:
+          - heading "對陣矩陣" [level=2] [ref=f8e80]
+          - generic [ref=f8e81]: 2×2 一覽四組對陣結果
+        - tabpanel "⊞ 對陣矩陣 4" [ref=f8e82]:
+          - paragraph [ref=f8e83]: 勝方標青、亞方標琥珀，內嵌差距。最佳對陣為進攻2 vs 防禦1。
+          - generic [ref=f8e84]:
+            - generic [ref=f8e86]: vs 防禦數值 1
+            - generic [ref=f8e87]: vs 防禦數值 2
+            - generic [ref=f8e88]: 進攻數值 1
+            - generic [ref=f8e89]:
+              - generic [ref=f8e90]: 防禦1
+              - generic [ref=f8e91]: 18,932
+              - generic [ref=f8e92]: +1,212 (+6.8%)
+            - generic [ref=f8e93]:
+              - generic [ref=f8e94]: 防禦2
+              - generic [ref=f8e95]: 17,058
+              - generic [ref=f8e96]: −1,152 (−6.3%)
+            - generic [ref=f8e97]: 進攻數值 2
+            - generic [ref=f8e98]:
+              - generic [ref=f8e99]: 防禦1
+              - generic [ref=f8e100]: 20,144
+              - generic [ref=f8e101]: +1,832 (+6.4%)
+            - generic [ref=f8e102]:
+              - generic [ref=f8e103]: 防禦2
+              - generic [ref=f8e104]: 18,210
+              - generic [ref=f8e105]: −1,152 (−6.0%)
+        - text: 56% 16% 10% 18%

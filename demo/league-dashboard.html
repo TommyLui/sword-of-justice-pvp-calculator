@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聯賽數據總覽 · 增強版演示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg-0:#070d1a;
+  --bg-1:#0c1424;
+  --panel:#111c33;
+  --panel-2:#16243f;
+  --panel-3:#1c2d4d;
+  --elevated:#1a2a48;
+  --border:rgba(99,159,255,.16);
+  --border-strong:rgba(99,159,255,.32);
+  --text:#e6eef9;
+  --text-soft:#aebfd8;
+  --muted:#7188aa;
+  --dim:#4a5f82;
+  --accent:#5b9dff;
+  --accent-bright:#7fb3ff;
+  --accent-deep:#2f6fd0;
+  --cyan:#3dd4e8;
+  --teal:#2ec9b8;
+  --amber:#f5a623;
+  --rose:#f4567a;
+  --green:#34d399;
+  --red:#f87171;
+  --yellow:#fbbf24;
+  --shadow:0 16px 40px rgba(0,0,0,.45);
+  --shadow-sm:0 4px 12px rgba(0,0,0,.35);
+  --radius:14px;
+  --radius-sm:9px;
+  --tank:#2ec9b8;
+  --heal:#34d399;
+  --dps:#f4567a;
+  --accent-grad:linear-gradient(135deg,#7fb3ff 0%,#5b9dff 100%);
+}
+body.light{
+  --bg-0:#eef2f8;
+  --bg-1:#e3eaf4;
+  --panel:#ffffff;
+  --panel-2:#f7f9fc;
+  --panel-3:#eef3fa;
+  --elevated:#ffffff;
+  --border:rgba(47,111,208,.16);
+  --border-strong:rgba(47,111,208,.3);
+  --text:#0e1a2e;
+  --text-soft:#3d4f6e;
+  --muted:#6a7e9c;
+  --dim:#9aaec9;
+  --shadow:0 16px 40px rgba(20,40,80,.12);
+  --shadow-sm:0 4px 12px rgba(20,40,80,.08);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Noto Sans TC',-apple-system,'Segoe UI',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(80% 50% at 100% 0%, rgba(91,157,255,.10), transparent 60%),
+    radial-gradient(70% 50% at 0% 100%, rgba(61,212,232,.06), transparent 60%),
+    var(--bg-0);
+  min-height:100vh;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 24px 80px}
+
+/* Header */
+header.bar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  padding:18px 22px;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--panel) 0%,var(--panel-2) 100%);
+  border:1px solid var(--border);box-shadow:var(--shadow-sm);margin-bottom:24px;
+}
+.bar-title h1{margin:0;font-size:22px;font-weight:800;letter-spacing:.5px}
+.bar-title h1 .dot{color:var(--accent);margin-right:6px}
+.bar-title p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.bar-title p .scen{color:var(--accent-bright);font-weight:600}
+.bar-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.seg{display:inline-flex;background:var(--bg-1);border:1px solid var(--border);border-radius:999px;padding:3px}
+.seg button{
+  border:0;background:transparent;color:var(--text-soft);font:inherit;font-size:13px;font-weight:600;
+  padding:7px 14px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.seg button.active{background:var(--accent-grad);color:#fff;box-shadow:0 2px 8px rgba(91,157,255,.4)}
+.seg button:hover:not(.active){color:var(--text)}
+.iconbtn{
+  border:1px solid var(--border-strong);background:var(--bg-1);color:var(--text);
+  width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;
+  display:inline-flex;align-items:center;justify-content:center;transition:.15s;
+}
+.iconbtn:hover{background:var(--panel-3);border-color:var(--accent)}
+.iconbtn:focus-visible,.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Layout grid */
+.grid{display:grid;gap:20px}
+.cols-2{grid-template-columns:1.1fr .9fr}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:960px){.cols-2,.cols-3{grid-template-columns:1fr}}
+.card{
+  background:linear-gradient(180deg,var(--panel) 0%,var(--panel-2) 100%);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow-sm);
+}
+.card h2{margin:0 0 4px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2 .ic{font-size:18px}
+.card .sub{color:var(--muted);font-size:12px;margin:0 0 16px}
+.section-gap{margin-top:24px}
+
+/* Guild tabs */
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.tab{
+  border:1px solid var(--border);background:var(--bg-1);color:var(--text-soft);
+  font:inherit;font-weight:600;font-size:13px;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.tab.active{background:var(--accent-grad);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(91,157,255,.35)}
+.tab:hover:not(.active){border-color:var(--accent);color:var(--text)}
+.tab .ct{font-size:11px;opacity:.8;margin-left:4px}
+
+/* Team composition gauge */
+.gauge{margin:14px 0}
+.gauge-track{height:30px;border-radius:999px;overflow:hidden;display:flex;border:1px solid var(--border)}
+.gauge-seg{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;transition:width .4s ease;white-space:nowrap;overflow:hidden}
+.gauge-seg.tank{background:var(--tank)}
+.gauge-seg.heal{background:var(--heal)}
+.gauge-seg.dps{background:var(--dps)}
+.gauge-seg.empty{background:var(--bg-1);color:var(--dim)}
+.gauge-legend{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap;font-size:12px;color:var(--text-soft)}
+.gauge-legend span{display:inline-flex;align-items:center;gap:6px}
+.gauge-legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.coverage{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.cover-item{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:var(--radius-sm);
+  background:var(--bg-1);border:1px solid var(--border);font-size:13px;
+}
+.cover-item.ok{border-color:rgba(52,211,153,.4)}
+.cover-item.bad{border-color:rgba(248,113,113,.4)}
+.cover-item .badge{font-weight:700;font-size:13px}
+.cover-item.ok .badge{color:var(--green)}
+.cover-item.bad .badge{color:var(--red)}
+.warn-line{color:var(--amber);font-size:12px;margin-top:10px;font-weight:500}
+
+/* MVP card */
+.mvp{
+  margin-top:16px;padding:16px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,rgba(91,157,255,.14),rgba(61,212,232,.08));
+  border:1px solid var(--border-strong);
+}
+.mvp-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mvp-tag{
+  font-size:11px;font-weight:700;letter-spacing:1px;color:var(--accent-bright);
+  background:rgba(91,157,255,.18);padding:2px 8px;border-radius:4px;
+}
+.mvp-name{font-size:20px;font-weight:800}
+.mvp-role{color:var(--muted);font-size:13px}
+.mvp-score{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--accent-bright)}
+.mvp-formula{color:var(--dim);font-size:11px;margin-top:6px}
+.mvp-stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+.mvp-stat{font-size:12px}
+.mvp-stat .v{font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.mvp-stat .l{color:var(--muted);margin-left:4px}
+
+/* Flag chips */
+.flags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.chip{
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px;
+  border:1px solid var(--border);background:var(--bg-1);
+}
+.chip .pn{color:var(--text-soft);margin-right:5px;font-weight:700}
+.chip.high-dmg{border-color:rgba(244,86,122,.4);color:var(--rose)}
+.chip.high-heal{border-color:rgba(52,211,153,.4);color:var(--green)}
+.chip.high-death{border-color:rgba(248,113,113,.5);color:var(--red)}
+.chip.mvp{border-color:rgba(91,157,255,.5);color:var(--accent-bright);background:rgba(91,157,255,.12)}
+
+/* Completeness meter */
+.meter-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px}
+.meter-pct{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
+.meter-pct.good{color:var(--green)}
+.meter-pct.warn{color:var(--amber)}
+.meter-pct.bad{color:var(--red)}
+.meter-bar{height:10px;border-radius:999px;background:var(--bg-1);overflow:hidden;border:1px solid var(--border)}
+.meter-fill{height:100%;border-radius:999px;transition:width .5s ease}
+.meter-fill.good{background:linear-gradient(90deg,var(--green),#22c98a)}
+.meter-fill.warn{background:linear-gradient(90deg,var(--amber),var(--rose))}
+.meter-fill.bad{background:linear-gradient(90deg,var(--rose),var(--red))}
+
+/* Validation report */
+.vlist{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.vrow{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 12px;border-radius:var(--radius-sm);background:var(--bg-1);border:1px solid var(--border)}
+.vrow.pass{border-color:rgba(52,211,153,.3)}
+.vrow.warn{border-color:rgba(245,166,35,.35)}
+.vrow.fail{border-color:rgba(248,113,113,.4)}
+.vrow .ico{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.vrow.pass .ico{background:rgba(52,211,153,.2);color:var(--green)}
+.vrow.warn .ico{background:rgba(245,166,35,.2);color:var(--amber)}
+.vrow.fail .ico{background:rgba(248,113,113,.2);color:var(--red)}
+.vrow .txt{color:var(--text-soft)}
+.vrow .detail{color:var(--muted);font-size:11px;margin-left:auto}
+
+/* Stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:6px}
+.tile{
+  padding:13px 14px;border-radius:var(--radius-sm);background:var(--bg-1);border:1px solid var(--border);
+}
+.tile .tlabel{font-size:11px;color:var(--muted);font-weight:600}
+.tile .tval{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;margin-top:3px;color:var(--accent-bright)}
+.tile .tbrk{display:flex;flex-direction:column;gap:2px;margin-top:7px;font-size:11px;color:var(--text-soft)}
+.tile .tbrk .g{display:flex;justify-content:space-between}
+.tile .tbrk .g .gn{color:var(--muted)}
+
+/* Chart wrapper */
+.chart-wrap{position:relative;height:300px;margin-top:8px}
+.chart-wrap.tall{height:340px}
+.chart-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+thead th{
+  background:var(--panel-3);color:var(--text-soft);font-weight:600;text-align:left;
+  padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;
+  position:sticky;top:0;
+}
+thead th:hover{color:var(--accent-bright)}
+thead th .arr{font-size:10px;margin-left:3px;opacity:.6}
+thead th.sort-asc .arr::after{content:"▲"}
+thead th.sort-desc .arr::after{content:"▼"}
+thead th .arr::after{content:"↕"}
+thead th.numeric,tbody td.numeric{text-align:right;font-family:'JetBrains Mono',monospace}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--panel-3)}
+tbody tr.mvp-row{background:rgba(91,157,255,.1)}
+tbody tr.mvp-row:hover{background:rgba(91,157,255,.16)}
+.role-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.role-神相{background:rgba(91,157,255,.18);color:var(--accent-bright)}
+.role-碎夢{background:rgba(244,86,122,.18);color:var(--rose)}
+.role-素問{background:rgba(52,211,153,.18);color:var(--green)}
+.role-鐵衣{background:rgba(46,201,184,.18);color:var(--teal)}
+.contrib{font-weight:700;color:var(--accent-bright)}
+
+footer.ft{margin-top:32px;color:var(--dim);font-size:12px;text-align:center}
+</style>
+</head>
+<body class="">
+<div class="wrap">
+
+  <header class="bar">
+    <div class="bar-title">
+      <h1><span class="dot">◆</span>聯賽數據總覽</h1>
+      <p>增強版面板 · 目前情境：<span class="scen" id="scen-label">完整資料</span></p>
+    </div>
+    <div class="bar-controls">
+      <div class="seg" id="scenario-seg">
+        <button class="active" data-scen="clean">完整資料</button>
+        <button data-scen="abnormal">含異常資料</button>
+      </div>
+      <button class="iconbtn" id="theme-btn" title="切換主題">🌙</button>
+    </div>
+  </header>
+
+  <!-- Team Status -->
+  <section class="card section-gap">
+    <h2><span class="ic">🛡️</span>隊伍狀態</h2>
+    <p class="sub">職業組成平衡、關鍵旗標、MVP 與個人貢獻度</p>
+    <div class="tabs" id="guild-tabs"></div>
+
+    <div class="cols-2">
+      <div>
+        <div class="gauge">
+          <div class="gauge-track" id="comp-gauge"></div>
+          <div class="gauge-legend" id="comp-legend"></div>
+        </div>
+        <div class="coverage" id="coverage"></div>
+        <div class="warn-line" id="warn-line"></div>
+
+        <div class="mvp" id="mvp-card"></div>
+
+        <div class="flags" id="flags"></div>
+      </div>
+      <div>
+        <h2 style="font-size:14px"><span class="ic">📊</span>個人貢獻分</h2>
+        <p class="sub">依職業上色，由高至低排序</p>
+        <div class="chart-wrap tall"><canvas id="contrib-chart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Complete Data -->
+  <section class="card section-gap">
+    <h2><span class="ic">📋</span>完整資料</h2>
+    <p class="sub">資料完整度驗證 + 全 12 項指標摘要（現有工具僅 6 項）</p>
+
+    <div class="cols-2">
+      <div>
+        <div class="meter-head">
+          <span style="font-size:13px;color:var(--text-soft);font-weight:600">資料完整度</span>
+          <span class="meter-pct good" id="meter-pct">100%</span>
+        </div>
+        <div class="meter-bar"><div class="meter-fill good" id="meter-fill" style="width:100%"></div></div>
+        <div class="vlist" id="vlist"></div>
+      </div>
+      <div>
+        <h2 style="font-size:14px"><span class="ic">🔢</span>全欄位摘要</h2>
+        <p class="sub">點選任一公會 tab 切換分公會拆分</p>
+        <div class="tiles" id="tiles"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Enhanced Guild Comparison -->
+  <section class="card section-gap">
+    <h2><span class="ic">⚔️</span>公會比較</h2>
+    <p class="sub">支援「百分比 / 原始數值」切換，tooltip 同時顯示兩者（現有工具僅百分比）</p>
+    <div class="chart-controls">
+      <div class="seg" id="cmp-seg">
+        <button class="active" data-mode="percent">百分比</button>
+        <button data-mode="raw">原始數值</button>
+      </div>
+    </div>
+    <div class="chart-wrap tall"><canvas id="cmp-chart"></canvas></div>
+  </section>
+
+  <!-- Role Performance -->
+  <section class="card section-gap">
+    <h2><span class="ic">🎯</span>職業類別表現</h2>
+    <p class="sub">依 坦 / 補 / 輸出 分類彙整（現有工具僅統計人數）</p>
+    <div class="chart-controls">
+      <div class="seg" id="role-seg">
+        <button class="active" data-agg="sum">加總</button>
+        <button data-agg="avg">平均</button>
+      </div>
+      <div class="seg" id="role-type-seg">
+        <button class="active" data-type="bar">長條圖</button>
+        <button data-type="radar">雷達圖</button>
+      </div>
+    </div>
+    <div class="chart-wrap tall"><canvas id="role-chart"></canvas></div>
+  </section>
+
+  <!-- Player Table -->
+  <section class="card section-gap">
+    <h2><span class="ic">📑</span>玩家資料表</h2>
+    <p class="sub">完整 12 欄位 + 貢獻分，可排序，MVP 列高亮</p>
+    <div class="tbl-wrap">
+      <table id="player-table">
+        <thead id="player-thead"></thead>
+        <tbody id="player-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="ft">靜態演示原型 · 嵌入式範例資料 · 僅供展示增強版聯賽面板概念</footer>
+</div>
+
+<script>
+// ============ Data ============
+const COLUMNS = [
+  { key:'name', label:'玩家名字', numeric:false },
+  { key:'role', label:'職業', numeric:false },
+  { key:'kills', label:'擊敗', numeric:true },
+  { key:'assists', label:'助攻', numeric:true },
+  { key:'resources', label:'資源', numeric:true },
+  { key:'playerDamage', label:'對玩家傷害', numeric:true, wan:true },
+  { key:'buildingDamage', label:'對建築傷害', numeric:true, wan:true },
+  { key:'healing', label:'治療值', numeric:true, wan:true },
+  { key:'damageTaken', label:'承受傷害', numeric:true, wan:true },
+  { key:'deaths', label:'重傷', numeric:true },
+  { key:'revive', label:'化羽/清泉', numeric:true },
+  { key:'burn', label:'焚骨', numeric:true }
+];
+const ROLE_CAT = { '鐵衣':'坦', '素問':'補', '神相':'輸出', '碎夢':'輸出' };
+const CAT_COLOR = { '坦':'#2ec9b8', '補':'#34d399', '輸出':'#f4567a' };
+const ROLE_COLOR = { '神相':'#5b9dff','碎夢':'#f4567a','素問':'#34d399','鐵衣':'#2ec9b8' };
+const SUMMARY_KEYS = ['kills','assists','resources','playerDamage','buildingDamage','healing','damageTaken','deaths','revive','burn'];
+const COMPARE_KEYS = ['kills','playerDamage','healing','deaths','revive','burn'];
+const COMPARE_LABELS = ['擊敗','對玩家傷害','治療值','重傷','化羽/清泉','焚骨'];
+
+const SCENARIOS = {
+  clean: {
+    guilds: [
+      { name:'Guild Alpha', declared:2, players:[
+        { name:'Alice', role:'神相', kills:10, assists:5, resources:100, playerDamage:200000, buildingDamage:50000, healing:30000, damageTaken:150000, deaths:2, revive:1, burn:0 },
+        { name:'Bob', role:'碎夢', kills:7, assists:8, resources:90, playerDamage:180000, buildingDamage:40000, healing:10000, damageTaken:120000, deaths:3, revive:0, burn:1 }
+      ]},
+      { name:'Guild Beta', declared:2, players:[
+        { name:'Carol', role:'素問', kills:3, assists:12, resources:80, playerDamage:90000, buildingDamage:20000, healing:220000, damageTaken:110000, deaths:1, revive:4, burn:0 },
+        { name:'Dave', role:'鐵衣', kills:5, assists:6, resources:95, playerDamage:130000, buildingDamage:35000, healing:5000, damageTaken:250000, deaths:4, revive:0, burn:2 }
+      ]}
+    ],
+    issues: [] // format: { guild, type:'count_mismatch'|'row_short'|'invalid_num'|'empty_name', detail }
+  },
+  abnormal: {
+    guilds: [
+      { name:'Guild Alpha', declared:2, players:[
+        { name:'Alice', role:'神相', kills:10, assists:5, resources:100, playerDamage:200000, buildingDamage:50000, healing:30000, damageTaken:150000, deaths:2, revive:1, burn:0 },
+        { name:'Bob', role:'碎夢', kills:7, assists:8, resources:90, playerDamage:180000, buildingDamage:40000, healing:10000, damageTaken:120000, deaths:3, revive:0, burn:1 }
+      ]},
+      { name:'Guild Beta', declared:2, players:[
+        { name:'Carol', role:'素問', kills:3, assists:12, resources:80, playerDamage:90000, buildingDamage:20000, healing:220000, damageTaken:110000, deaths:1, revive:4, burn:0 },
+        { name:'Dave', role:'鐵衣', kills:5, assists:6, resources:95, playerDamage:130000, buildingDamage:35000, healing:5000, damageTaken:250000, deaths:4, revive:0, burn:2 }
+      ]},
+      { name:'Guild Gamma', declared:3, players:[
+        { name:'Eve', role:'神相', kills:8, assists:4, resources:70, playerDamage:150000, buildingDamage:30000, healing:8000, damageTaken:90000, deaths:2, revive:0, burn:1 },
+        { name:'Frank', role:'鐵衣', kills:2, assists:5, resources:60, playerDamage:60000, buildingDamage:15000, healing:3000, damageTaken:180000, deaths:3, revive:0, burn:0 }
+        // declared 3 but only 2 present => count mismatch
+      ],
+        issues:[
+          { type:'count_mismatch', detail:'Guild Gamma 宣告 3 人，實際 2 人' }
+        ]}
+    ],
+    issues: []
+  }
+};
+
+// ============ State ============
+let state = {
+  scenario:'clean',
+  guilds:[],
+  activeGuild:null,
+  theme:'dark',
+  sortCol:'contrib',
+  sortAsc:false,
+  cmpMode:'percent',
+  roleAgg:'sum',
+  roleType:'bar'
+};
+let charts = { contrib:null, cmp:null, role:null };
+
+// ============ Helpers ============
+function fmt(n){ return Number(n).toLocaleString('zh-TW'); }
+function fmtWan(n){
+  n = Number(n)||0;
+  if(n>=100000000){ const yi=Math.floor(n/100000000); const wan=Math.floor((n%100000000)/10000); return wan>0?`${yi}億${fmt(wan)}萬`:`${yi}億`; }
+  if(n>=10000){ return `${fmt(Math.floor(n/10000))}萬`; }
+  return fmt(n);
+}
+function fmtCol(key,val){ const c=COLUMNS.find(x=>x.key===key); return c&&c.wan?fmtWan(val):fmt(val); }
+function contrib(p){
+  return p.kills*1 + p.assists*0.5 + p.playerDamage/100000 + p.healing/100000 + p.revive*2 - p.deaths*0.5;
+}
+function guildStats(g){
+  const s={}; SUMMARY_KEYS.forEach(k=>s[k]=0);
+  g.players.forEach(p=>SUMMARY_KEYS.forEach(k=>s[k]+=Number(p[k])||0));
+  return s;
+}
+function allStats(){
+  const s={}; SUMMARY_KEYS.forEach(k=>s[k]=0);
+  state.guilds.forEach(g=>{ const gs=guildStats(g); SUMMARY_KEYS.forEach(k=>s[k]+=gs[k]); });
+  return s;
+}
+function cssVar(name){ return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+function chartColors(){
+  const dark = state.theme==='dark';
+  return {
+    text: dark? '#aebfd8' : '#3d4f6e',
+    grid: dark? 'rgba(99,159,255,.08)' : 'rgba(47,111,208,.1)',
+    guilds:['#5b9dff','#f4567a','#34d399','#f5a623','#3dd4e8','#a78bfa']
+  };
+}
+
+// ============ Render: Tabs ============
+function renderTabs(){
+  const el=document.getElementById('guild-tabs'); el.innerHTML='';
+  state.guilds.forEach(g=>{
+    const b=document.createElement('button');
+    b.className='tab'+(g.name===state.activeGuild?' active':'');
+    b.innerHTML=`${g.name} <span class="ct">(${g.players.length})</span>`;
+    b.onclick=()=>{ state.activeGuild=g.name; renderAll(); };
+    el.appendChild(b);
+  });
+}
+
+// ============ Render: Team Status ============
+function renderTeamStatus(){
+  const g = state.guilds.find(x=>x.name===state.activeGuild);
+  const cats={ '坦':0,'補':0,'輸出':0 };
+  g.players.forEach(p=>{ const c=ROLE_CAT[p.role]; if(c) cats[c]++; });
+  const total=g.players.length||1;
+
+  // gauge
+  const gauge=document.getElementById('comp-gauge'); gauge.innerHTML='';
+  ['坦','補','輸出'].forEach(c=>{
+    const seg=document.createElement('div');
+    seg.className='gauge-seg '+(c==='坦'?'tank':c==='補'?'heal':'dps')+(cats[c]===0?' empty':'');
+    seg.style.width=(cats[c]/total*100)+'%';
+    seg.textContent=cats[c]>0?`${c} ${cats[c]}`:'';
+    gauge.appendChild(seg);
+  });
+  // legend
+  const leg=document.getElementById('comp-legend'); leg.innerHTML='';
+  ['坦','補','輸出'].forEach(c=>{
+    const s=document.createElement('span');
+    s.innerHTML=`<i style="background:${CAT_COLOR[c]}"></i>${c}：${cats[c]} 人 (${Math.round(cats[c]/total*100)}%)`;
+    leg.appendChild(s);
+  });
+  // coverage
+  const cov=document.getElementById('coverage'); cov.innerHTML='';
+  ['坦','補','輸出'].forEach(c=>{
+    const ok=cats[c]>0;
+    const d=document.createElement('div'); d.className='cover-item '+(ok?'ok':'bad');
+    d.innerHTML=`<span class="badge">${ok?'✓':'✗'}</span> ${c}${ok?` · ${cats[c]} 人`:' · 缺少'}`;
+    cov.appendChild(d);
+  });
+  // warn
+  const warn=document.getElementById('warn-line'); warn.textContent='';
+  const missing=['坦','補','輸出'].filter(c=>cats[c]===0);
+  if(missing.length) warn.textContent=`⚠ 隊伍缺少：${missing.join('、')}`;
+
+  // MVP
+  const scored=g.players.map(p=>({...p,_s:contrib(p)})).sort((a,b)=>b._s-a._s);
+  const mvp=scored[0];
+  const mvpEl=document.getElementById('mvp-card');
+  const top3=[
+    {l:'擊敗',v:mvp.kills},{l:'對玩家傷害',v:fmtWan(mvp.playerDamage)},{l:'治療',v:fmtWan(mvp.healing)}
+  ];
+  mvpEl.innerHTML=`
+    <div class="mvp-head">
+      <span class="mvp-tag">MVP</span>
+      <span class="mvp-name">${mvp.name}</span>
+      <span class="mvp-role">${mvp.role}</span>
+      <span class="mvp-score">${mvp._s.toFixed(2)}</span>
+    </div>
+    <div class="mvp-formula">貢獻分 = 擊敗×1 + 助攻×0.5 + 對玩家傷害/10萬 + 治療/10萬 + 化羽×2 − 重傷×0.5</div>
+    <div class="mvp-stats">${top3.map(t=>`<span class="mvp-stat"><span class="v">${t.v}</span><span class="l">${t.l}</span></span>`).join('')}</div>
+  `;
+
+  // flags
+  const flags=document.getElementById('flags'); flags.innerHTML='';
+  scored.forEach(p=>{
+    const cs=[];
+    if(p.damageTaken>200000) cs.push({cls:'high-dmg',t:'高承傷'});
+    if(p.healing>150000) cs.push({cls:'high-heal',t:'高治療'});
+    if(p.deaths>=4) cs.push({cls:'high-death',t:'高陣亡'});
+    if(p._s===mvp._s) cs.push({cls:'mvp',t:'MVP'});
+    if(!cs.length) cs.push({cls:'',t:'表現穩定'});
+    const grp=document.createElement('div'); grp.style.width='100%';
+    grp.innerHTML=`<span class="chip"><span class="pn">${p.name}</span></span>`+cs.map(c=>`<span class="chip ${c.cls}">${c.t}</span>`).join('');
+    flags.appendChild(grp);
+  });
+}
+
+// ============ Render: Completeness + validation ============
+function renderComplete(){
+  let totalFields=0, validFields=0;
+  const checks=[];
+  const detailIssues=[];
+
+  state.guilds.forEach(g=>{
+    // count mismatch
+    const declared=g.declared, actual=g.players.length;
+    if(declared!==actual){
+      checks.push({s:'fail',t:`${g.name} 宣告 ${declared} 人與實際 ${actual} 人不一致`,d:`差 ${Math.abs(declared-actual)} 人`});
+      detailIssues.push(`${g.name} 宣告 ${declared} 人，實際 ${actual} 人`);
+    } else {
+      checks.push({s:'pass',t:`${g.name} 宣告人數與實際人數一致（${actual} 人）`,d:''});
+    }
+    // per player
+    g.players.forEach(p=>{
+      COLUMNS.forEach(c=>{
+        totalFields++;
+        const v=p[c.key];
+        if(c.key==='name'){ if(v&&String(v).trim()) validFields++; }
+        else if(c.key==='role'){ if(v) validFields++; }
+        else { if(v!==undefined&&v!==null&&v!==''&&!isNaN(Number(String(v).replace(/,/g,'')))) validFields++; }
+      });
+      if(!p.name||!String(p.name).trim()) detailIssues.push(`${g.name} 有空名字玩家`);
+    });
+  });
+  // abnormal scenario explicit issues
+  if(state.scenario==='abnormal'){
+    state.guilds.forEach(g=>{ (g.issues||[]).forEach(i=>detailIssues.push(i.detail)); });
+  }
+  // global checks
+  const hasShortRow = state.scenario==='abnormal'; // simulate a malformed row flag
+  checks.push({s: state.guilds.every(g=>g.players.every(p=>COLUMNS.every(c=>p[c.key]!==undefined&&p[c.key]!==null&&p[c.key]!=='')))?'pass':'warn',
+    t:'玩家欄位完整（每行 ≥12 欄）', d:''});
+  checks.push({s:'pass', t:'數值欄位皆為有效數字', d:''});
+  const noEmpty = state.guilds.every(g=>g.players.every(p=>p.name&&String(p.name).trim()));
+  checks.push({s:noEmpty?'pass':'fail', t:'無空名字玩家', d:''});
+  if(hasShortRow){ checks.push({s:'warn',t:'偵測到格式不完整資料列',d:'第 3 行欄位不足'}); detailIssues.push('Guild Gamma 第 3 行欄位不足（已略過）'); }
+
+  const pct = totalFields? Math.round(validFields/totalFields*100):100;
+  const pctEl=document.getElementById('meter-pct');
+  const fillEl=document.getElementById('meter-fill');
+  pctEl.textContent=pct+'%';
+  const cls = pct>=95?'good':pct>=80?'warn':'bad';
+  pctEl.className='meter-pct '+cls;
+  fillEl.className='meter-fill '+cls;
+  fillEl.style.width=pct+'%';
+
+  const vl=document.getElementById('vlist'); vl.innerHTML='';
+  checks.forEach(c=>{
+    const r=document.createElement('div'); r.className='vrow '+c.s;
+    const sym=c.s==='pass'?'✓':c.s==='warn'?'!':'✗';
+    r.innerHTML=`<span class="ico">${sym}</span><span class="txt">${c.t}</span>${c.d?`<span class="detail">${c.d}</span>`:''}`;
+    vl.appendChild(r);
+  });
+  detailIssues.forEach(d=>{
+    const r=document.createElement('div'); r.className='vrow fail';
+    r.innerHTML=`<span class="ico">!</span><span class="txt">${d}</span>`;
+    vl.appendChild(r);
+  });
+
+  // tiles: ALL 12 cols summary
+  const tiles=document.getElementById('tiles'); tiles.innerHTML='';
+  const tot=allStats();
+  const perGuild={}; state.guilds.forEach(g=>perGuild[g.name]=guildStats(g));
+  SUMMARY_KEYS.forEach(k=>{
+    const c=COLUMNS.find(x=>x.key===k);
+    const t=document.createElement('div'); t.className='tile';
+    let brk='';
+    state.guilds.forEach(g=>{ brk+=`<div class="g"><span class="gn">${g.name}</span><span>${fmtCol(k,perGuild[g.name][k])}</span></div>`; });
+    t.innerHTML=`<div class="tlabel">${c.label}</div><div class="tval">${fmtCol(k,tot[k])}</div><div class="tbrk">${brk}</div>`;
+    tiles.appendChild(t);
+  });
+}
+
+// ============ Render: Comparison chart ============
+function renderCmp(){
+  const ctx=document.getElementById('cmp-chart').getContext('2d');
+  const cc=chartColors();
+  const totals={}; COMPARE_KEYS.forEach(k=>totals[k]=0);
+  state.guilds.forEach(g=>{ const s=guildStats(g); COMPARE_KEYS.forEach(k=>totals[k]+=s[k]); });
+  const datasets=state.guilds.map((g,i)=>{
+    const s=guildStats(g);
+    const data=COMPARE_KEYS.map(k=>{
+      const raw=s[k]; const t=totals[k]||1;
+      return state.cmpMode==='percent'? Math.round(raw/t*100): raw;
+    });
+    return { label:g.name, data, backgroundColor:cc.guilds[i]+'cc', borderColor:cc.guilds[i], borderWidth:1, _raw:COMPARE_KEYS.map(k=>s[k]), _pct:COMPARE_KEYS.map(k=>Math.round(s[k]/(totals[k]||1)*100)) };
+  });
+  if(charts.cmp) charts.cmp.destroy();
+  charts.cmp=new Chart(ctx,{
+    type:'bar',
+    data:{ labels:COMPARE_LABELS, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:cc.text}},
+        tooltip:{
+          callbacks:{
+            label:(c)=>{
+              const ds=c.chart.data.datasets[c.datasetIndex];
+              const raw=ds._raw[c.dataIndex], pct=ds._pct[c.dataIndex];
+              const k=COMPARE_KEYS[c.dataIndex];
+              return ` ${ds.label}: ${fmtCol(k,raw)} （${pct}%）`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:cc.text},grid:{color:cc.grid}},
+        y:{ticks:{color:cc.text, callback:v=>state.cmpMode==='percent'?v+'%':fmtWan(v)}, grid:{color:cc.grid}}
+      }
+    }
+  });
+}
+
+// ============ Render: Role performance ============
+function renderRole(){
+  const ctx=document.getElementById('role-chart').getContext('2d');
+  const cc=chartColors();
+  const cats=['坦','補','輸出'];
+  const metrics=[{k:'kills',l:'擊敗'},{k:'playerDamage',l:'對玩家傷害'},{k:'healing',l:'治療'},{k:'damageTaken',l:'承受傷害'}];
+  // aggregate all guilds players by cat
+  const byCat={}; cats.forEach(c=>byCat[c]=[]);
+  state.guilds.forEach(g=>g.players.forEach(p=>{ const c=ROLE_CAT[p.role]; if(c) byCat[c].push(p); }));
+  const datasets=cats.map((c,i)=>({
+    label:c, backgroundColor:CAT_COLOR[c]+'cc', borderColor:CAT_COLOR[c], borderWidth:1,
+    data:metrics.map(m=>{
+      const arr=byCat[c]; if(!arr.length) return 0;
+      const sum=arr.reduce((a,p)=>a+(Number(p[m.k])||0),0);
+      return state.roleAgg==='avg'? Math.round(sum/arr.length): sum;
+    })
+  }));
+  if(charts.role) charts.role.destroy();
+  const type=state.roleType==='radar'?'radar':'bar';
+  const opt = type==='radar'? {
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:cc.text}}},
+    scales:{r:{ticks:{color:cc.text,backdropColor:'transparent'},grid:{color:cc.grid},angleLines:{color:cc.grid},pointLabels:{color:cc.text}}}
+  }:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:cc.text}}},
+    scales:{x:{ticks:{color:cc.text},grid:{color:cc.grid}},y:{ticks:{color:cc.text,callback:fmtWan},grid:{color:cc.grid}}}
+  };
+  charts.role=new Chart(ctx,{ type, data:{labels:metrics.map(m=>m.l),datasets}, options:opt });
+}
+
+// ============ Render: Contribution chart ============
+function renderContrib(){
+  const g=state.guilds.find(x=>x.name===state.activeGuild);
+  const ctx=document.getElementById('contrib-chart').getContext('2d');
+  const cc=chartColors();
+  const scored=g.players.map(p=>({...p,_s:contrib(p)})).sort((a,b)=>b._s-a._s);
+  if(charts.contrib) charts.contrib.destroy();
+  charts.contrib=new Chart(ctx,{
+    type:'bar',
+    data:{ labels:scored.map(p=>`${p.name} · ${p.role}`),
+      datasets:[{ label:'貢獻分', data:scored.map(p=>+p._s.toFixed(2)),
+        backgroundColor:scored.map(p=>ROLE_COLOR[p.role]+'cc'), borderColor:scored.map(p=>ROLE_COLOR[p.role]), borderWidth:1 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` 貢獻分 ${c.raw}`}}},
+      scales:{x:{ticks:{color:cc.text},grid:{color:cc.grid}},y:{ticks:{color:cc.text},grid:{color:cc.grid}}}}
+  });
+}
+
+// ============ Render: Player table ============
+function renderTable(){
+  const thead=document.getElementById('player-thead'); thead.innerHTML='';
+  const tr=document.createElement('tr');
+  const cols=[...COLUMNS,{key:'contrib',label:'貢獻分',numeric:true}];
+  cols.forEach(c=>{
+    const th=document.createElement('th');
+    th.dataset.col=c.key;
+    if(c.numeric) th.classList.add('numeric');
+    if(state.sortCol===c.key) th.classList.add(state.sortAsc?'sort-asc':'sort-desc');
+    th.innerHTML=`${c.label}<span class="arr"></span>`;
+    th.onclick=()=>{ if(state.sortCol===c.key){state.sortAsc=!state.sortAsc;} else {state.sortCol=c.key; state.sortAsc=!c.numeric;} renderTable(); };
+    tr.appendChild(th);
+  });
+  thead.appendChild(tr);
+
+  // gather players across all guilds, attach guild + contrib
+  let rows=[]; state.guilds.forEach(g=>g.players.forEach(p=>rows.push({...p,guild:g.name,_s:contrib(p)})));
+  const cur=cols.find(c=>c.key===state.sortCol);
+  rows.sort((a,b)=>{
+    if(state.sortCol==='contrib'){ return state.sortAsc?a._s-b._s:b._s-a._s; }
+    if(!cur||!cur.numeric){ return state.sortAsc? String(a[state.sortCol]).localeCompare(String(b[state.sortCol]),'zh-TW') : String(b[state.sortCol]).localeCompare(String(a[state.sortCol]),'zh-TW'); }
+    const av=Number(a[state.sortCol])||0, bv=Number(b[state.sortCol])||0; return state.sortAsc?av-bv:bv-av;
+  });
+  const mvpScore=Math.max(...rows.map(r=>r._s));
+  const tb=document.getElementById('player-tbody'); tb.innerHTML='';
+  rows.forEach(r=>{
+    const tr=document.createElement('tr'); if(r._s===mvpScore) tr.classList.add('mvp-row');
+    cols.forEach(c=>{
+      const td=document.createElement('td'); if(c.numeric) td.classList.add('numeric');
+      if(c.key==='contrib'){ td.textContent=r._s.toFixed(2); td.classList.add('contrib'); }
+      else if(c.key==='role'){ td.innerHTML=`<span class="role-pill role-${r.role}">${r.role}</span>`; }
+      else if(c.key==='name'){ td.textContent=r.name; }
+      else { td.textContent=fmtCol(c.key,r[c.key]); }
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+}
+
+// ============ Master render ============
+function renderAll(){
+  document.getElementById('scen-label').textContent = state.scenario==='clean'?'完整資料':'含異常資料';
+  renderTabs();
+  renderTeamStatus();
+  renderComplete();
+  renderCmp();
+  renderRole();
+  renderContrib();
+  renderTable();
+}
+
+function loadScenario(name){
+  state.scenario=name;
+  state.guilds = JSON.parse(JSON.stringify(SCENARIOS[name].guilds));
+  state.activeGuild = state.guilds[0].name;
+  renderAll();
+}
+
+// ============ Events ============
+document.getElementById('scenario-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#scenario-seg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  loadScenario(b.dataset.scen);
+});
+document.getElementById('cmp-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#cmp-seg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); state.cmpMode=b.dataset.mode; renderCmp();
+});
+document.getElementById('role-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#role-seg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); state.roleAgg=b.dataset.agg; renderRole();
+});
+document.getElementById('role-type-seg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#role-type-seg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); state.roleType=b.dataset.type; renderRole();
+});
+document.getElementById('theme-btn').addEventListener('click',()=>{
+  state.theme = state.theme==='dark'?'light':'dark';
+  document.body.classList.toggle('light', state.theme==='light');
+  document.getElementById('theme-btn').textContent = state.theme==='dark'?'🌙':'☀️';
+  renderCmp(); renderRole(); renderContrib();
+});
+
+// init
+loadScenario('clean');
+</script>
+</body>
+</html>

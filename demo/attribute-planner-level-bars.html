@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每級邊際增益排序 · 等級子分頁 + 橫條排序 設計原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#050b18;
+  --bg-1:#0a1428;
+  --bg-2:#0d1b30;
+  --panel:#0f1d38;
+  --panel-2:#142849;
+  --border:rgba(74,158,255,.14);
+  --border-strong:rgba(74,158,255,.28);
+  --text:#e0eaf5;
+  --text-soft:#a8bcdc;
+  --muted:#6a82a8;
+  --dim:#4a6088;
+  --blue:#4a9eff;
+  --cyan:#3dd4e8;
+  --indigo:#6b7eff;
+  --teal:#2ec9b8;
+  --amber:#f5a623;
+  --rose:#f4567a;
+  --green:#3dd47a;
+  --shadow:0 16px 40px rgba(0,0,0,.5);
+  --shadow-glow:0 0 32px rgba(74,158,255,.16);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+
+body{
+  font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgba(74,158,255,.08), transparent 60%),
+    radial-gradient(70% 50% at 0% 100%, rgba(61,212,232,.06), transparent 60%),
+    var(--bg-0);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  position:relative;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(74,158,255,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(74,158,255,.04) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(120% 90% at 50% 30%,#000 0%,transparent 80%);
+  -webkit-mask-image:radial-gradient(120% 90% at 50% 30%,#000 0%,transparent 80%);
+}
+
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:48px 24px 80px}
+
+header{margin-bottom:40px}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.18em;color:var(--cyan);text-transform:uppercase;margin:0 0 12px}
+h1{font-family:'Manrope',sans-serif;font-weight:800;font-size:clamp(28px,4vw,44px);line-height:1.1;margin:0 0 14px;letter-spacing:-.01em}
+h1 .accent{background:linear-gradient(135deg,#6bb5ff 0%,#3dd4e8 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lead{color:var(--text-soft);font-size:16px;line-height:1.6;max-width:760px;margin:0}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--border-strong);border-radius:999px;font-size:12px;color:var(--text-soft);background:rgba(74,158,255,.06);margin-top:18px}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan)}
+
+/* ---- KPI strip ---- */
+.kpi-strip{display:flex;flex-wrap:wrap;gap:14px;margin:32px 0 40px}
+.kpi{flex:1 1 180px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-glow)}
+.kpi .lbl{font-size:12px;color:var(--muted);letter-spacing:.04em;margin-bottom:8px}
+.kpi .val{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:700;color:var(--text)}
+.kpi .val small{font-size:13px;color:var(--text-soft);font-weight:500;margin-left:6px}
+
+/* ---- two-column layout ---- */
+.grid{display:grid;grid-template-columns:340px 1fr;gap:28px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:24px;box-shadow:var(--shadow)}
+.panel-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.panel-title h2{font-family:'Manrope',sans-serif;font-size:18px;font-weight:700;margin:0}
+.panel-title .hint{font-size:12px;color:var(--muted)}
+.panel-sub{color:var(--text-soft);font-size:13px;line-height:1.55;margin:0 0 22px}
+
+/* ---- step inputs ---- */
+.fields{display:flex;flex-direction:column;gap:12px}
+.field{display:grid;grid-template-columns:1fr 110px;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(10,20,40,.4);transition:border-color .15s}
+.field:hover{border-color:var(--border-strong)}
+.field label{font-size:14px;color:var(--text-soft);display:flex;align-items:center;gap:8px}
+.swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.field input{background:var(--bg-1);border:1px solid var(--border);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;padding:8px 10px;border-radius:8px;width:100%;text-align:right}
+.field input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(74,158,255,.15)}
+.field .pu{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace}
+
+.toolbar{display:flex;gap:10px;margin-top:18px}
+.btn{flex:1;padding:10px 14px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border-strong);background:rgba(74,158,255,.08);color:var(--text);transition:background .15s}
+.btn:hover{background:rgba(74,158,255,.18)}
+.btn.primary{background:linear-gradient(135deg,#6bb5ff 0%,#4a9eff 100%);border-color:transparent;color:#06122a}
+.btn.primary:hover{filter:brightness(1.08)}
+
+/* ---- redesigned panel (the core of this demo) ---- */
+.tab-group{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+/* helper line above sub-tab strip */
+.subtab-helper{
+  padding:14px 24px 6px;
+  font-size:12px;
+  color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+  letter-spacing:.02em;
+}
+
+/* ---- level sub-tab strip (horizontally scrollable) ---- */
+.subtab-list{
+  display:flex;
+  gap:4px;
+  padding:8px 16px 0;
+  background:linear-gradient(180deg,rgba(74,158,255,.05),transparent);
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;
+  flex-wrap:nowrap;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border-strong) transparent;
+}
+.subtab-list::-webkit-scrollbar{height:6px}
+.subtab-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.subtab-list::-webkit-scrollbar-track{background:transparent}
+.subtab-btn{
+  appearance:none;
+  border:none;
+  background:transparent;
+  color:var(--muted);
+  font-family:'Manrope',sans-serif;
+  font-size:14px;
+  font-weight:600;
+  padding:10px 14px;
+  cursor:pointer;
+  border-radius:10px 10px 0 0;
+  position:relative;
+  transition:color .15s,background .15s;
+  white-space:nowrap;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-shrink:0;
+}
+.subtab-btn:hover{color:var(--text-soft);background:rgba(74,158,255,.05)}
+.subtab-btn[aria-selected="true"]{
+  color:var(--text);
+  background:var(--panel-2);
+}
+.subtab-btn[aria-selected="true"]::after{
+  content:'';position:absolute;left:12px;right:12px;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,#6bb5ff,#3dd4e8);
+  border-radius:2px;
+}
+.subtab-btn .subtab-badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  font-weight:700;
+  padding:2px 6px;
+  border-radius:999px;
+  background:rgba(74,158,255,.12);
+  color:var(--text-soft);
+  border:1px solid var(--border);
+}
+.subtab-btn[aria-selected="true"] .subtab-badge{
+  background:rgba(74,158,255,.22);
+  color:var(--text);
+  border-color:var(--border-strong);
+}
+
+/* ---- content area ---- */
+.content-meta{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:18px 24px 4px;
+  min-height:44px;
+}
+.content-meta h2{font-family:'Manrope',sans-serif;font-size:18px;font-weight:700;margin:0}
+.content-meta .meta{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.content-body{padding:8px 24px 24px}
+
+/* ---- bar rows (verbatim from existing demo) ---- */
+.bar-row{display:grid;grid-template-columns:96px 1fr 92px 64px;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid rgba(74,158,255,.07)}
+.bar-row:last-child{border-bottom:none}
+.bar-row .name{font-size:14px;color:var(--text-soft);display:flex;align-items:center;gap:8px}
+.bar-row .track{height:22px;background:rgba(10,20,40,.5);border-radius:6px;overflow:hidden;position:relative}
+.bar-row .fill{height:100%;border-radius:6px;transition:width .35s cubic-bezier(.16,1,.3,1);position:relative}
+.bar-row .fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18));border-radius:6px}
+.bar-row .pct{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;text-align:right}
+.bar-row .rank{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-align:right}
+
+/* ---- bump chart ---- */
+.bump-wrap{width:100%}
+.bump-caption{
+  font-size:12px;color:var(--text-soft);line-height:1.55;
+  margin:0 0 14px;max-width:680px;
+}
+.bump-caption .em{color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em}
+.bump-svg{display:block;width:100%;height:auto;font-family:'JetBrains Mono',monospace;overflow:visible}
+.bump-svg .grid-line{stroke:rgba(74,158,255,.08);stroke-width:1}
+.bump-svg .axis-line{stroke:rgba(74,158,255,.18);stroke-width:1}
+.bump-svg .axis-label{fill:var(--muted);font-size:10px}
+.bump-svg .rank-label{fill:var(--dim);font-size:9px}
+.bump-svg .polyline{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:opacity .2s}
+.bump-svg .dot{transition:r .15s}
+.bump-svg .end-label{font-size:11px;font-weight:600}
+.bump-svg .end-label-bg{fill:var(--panel);opacity:.7}
+
+.empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px}
+
+footer{margin-top:48px;padding-top:24px;border-top:1px solid var(--border);color:var(--dim);font-size:12px;line-height:1.6}
+footer code{font-family:'JetBrains Mono',monospace;color:var(--text-soft)}
+
+/* 動畫：切換子分頁時輕微淡入 */
+.content-body{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">設計原型 · 方向 3</p>
+    <h1>每級邊際增益排序 <span class="accent">等級子分頁 + 橫條排序</span></h1>
+    <p class="lead">將原本 10 列文字堆疊的「每級邊際增益排序」改為單一卡片：以等級子分頁切換各級橫條排序，「全部總覽」則以排名軌跡圖（bump chart）一次看清 10 級變化，避免使用者需要點 10 次才能理解排名故事。資料為模擬飽和曲線，互動可調 step 即時重算。</p>
+    <div class="badge"><span class="dot"></span>等級子分頁 · 橫條排序 · bump chart 總覽</div>
+  </header>
+
+  <div class="kpi-strip" id="kpi-strip"></div>
+
+  <div class="grid">
+    <section class="panel" aria-label="階梯增量設定">
+      <div class="panel-title"><h2>階梯增量</h2><span class="hint">每次 +N</span></div>
+      <p class="panel-sub">為每個屬性輸入階梯量；0 的屬性不列入比較。基準值來自計算器 atk1（此 demo 固定）。</p>
+      <div class="fields" id="fields"></div>
+      <div class="toolbar">
+        <button class="btn" id="reset" type="button">重置增量</button>
+        <button class="btn primary" id="preset" type="button">套用範例</button>
+      </div>
+    </section>
+
+    <!-- ===== The redesigned panel (core of this demo) ===== -->
+    <section aria-label="每級邊際增益排序 等級子分頁">
+      <div class="tab-group" id="redesign">
+        <!-- helper line above the sub-tab strip -->
+        <div class="subtab-helper">切換等級查看該級排序；「全部總覽」以排名軌跡圖一次看清 10 級變化。</div>
+
+        <!-- level sub-tab strip -->
+        <div class="subtab-list" role="tablist" aria-label="等級子分頁" id="subtab-list"></div>
+
+        <!-- content area (switches based on selected sub-tab) -->
+        <div class="content-meta" id="content-meta">
+          <h2 id="content-title">全部總覽</h2>
+          <span class="meta" id="content-submeta">每條線為一個屬性，追蹤其在各等級的邊際增益排名變化</span>
+        </div>
+        <div class="content-body" id="content-body"></div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    本頁為 demo/ 下的設計原型，計算使用模擬飽和曲線 <code>damage &prop; value/(value+C)</code> 以重現邊際遞減樣貌，非實際 pvpCombat 公式。目的在驗證「等級子分頁 + 橫條排序 + bump chart 總覽」版面可行性，未修改正式 index.html / tools/attribute-planner.js。
+  </footer>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---- attribute config (mirrors pvp-config PLANNER_ATTRIBUTES; verbatim from existing demo) ----
+  const ATTRS = [
+    { id:'attack',         name:'攻擊',     baseline:12000, step:500, color:'#4a9eff', K:1.00, C:9000  },
+    { id:'elementalAttack',name:'元素攻擊', baseline:8000,  step:300, color:'#3dd4e8', K:0.85, C:7000  },
+    { id:'defenseBreak',   name:'破防',     baseline:6000,  step:400, color:'#6b7eff', K:0.90, C:5500  },
+    { id:'shieldBreak',    name:'破盾',     baseline:4000,  step:300, color:'#2ec9b8', K:0.70, C:6000  },
+    { id:'accuracy',       name:'命中',     baseline:3500,  step:200, color:'#f5a623', K:0.60, C:8000  },
+    { id:'crit',           name:'會心',     baseline:2800,  step:150, color:'#f4567a', K:0.80, C:4000  },
+    { id:'critDamage',     name:'會傷',     baseline:2200,  step:120, color:'#3dd47a', K:0.65, C:3500  },
+    { id:'elementalBreak', name:'忽視元抗', baseline:1800,  step:100, color:'#b58bff', K:0.75, C:3000  }
+  ];
+  const LEVELS = 10;
+
+  // ---- mock damage model: saturating curve → natural diminishing returns (verbatim) ----
+  function contribution(attr, value){
+    return attr.K * value / (value + attr.C);
+  }
+  function baselineDamage(){
+    let s = 0;
+    ATTRS.forEach(a => s += contribution(a, a.baseline));
+    return s * 1000;
+  }
+  function damageAt(attr, value){
+    let s = 0;
+    ATTRS.forEach(a => s += contribution(a, a.id === attr.id ? value : a.baseline));
+    return s * 1000;
+  }
+
+  // ---- state ----
+  const state = { steps: {} };
+  ATTRS.forEach(a => state.steps[a.id] = a.step); // default preset
+
+  // active sub-tab: 'overview' or 'lv:<N>' (1..10)
+  let activeSubtab = 'overview';
+
+  // ---- compute per-attr stepping (verbatim from existing demo) ----
+  function compute(){
+    const base = baselineDamage();
+    const groups = [];
+    ATTRS.forEach(attr => {
+      const step = Number(state.steps[attr.id]) || 0;
+      if (step <= 0) return;
+      const rows = [];
+      let prev = base;
+      for (let lv = 1; lv <= LEVELS; lv++){
+        const value = attr.baseline + lv * step;
+        const dmg = damageAt(attr, value);
+        const marginal = prev > 0 ? (dmg - prev) / prev : 0;
+        const cumulative = base > 0 ? (dmg - base) / base : 0;
+        rows.push({ level:lv, value, damage:dmg, marginal, cumulative, perUnit: marginal / step });
+        prev = dmg;
+      }
+      groups.push({ attr, step, rows });
+    });
+    return { base, groups };
+  }
+
+  // ---- formatting (verbatim from existing demo) ----
+  const fmtInt = v => Math.floor(v).toLocaleString('zh-TW');
+  const fmtPct = v => { const p = v*100; const s = p>=0?'+':''; return s + p.toFixed(2) + '%'; };
+  const fmtPct4 = v => { const p = v*100; const s = p>=0?'+':''; return s + p.toFixed(4) + '%'; };
+
+  // ---- KPI strip (same 4 KPIs as existing demo) ----
+  function renderKPI(data){
+    const el = document.getElementById('kpi-strip');
+    const activeCount = data.groups.length;
+    const best = data.groups
+      .map(g => ({ name:g.attr.name, color:g.attr.color, perUnit:g.rows[0].perUnit }))
+      .sort((a,b) => b.perUnit - a.perUnit)[0];
+    const totalCumAt10 = data.groups.reduce((acc,g) => acc + g.rows[g.rows.length-1].cumulative, 0);
+    el.innerHTML = `
+      <div class="kpi"><div class="lbl">基準有效傷害</div><div class="val">${fmtInt(data.base)}</div></div>
+      <div class="kpi"><div class="lbl">比較中屬性</div><div class="val">${activeCount}<small>/ ${ATTRS.length}</small></div></div>
+      <div class="kpi"><div class="lbl">最佳每單位 CP</div><div class="val" style="color:${best?best.color:'var(--muted)'}">${best?best.name:'—'}<small>${best?fmtPct4(best.perUnit):''}</small></div></div>
+      <div class="kpi"><div class="lbl">10 級累計提升總和</div><div class="val">${fmtPct(totalCumAt10)}</div></div>
+    `;
+  }
+
+  // ---- render step input fields (verbatim from existing demo) ----
+  function renderFields(){
+    const el = document.getElementById('fields');
+    el.innerHTML = ATTRS.map(a => `
+      <div class="field">
+        <label for="step-${a.id}"><span class="swatch" style="background:${a.color}"></span>${a.name}</label>
+        <input id="step-${a.id}" type="number" min="0" step="1" value="${state.steps[a.id]||''}" placeholder="0" inputmode="numeric">
+      </div>
+    `).join('');
+    ATTRS.forEach(a => {
+      const input = document.getElementById('step-' + a.id);
+      input.addEventListener('input', () => {
+        const v = Math.max(0, Number(input.value) || 0);
+        state.steps[a.id] = v;
+        renderAll();
+      });
+    });
+  }
+
+  // =========================================================
+  // ==== Level sub-tab strip ====
+  // =========================================================
+
+  // Build the sub-tab buttons: 全部總覽 + Lv.1..Lv.10
+  function renderSubtabs(activeCount){
+    const list = document.getElementById('subtab-list');
+    const tabs = [{ id:'overview', label:'全部總覽', badge:null }];
+    for (let lv = 1; lv <= LEVELS; lv++){
+      tabs.push({ id:'lv:'+lv, label:'Lv.'+lv, badge:lv });
+    }
+    list.innerHTML = tabs.map(t => `
+      <button class="subtab-btn" role="tab" data-subtab="${t.id}" aria-selected="${activeSubtab===t.id}" type="button">
+        ${t.label}${t.badge!==null?`<span class="subtab-badge">${String(t.badge).padStart(2,'0')}</span>`:''}
+      </button>
+    `).join('');
+
+    list.querySelectorAll('.subtab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeSubtab = btn.dataset.subtab;
+        // re-render content + sub-tab selected states; no need to rebuild fields/KPI
+        renderRedesignPanel(compute());
+      });
+    });
+  }
+
+  // =========================================================
+  // ==== Bump chart (ranking trajectory) for 全部總覽 ====
+  // =========================================================
+  // For each level, rank active attributes by marginalGain descending.
+  // Returns: perAttrTrajectories = [{ attr, ranks: [r1..r10] }] (rank 1 = best)
+  function getLevelRankings(data){
+    // rankings[levelIndex] = [{ attr, marginal, rank }]
+    const perLevel = [];
+    for (let lv = 1; lv <= LEVELS; lv++){
+      const items = data.groups.map(g => ({ attr:g.attr, marginal:g.rows[lv-1].marginal }));
+      items.sort((a,b) => b.marginal - a.marginal);
+      items.forEach((it, i) => { it.rank = i + 1; });
+      perLevel.push(items);
+    }
+    // trajectories per attr
+    const trajs = data.groups.map(g => {
+      const ranks = [];
+      for (let lv = 1; lv <= LEVELS; lv++){
+        const found = perLevel[lv-1].find(it => it.attr.id === g.attr.id);
+        ranks.push(found ? found.rank : data.groups.length);
+      }
+      return { attr:g.attr, ranks };
+    });
+    return { perLevel, trajs };
+  }
+
+  function renderBumpChart(data){
+    const el = document.getElementById('content-body');
+    if (!data.groups.length){
+      el.innerHTML = '<div class="empty">請在左側為至少一項屬性設定階梯增量，才能檢視排名軌跡。</div>';
+      return;
+    }
+    const { trajs } = getLevelRankings(data);
+    const N = data.groups.length; // active count = number of ranks
+
+    // SVG layout: 760 x 360 viewBox
+    const W = 760, H = 360;
+    const P_L = 40, P_R = 130, P_T = 18, P_B = 36;
+    const innerW = W - P_L - P_R;
+    const innerH = H - P_T - P_B;
+    const xForLevel = lv => P_L + ((lv - 1) / (LEVELS - 1)) * innerW;
+    // Y inverted: rank 1 at top
+    const yForRank = r => P_T + ((r - 1) / Math.max(N - 1, 1)) * innerH;
+
+    // gridlines per rank
+    let grid = '';
+    for (let r = 1; r <= N; r++){
+      const y = yForRank(r);
+      grid += `<line class="grid-line" x1="${P_L}" y1="${y.toFixed(1)}" x2="${P_L+innerW}" y2="${y.toFixed(1)}"/>`;
+      grid += `<text class="axis-label" x="${P_L-8}" y="${(y+3).toFixed(1)}" text-anchor="end">#${r}</text>`;
+    }
+    // X axis labels (level numbers)
+    let xlabels = '';
+    for (let lv = 1; lv <= LEVELS; lv++){
+      const x = xForLevel(lv);
+      xlabels += `<text class="axis-label" x="${x.toFixed(1)}" y="${(P_T+innerH+18).toFixed(1)}" text-anchor="middle">Lv.${lv}</text>`;
+    }
+    // axis lines
+    const axes = `
+      <line class="axis-line" x1="${P_L}" y1="${P_T}" x2="${P_L}" y2="${(P_T+innerH).toFixed(1)}"/>
+      <line class="axis-line" x1="${P_L}" y1="${(P_T+innerH).toFixed(1)}" x2="${(P_L+innerW).toFixed(1)}" y2="${(P_T+innerH).toFixed(1)}"/>
+    `;
+
+    // Build polylines + dots + per-level rank numbers + end labels
+    let polys = '';
+    let dotsAndRanks = '';
+    const endLabelAnchors = []; // for collision handling
+    trajs.forEach((t, idx) => {
+      const pts = t.ranks.map((r, i) => {
+        const lv = i + 1;
+        return `${xForLevel(lv).toFixed(1)},${yForRank(r).toFixed(1)}`;
+      });
+      const linePath = 'M' + pts.join(' L');
+      polys += `<path class="polyline" d="${linePath}" stroke="${t.attr.color}" opacity="0.92"/>`;
+
+      t.ranks.forEach((r, i) => {
+        const lv = i + 1;
+        const cx = xForLevel(lv);
+        const cy = yForRank(r);
+        dotsAndRanks += `<circle class="dot" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="${t.attr.color}"/>`;
+        // small rank number above dot
+        dotsAndRanks += `<text class="rank-label" x="${cx.toFixed(1)}" y="${(cy-6).toFixed(1)}" text-anchor="middle">${r}</text>`;
+      });
+
+      // end label at Lv.10
+      const endX = xForLevel(LEVELS);
+      const endY = yForRank(t.ranks[LEVELS-1]);
+      endLabelAnchors.push({ attr:t.attr, y:endY });
+    });
+
+    // Stagger end labels vertically to avoid overlap (sort by y, push apart)
+    endLabelAnchors.sort((a,b) => a.y - b.y);
+    const minGap = 14;
+    for (let i = 1; i < endLabelAnchors.length; i++){
+      if (endLabelAnchors[i].y - endLabelAnchors[i-1].y < minGap){
+        endLabelAnchors[i].y = endLabelAnchors[i-1].y + minGap;
+      }
+    }
+    // clamp within plot
+    endLabelAnchors.forEach(a => {
+      a.y = Math.max(P_T + 4, Math.min(P_T + innerH - 4, a.y));
+    });
+    let endLabels = '';
+    endLabelAnchors.forEach(a => {
+      const lx = P_L + innerW + 8;
+      const name = a.attr.name.length > 5 ? a.attr.name.slice(0,4)+'…' : a.attr.name;
+      // small background pill for readability
+      const txtW = name.length * 9 + 12;
+      endLabels += `<rect class="end-label-bg" x="${lx-4}" y="${(a.y-8).toFixed(1)}" width="${txtW}" height="16" rx="4"/>`;
+      endLabels += `<circle cx="${lx-2}" cy="${a.y.toFixed(1)}" r="3.5" fill="${a.attr.color}"/>`;
+      endLabels += `<text class="end-label" x="${lx+10}" y="${(a.y+3).toFixed(1)}" fill="${a.attr.color}">${name}</text>`;
+    });
+
+    const svg = `
+      <svg class="bump-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="各等級邊際增益排名軌跡圖">
+        ${grid}
+        ${axes}
+        ${xlabels}
+        ${polys}
+        ${dotsAndRanks}
+        ${endLabels}
+      </svg>
+    `;
+
+    el.innerHTML = `
+      <p class="bump-caption">
+        <span class="em">bump chart</span> · 每條線為一個屬性，追蹤其在各等級的邊際增益排名變化。線往上 = 排名提升。每個圓點旁的數字為該級排名。
+      </p>
+      <div class="bump-wrap">${svg}</div>
+    `;
+  }
+
+  // =========================================================
+  // ==== Level bars (horizontal bar ranking for Lv.N) ====
+  // =========================================================
+  function renderLevelBars(data, lv){
+    const el = document.getElementById('content-body');
+    const titleEl = document.getElementById('content-title');
+    const submetaEl = document.getElementById('content-submeta');
+
+    titleEl.textContent = `Lv.${lv} 邊際增益排序`;
+    submetaEl.textContent = `每 +step 該屬性於第 ${lv} 級的傷害邊際提升 %`;
+
+    if (!data.groups.length){
+      el.innerHTML = '<div class="empty">請在左側為至少一項屬性設定階梯增量。</div>';
+      return;
+    }
+
+    // sort active attributes by marginalGain at level N, descending
+    const ranked = data.groups
+      .map(g => ({ attr:g.attr, marginal:g.rows[lv-1].marginal }))
+      .sort((a,b) => b.marginal - a.marginal);
+    const max = Math.max(...ranked.map(r => r.marginal), 1e-9);
+    const tint = c => `${c}33`;
+
+    el.innerHTML = ranked.map((r, i) => `
+      <div class="bar-row">
+        <div class="name"><span class="swatch" style="background:${r.attr.color}"></span>${r.attr.name}</div>
+        <div class="track"><div class="fill" style="width:${(r.marginal/max*100).toFixed(1)}%;background:linear-gradient(90deg,${tint(r.attr.color)},${r.attr.color})"></div></div>
+        <div class="pct" style="color:${r.attr.color}">${fmtPct(r.marginal)}</div>
+        <div class="rank">#${i+1}</div>
+      </div>
+    `).join('');
+  }
+
+  // =========================================================
+  // ==== Redesign panel renderer (dispatches on active sub-tab) ====
+  // =========================================================
+  function renderRedesignPanel(data){
+    const activeCount = data.groups.length;
+    // fallback: if active sub-tab is a level and there are no active attrs, go overview
+    let sub = activeSubtab;
+    if (activeCount === 0 && sub !== 'overview'){
+      sub = 'overview';
+      activeSubtab = 'overview';
+    }
+    renderSubtabs(activeCount);
+
+    const titleEl = document.getElementById('content-title');
+    const submetaEl = document.getElementById('content-submeta');
+
+    if (sub === 'overview'){
+      titleEl.textContent = '全部總覽';
+      submetaEl.textContent = '每條線為一個屬性，追蹤其在各等級的邊際增益排名變化';
+      renderBumpChart(data);
+    } else {
+      const lv = Number(sub.split(':')[1]);
+      renderLevelBars(data, lv);
+    }
+  }
+
+  function renderAll(){
+    const data = compute();
+    renderKPI(data);
+    renderRedesignPanel(data);
+  }
+
+  // ---- keyboard: left/right cycle the level sub-tabs ----
+  function activeSubtabOrder(){
+    const ids = ['overview'];
+    for (let lv = 1; lv <= LEVELS; lv++) ids.push('lv:'+lv);
+    return ids;
+  }
+  document.getElementById('subtab-list').addEventListener('keydown', (e) => {
+    const order = activeSubtabOrder();
+    const idx = order.indexOf(activeSubtab);
+    if (idx < 0) return;
+    if (e.key === 'ArrowRight'){
+      e.preventDefault();
+      activeSubtab = order[(idx + 1) % order.length];
+      renderRedesignPanel(compute());
+    } else if (e.key === 'ArrowLeft'){
+      e.preventDefault();
+      activeSubtab = order[(idx - 1 + order.length) % order.length];
+      renderRedesignPanel(compute());
+    }
+  });
+
+  // ---- toolbar (verbatim behavior from existing demo) ----
+  document.getElementById('reset').addEventListener('click', () => {
+    ATTRS.forEach(a => state.steps[a.id] = 0);
+    renderFields();
+    renderAll();
+  });
+  document.getElementById('preset').addEventListener('click', () => {
+    ATTRS.forEach(a => state.steps[a.id] = a.step);
+    renderFields();
+    renderAll();
+  });
+
+  // ---- boot ----
+  renderFields();
+  renderAll();
+})();
+</script>
+</body>
+</html>

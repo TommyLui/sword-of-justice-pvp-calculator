@@ -1,0 +1,417 @@
+- generic [ref=f1e2]:
+  - complementary [ref=f1e3]:
+    - generic [ref=f1e4]:
+      - img [ref=f1e6]
+      - generic [ref=f1e9]:
+        - heading "逆水寒 PVP 工具箱" [level=1] [ref=f1e10]:
+          - text: 逆水寒 PVP
+          - text: 工具箱
+        - paragraph [ref=f1e11]: S2.2版本
+    - navigation [ref=f1e12]:
+      - link "🏠 首頁" [ref=f1e13] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f1e14]: 🏠
+        - text: 首頁
+      - link "⚔️ 傷害計算器" [ref=f1e15] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f1e16]: ⚔️
+        - text: 傷害計算器
+      - link "📈 屬性規劃" [ref=f1e17] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f1e18]: 📈
+        - text: 屬性規劃
+      - link "🗂️ 打造資料庫" [ref=f1e19] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f1e20]: 🗂️
+        - text: 打造資料庫
+      - link "📊 聯賽數據分析" [ref=f1e21] [cursor=pointer]:
+        - /url: "#"
+        - generic [ref=f1e22]: 📊
+        - text: 聯賽數據分析
+  - main [ref=f1e23]:
+    - generic [ref=f1e24]: // DEMO · 傷害計算機重設計預覽（沿用網站藍色風格，僅重組資訊層次）
+    - generic [ref=f1e25]:
+      - button "🗑️ 重置資料" [ref=f1e26] [cursor=pointer]
+      - button "📥 匯入" [ref=f1e27] [cursor=pointer]
+      - button "📤 匯出" [ref=f1e28] [cursor=pointer]
+    - region "判決" [ref=f1e29]:
+      - generic [ref=f1e30]:
+        - generic [ref=f1e31]: 判決 · VERDICT（進攻數值2 vs 防禦數值1）
+        - generic [ref=f1e32]: 20,144預期傷害
+        - generic [ref=f1e33]:
+          - generic [ref=f1e34]: 命中率 93%
+          - generic [ref=f1e35]: 會心率 48%
+          - generic [ref=f1e36]: 較次佳 +6.4%
+      - generic [ref=f1e37]:
+        - generic [ref=f1e38]:
+          - generic [ref=f1e39]: 進攻2 vs 防禦1
+          - generic [ref=f1e40]: 20,144
+        - generic [ref=f1e41]:
+          - generic [ref=f1e42]: 進攻2 vs 防禦2
+          - generic [ref=f1e43]: 18,210
+        - generic [ref=f1e44]:
+          - generic [ref=f1e45]: 進攻1 vs 防禦1
+          - generic [ref=f1e46]: 18,932
+        - generic [ref=f1e47]:
+          - generic [ref=f1e48]: 進攻1 vs 防禦2
+          - generic [ref=f1e49]: 17,058
+    - region "防禦削減瀑布" [ref=f1e50]:
+      - generic [ref=f1e51]:
+        - generic [ref=f1e52]:
+          - heading "防禦削減瀑布" [level=2] [ref=f1e53]
+          - paragraph [ref=f1e54]: 追蹤原始傷害如何被防禦層層削減，看見傷害在哪一層流失。切換對陣看不同組合的拆解。
+        - tablist "選擇對陣" [ref=f1e55]:
+          - button "進攻1 vs 防禦1 18,932" [ref=f1e56] [cursor=pointer]:
+            - text: 進攻1 vs 防禦1
+            - generic [ref=f1e57]: 18,932
+          - button "進攻1 vs 防禦2 17,058" [ref=f1e58] [cursor=pointer]:
+            - text: 進攻1 vs 防禦2
+            - generic [ref=f1e59]: 17,058
+          - button "進攻2 vs 防禦1 20,144" [ref=f1e60] [cursor=pointer]:
+            - text: 進攻2 vs 防禦1
+            - generic [ref=f1e61]: 20,144
+          - button "進攻2 vs 防禦2 18,210" [ref=f1e62] [cursor=pointer]:
+            - text: 進攻2 vs 防禦2
+            - generic [ref=f1e63]: 18,210
+      - generic [ref=f1e64]:
+        - generic [ref=f1e65]:
+          - generic [ref=f1e66]: 原始傷害
+          - generic [ref=f1e69]: 26,200
+        - generic [ref=f1e70]:
+          - generic [ref=f1e71]: 防禦減免
+          - generic [ref=f1e74]: 17,030-35%
+        - generic [ref=f1e75]:
+          - generic [ref=f1e76]: 氣盾吸收
+          - generic [ref=f1e79]: 15,850-7%
+        - generic [ref=f1e80]:
+          - generic [ref=f1e81]: 元抗減免
+          - generic [ref=f1e84]: 12,838-19%
+        - generic [ref=f1e85]:
+          - generic [ref=f1e86]: 格擋抵消
+          - generic [ref=f1e89]: 12,453-3%
+        - generic [ref=f1e90]:
+          - generic [ref=f1e91]: 會心抵抗後
+          - generic [ref=f1e94]: 20,144含會心
+      - generic [ref=f1e95]: 最終預期傷害（含命中會心） 20,144 · 較原始流失約 23.1%
+    - region "傷害貢獻分解" [ref=f1e96]:
+      - generic [ref=f1e97]:
+        - generic [ref=f1e98]:
+          - heading "傷害貢獻分解" [level=2] [ref=f1e99]
+          - paragraph [ref=f1e100]: 拆解最終傷害由哪些來源構成，找出主要輸出引擎。切換對陣看不同組合的貢獻結構。
+        - tablist "選擇對陣" [ref=f1e101]:
+          - button "進攻1 vs 防禦1" [ref=f1e102] [cursor=pointer]
+          - button "進攻1 vs 防禦2" [ref=f1e103] [cursor=pointer]
+          - button "進攻2 vs 防禦1" [ref=f1e104] [cursor=pointer]
+          - button "進攻2 vs 防禦2" [ref=f1e105] [cursor=pointer]
+      - generic [ref=f1e107]:
+        - generic [ref=f1e108]: 進攻2 vs 防禦1 · 20,144
+        - generic [ref=f1e109]:
+          - generic [ref=f1e110]: 56%
+          - generic [ref=f1e111]: 16%
+          - generic [ref=f1e112]: 10%
+          - generic [ref=f1e113]: 18%
+      - generic [ref=f1e114]:
+        - generic [ref=f1e115]: 攻擊
+        - generic [ref=f1e117]: 元素攻擊
+        - generic [ref=f1e119]: 流派克制
+        - generic [ref=f1e121]: 會心
+    - region "對陣矩陣" [ref=f1e123]:
+      - heading "對陣矩陣" [level=2] [ref=f1e124]
+      - paragraph [ref=f1e125]: 2×2 一覽四組對陣結果，勝方標青、亞方標琥珀，內嵌差距。
+      - generic [ref=f1e126]:
+        - generic [ref=f1e128]: vs 防禦數值 1
+        - generic [ref=f1e129]: vs 防禦數值 2
+        - generic [ref=f1e130]: 進攻數值 1
+        - generic [ref=f1e131]:
+          - generic [ref=f1e132]: 防禦1
+          - generic [ref=f1e133]: 18,932
+          - generic [ref=f1e134]: +1,212 (+6.8%)
+        - generic [ref=f1e135]:
+          - generic [ref=f1e136]: 防禦2
+          - generic [ref=f1e137]: 17,058
+          - generic [ref=f1e138]: −1,152 (−6.3%)
+        - generic [ref=f1e139]: 進攻數值 2
+        - generic [ref=f1e140]:
+          - generic [ref=f1e141]: 防禦1
+          - generic [ref=f1e142]: 20,144
+          - generic [ref=f1e143]: +1,832 (+6.4%)
+        - generic [ref=f1e144]:
+          - generic [ref=f1e145]: 防禦2
+          - generic [ref=f1e146]: 18,210
+          - generic [ref=f1e147]: −1,152 (−6.0%)
+    - region "進攻與防禦輸入" [ref=f1e148]:
+      - generic [ref=f1e150]:
+        - heading "進攻 vs 防禦 輸入" [level=2] [ref=f1e151]
+        - paragraph [ref=f1e152]: 兩組進攻與兩組防禦同畫面並列，中央交叉匯流 → 產生 2×2 = 4 組對打結果（見上方判決、矩陣、明細）。
+      - generic [ref=f1e153]:
+        - generic [ref=f1e154]:
+          - generic [ref=f1e155]:
+            - generic [ref=f1e156]:
+              - heading "進攻數值 1" [level=2] [ref=f1e157]
+              - generic [ref=f1e158]: ATK · 1
+            - generic [ref=f1e159]:
+              - button "從圖片讀取" [ref=f1e160] [cursor=pointer]
+              - button "貼上" [ref=f1e161] [cursor=pointer]
+              - button "從進攻2複製" [ref=f1e162] [cursor=pointer]
+            - generic [ref=f1e163]:
+              - generic [ref=f1e164]:
+                - generic [ref=f1e165]: "攻擊:"
+                - spinbutton "攻擊:" [ref=f1e166]: "48200"
+              - generic [ref=f1e167]:
+                - generic [ref=f1e168]: "破防:"
+                - spinbutton "破防:" [ref=f1e169]: "12500"
+              - generic [ref=f1e170]:
+                - generic [ref=f1e171]: "破盾:"
+                - spinbutton "破盾:" [ref=f1e172]: "6800"
+              - generic [ref=f1e173]:
+                - generic [ref=f1e174]: "元素攻擊:"
+                - spinbutton "元素攻擊:" [ref=f1e175]: "9200"
+              - generic [ref=f1e176]:
+                - generic [ref=f1e177]: "流派克制:"
+                - spinbutton "流派克制:" [ref=f1e178]: "3400"
+              - generic [ref=f1e179]:
+                - generic [ref=f1e180]: "命中:"
+                - spinbutton "命中:" [ref=f1e181]: "11800"
+              - generic [ref=f1e182]:
+                - generic [ref=f1e183]: "會心:"
+                - spinbutton "會心:" [ref=f1e184]: "8600"
+              - generic [ref=f1e185]:
+                - generic [ref=f1e186]: "會傷-100%:"
+                - spinbutton "會傷-100%:" [ref=f1e187]: "220"
+              - generic [ref=f1e188]:
+                - generic [ref=f1e189]: "額外會心率:"
+                - spinbutton "額外會心率:" [ref=f1e190]: "0"
+              - generic [ref=f1e191]:
+                - generic [ref=f1e192]: "克制百分比:"
+                - spinbutton "克制百分比:" [ref=f1e193]: "12"
+              - generic [ref=f1e194]:
+                - generic [ref=f1e195]: "忽視元抗:"
+                - spinbutton "忽視元抗:" [ref=f1e196]: "2100"
+              - generic [ref=f1e197]:
+                - generic [ref=f1e198]: "技能增強:"
+                - spinbutton "技能增強:" [ref=f1e199]: "8"
+          - generic [ref=f1e200]:
+            - generic [ref=f1e201]:
+              - heading "進攻數值 2" [level=2] [ref=f1e202]
+              - generic [ref=f1e203]: ATK · 2
+            - generic [ref=f1e204]:
+              - button "從圖片讀取" [ref=f1e205] [cursor=pointer]
+              - button "貼上" [ref=f1e206] [cursor=pointer]
+              - button "從進攻1複製" [ref=f1e207] [cursor=pointer]
+            - generic [ref=f1e208]:
+              - generic [ref=f1e209]:
+                - generic [ref=f1e210]: "攻擊:"
+                - spinbutton "攻擊:" [ref=f1e211]: "51000"
+              - generic [ref=f1e212]:
+                - generic [ref=f1e213]: "破防:"
+                - spinbutton "破防:" [ref=f1e214]: "13800"
+              - generic [ref=f1e215]:
+                - generic [ref=f1e216]: "破盾:"
+                - spinbutton "破盾:" [ref=f1e217]: "7200"
+              - generic [ref=f1e218]:
+                - generic [ref=f1e219]: "元素攻擊:"
+                - spinbutton "元素攻擊:" [ref=f1e220]: "8800"
+              - generic [ref=f1e221]:
+                - generic [ref=f1e222]: "流派克制:"
+                - spinbutton "流派克制:" [ref=f1e223]: "3100"
+              - generic [ref=f1e224]:
+                - generic [ref=f1e225]: "命中:"
+                - spinbutton "命中:" [ref=f1e226]: "11200"
+              - generic [ref=f1e227]:
+                - generic [ref=f1e228]: "會心:"
+                - spinbutton "會心:" [ref=f1e229]: "7900"
+              - generic [ref=f1e230]:
+                - generic [ref=f1e231]: "會傷-100%:"
+                - spinbutton "會傷-100%:" [ref=f1e232]: "205"
+              - generic [ref=f1e233]:
+                - generic [ref=f1e234]: "額外會心率:"
+                - spinbutton "額外會心率:" [ref=f1e235]: "0"
+              - generic [ref=f1e236]:
+                - generic [ref=f1e237]: "克制百分比:"
+                - spinbutton "克制百分比:" [ref=f1e238]: "10"
+              - generic [ref=f1e239]:
+                - generic [ref=f1e240]: "忽視元抗:"
+                - spinbutton "忽視元抗:" [ref=f1e241]: "1900"
+              - generic [ref=f1e242]:
+                - generic [ref=f1e243]: "技能增強:"
+                - spinbutton "技能增強:" [ref=f1e244]: "6"
+        - generic [ref=f1e245]:
+          - generic [ref=f1e246]: 2×2 交叉
+          - generic [ref=f1e247]:
+            - text: 產生對陣
+            - generic [ref=f1e248]: 4 組
+        - generic [ref=f1e249]:
+          - generic [ref=f1e250]:
+            - generic [ref=f1e251]:
+              - heading "防禦數值 1" [level=2] [ref=f1e252]
+              - generic [ref=f1e253]: DEF · 1
+            - generic [ref=f1e254]:
+              - button "從圖片讀取" [ref=f1e255] [cursor=pointer]
+              - button "貼上" [ref=f1e256] [cursor=pointer]
+              - button "從防禦2複製" [ref=f1e257] [cursor=pointer]
+            - generic [ref=f1e258]:
+              - generic [ref=f1e259]:
+                - generic [ref=f1e260]: "防禦:"
+                - spinbutton "防禦:" [ref=f1e261]: "24500"
+              - generic [ref=f1e262]:
+                - generic [ref=f1e263]: "氣盾:"
+                - spinbutton "氣盾:" [ref=f1e264]: "4200"
+              - generic [ref=f1e265]:
+                - generic [ref=f1e266]: "元素抗性:"
+                - spinbutton "元素抗性:" [ref=f1e267]: "3800"
+              - generic [ref=f1e268]:
+                - generic [ref=f1e269]: "流派抵禦:"
+                - spinbutton "流派抵禦:" [ref=f1e270]: "2200"
+              - generic [ref=f1e271]:
+                - generic [ref=f1e272]: "格擋:"
+                - spinbutton "格擋:" [ref=f1e273]: "1800"
+              - generic [ref=f1e274]:
+                - generic [ref=f1e275]: "技能抵禦:"
+                - spinbutton "技能抵禦:" [ref=f1e276]: "950"
+              - generic [ref=f1e277]:
+                - generic [ref=f1e278]: "會心防禦:"
+                - spinbutton "會心防禦:" [ref=f1e279]: "2600"
+              - generic [ref=f1e280]:
+                - generic [ref=f1e281]: "會心抵抗:"
+                - spinbutton "會心抵抗:" [ref=f1e282]: "1400"
+          - generic [ref=f1e283]:
+            - generic [ref=f1e284]:
+              - heading "防禦數值 2" [level=2] [ref=f1e285]
+              - generic [ref=f1e286]: DEF · 2
+            - generic [ref=f1e287]:
+              - button "從圖片讀取" [ref=f1e288] [cursor=pointer]
+              - button "貼上" [ref=f1e289] [cursor=pointer]
+              - button "從防禦1複製" [ref=f1e290] [cursor=pointer]
+            - generic [ref=f1e291]:
+              - generic [ref=f1e292]:
+                - generic [ref=f1e293]: "防禦:"
+                - spinbutton "防禦:" [ref=f1e294]: "26800"
+              - generic [ref=f1e295]:
+                - generic [ref=f1e296]: "氣盾:"
+                - spinbutton "氣盾:" [ref=f1e297]: "4500"
+              - generic [ref=f1e298]:
+                - generic [ref=f1e299]: "元素抗性:"
+                - spinbutton "元素抗性:" [ref=f1e300]: "4100"
+              - generic [ref=f1e301]:
+                - generic [ref=f1e302]: "流派抵禦:"
+                - spinbutton "流派抵禦:" [ref=f1e303]: "2400"
+              - generic [ref=f1e304]:
+                - generic [ref=f1e305]: "格擋:"
+                - spinbutton "格擋:" [ref=f1e306]: "1950"
+              - generic [ref=f1e307]:
+                - generic [ref=f1e308]: "技能抵禦:"
+                - spinbutton "技能抵禦:" [ref=f1e309]: "1020"
+              - generic [ref=f1e310]:
+                - generic [ref=f1e311]: "會心防禦:"
+                - spinbutton "會心防禦:" [ref=f1e312]: "2750"
+              - generic [ref=f1e313]:
+                - generic [ref=f1e314]: "會心抵抗:"
+                - spinbutton "會心抵抗:" [ref=f1e315]: "1520"
+    - region "完整明細" [ref=f1e316]:
+      - heading "完整明細" [level=2] [ref=f1e317]
+      - paragraph [ref=f1e318]: 四組對陣的完整 8 欄結果，琥珀為未會心傷害、青為含會心傷害。
+      - generic [ref=f1e319]:
+        - generic [ref=f1e320]:
+          - heading "進攻1 vs 防禦1" [level=4] [ref=f1e321]
+          - generic [ref=f1e322]:
+            - generic [ref=f1e323]: 剩餘防禦
+            - generic [ref=f1e324]: 8,420
+          - generic [ref=f1e325]:
+            - generic [ref=f1e326]: 防禦減免率
+            - generic [ref=f1e327]: 38%
+          - generic [ref=f1e328]:
+            - generic [ref=f1e329]: 剩餘氣盾
+            - generic [ref=f1e330]: 1,250
+          - generic [ref=f1e331]:
+            - generic [ref=f1e332]: 元抗減免率
+            - generic [ref=f1e333]: 22%
+          - generic [ref=f1e334]:
+            - generic [ref=f1e335]: 實際命中率
+            - generic [ref=f1e336]: 96%
+          - generic [ref=f1e337]:
+            - generic [ref=f1e338]: 實際會心率
+            - generic [ref=f1e339]: 54%
+          - generic [ref=f1e340]:
+            - generic [ref=f1e341]: 傷害(未會心)
+            - generic [ref=f1e342]: 12,480
+          - generic [ref=f1e343]:
+            - generic [ref=f1e344]: 傷害(含會心)
+            - generic [ref=f1e345]: 18,932
+        - generic [ref=f1e346]:
+          - heading "進攻1 vs 防禦2" [level=4] [ref=f1e347]
+          - generic [ref=f1e348]:
+            - generic [ref=f1e349]: 剩餘防禦
+            - generic [ref=f1e350]: 9,180
+          - generic [ref=f1e351]:
+            - generic [ref=f1e352]: 防禦減免率
+            - generic [ref=f1e353]: 41%
+          - generic [ref=f1e354]:
+            - generic [ref=f1e355]: 剩餘氣盾
+            - generic [ref=f1e356]: 1,360
+          - generic [ref=f1e357]:
+            - generic [ref=f1e358]: 元抗減免率
+            - generic [ref=f1e359]: 25%
+          - generic [ref=f1e360]:
+            - generic [ref=f1e361]: 實際命中率
+            - generic [ref=f1e362]: 94%
+          - generic [ref=f1e363]:
+            - generic [ref=f1e364]: 實際會心率
+            - generic [ref=f1e365]: 51%
+          - generic [ref=f1e366]:
+            - generic [ref=f1e367]: 傷害(未會心)
+            - generic [ref=f1e368]: 11,260
+          - generic [ref=f1e369]:
+            - generic [ref=f1e370]: 傷害(含會心)
+            - generic [ref=f1e371]: 17,058
+        - generic [ref=f1e372]:
+          - heading "進攻2 vs 防禦1" [level=4] [ref=f1e373]
+          - generic [ref=f1e374]:
+            - generic [ref=f1e375]: 剩餘防禦
+            - generic [ref=f1e376]: 7,910
+          - generic [ref=f1e377]:
+            - generic [ref=f1e378]: 防禦減免率
+            - generic [ref=f1e379]: 35%
+          - generic [ref=f1e380]:
+            - generic [ref=f1e381]: 剩餘氣盾
+            - generic [ref=f1e382]: 1,180
+          - generic [ref=f1e383]:
+            - generic [ref=f1e384]: 元抗減免率
+            - generic [ref=f1e385]: 19%
+          - generic [ref=f1e386]:
+            - generic [ref=f1e387]: 實際命中率
+            - generic [ref=f1e388]: 93%
+          - generic [ref=f1e389]:
+            - generic [ref=f1e390]: 實際會心率
+            - generic [ref=f1e391]: 48%
+          - generic [ref=f1e392]:
+            - generic [ref=f1e393]: 傷害(未會心)
+            - generic [ref=f1e394]: 13,602
+          - generic [ref=f1e395]:
+            - generic [ref=f1e396]: 傷害(含會心)
+            - generic [ref=f1e397]: 20,144
+        - generic [ref=f1e398]:
+          - heading "進攻2 vs 防禦2" [level=4] [ref=f1e399]
+          - generic [ref=f1e400]:
+            - generic [ref=f1e401]: 剩餘防禦
+            - generic [ref=f1e402]: 8,650
+          - generic [ref=f1e403]:
+            - generic [ref=f1e404]: 防禦減免率
+            - generic [ref=f1e405]: 39%
+          - generic [ref=f1e406]:
+            - generic [ref=f1e407]: 剩餘氣盾
+            - generic [ref=f1e408]: 1,290
+          - generic [ref=f1e409]:
+            - generic [ref=f1e410]: 元抗減免率
+            - generic [ref=f1e411]: 22%
+          - generic [ref=f1e412]:
+            - generic [ref=f1e413]: 實際命中率
+            - generic [ref=f1e414]: 91%
+          - generic [ref=f1e415]:
+            - generic [ref=f1e416]: 實際會心率
+            - generic [ref=f1e417]: 45%
+          - generic [ref=f1e418]:
+            - generic [ref=f1e419]: 傷害(未會心)
+            - generic [ref=f1e420]: 12,340
+          - generic [ref=f1e421]:
+            - generic [ref=f1e422]: 傷害(含會心)
+            - generic [ref=f1e423]: 18,210

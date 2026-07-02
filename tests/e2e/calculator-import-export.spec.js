@@ -3,6 +3,27 @@ const os = require('os');
 const fs = require('fs');
 const { test, expect } = require('@playwright/test');
 
+const ATTACK_FIELDS = ['attack', 'elementalAttack', 'defenseBreak', 'shieldBreak', 'pvpAttack', 'accuracy', 'crit', 'critDamage', 'extraCritRate', 'pvpAttackRate', 'elementalBreak', 'skillAttack'];
+const DEFENSE_FIELDS = ['defense', 'airShield', 'elementalResistance', 'pvpResistance', 'blockResistance', 'criticalResistance', 'criticalDefense', 'skillResistance'];
+
+function buildValues(fields, start) {
+  return Object.fromEntries(fields.map((field, index) => [field, String(start + index * 111)]));
+}
+
+async function fillGroup(page, prefix, values) {
+  for (const [field, value] of Object.entries(values)) {
+    const selector = `#${prefix}-${field}`;
+    await page.fill(selector, value);
+    await page.dispatchEvent(selector, 'input');
+  }
+}
+
+async function expectGroup(page, prefix, values) {
+  for (const [field, value] of Object.entries(values)) {
+    await expect(page.locator(`#${prefix}-${field}`), `${prefix}-${field}`).toHaveValue(value);
+  }
+}
+
 test.describe('calculator import export', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/#/calculator');
@@ -36,12 +57,15 @@ test.describe('calculator import export', () => {
   });
 
   test('exports calculator data and can import it back after reset', async ({ page }) => {
-    await page.fill('#atk1-attack', '12345');
-    await page.dispatchEvent('#atk1-attack', 'input');
-    await page.fill('#atk2-crit', '543');
-    await page.dispatchEvent('#atk2-crit', 'input');
-    await page.fill('#def1-defense', '67890');
-    await page.dispatchEvent('#def1-defense', 'input');
+    const attack1 = buildValues(ATTACK_FIELDS, 10000);
+    const attack2 = buildValues(ATTACK_FIELDS, 20000);
+    const defense1 = buildValues(DEFENSE_FIELDS, 30000);
+    const defense2 = buildValues(DEFENSE_FIELDS, 40000);
+
+    await fillGroup(page, 'atk1', attack1);
+    await fillGroup(page, 'atk2', attack2);
+    await fillGroup(page, 'def1', defense1);
+    await fillGroup(page, 'def2', defense2);
 
     const [download] = await Promise.all([
       page.waitForEvent('download'),
@@ -51,9 +75,10 @@ test.describe('calculator import export', () => {
     const tmpPath = path.join(os.tmpdir(), `pvp-export-${Date.now()}.txt`);
     await download.saveAs(tmpPath);
     const exported = JSON.parse(fs.readFileSync(tmpPath, 'utf8'));
-    expect(exported.attack1.attack).toBe('12345');
-    expect(exported.attack2.crit).toBe('543');
-    expect(exported.defense1.defense).toBe('67890');
+    expect(exported.attack1).toEqual(attack1);
+    expect(exported.attack2).toEqual(attack2);
+    expect(exported.defense1).toEqual(defense1);
+    expect(exported.defense2).toEqual(defense2);
 
     await page.click('#reset-data-btn');
     await page.click('#calculator-reset-confirm');
@@ -65,10 +90,11 @@ test.describe('calculator import export', () => {
     ]);
     await chooser.setFiles(tmpPath);
 
-    await page.waitForFunction(() => document.getElementById('atk1-attack').value === '12345');
-    await expect(page.locator('#atk1-attack')).toHaveValue('12345');
-    await expect(page.locator('#atk2-crit')).toHaveValue('543');
-    await expect(page.locator('#def1-defense')).toHaveValue('67890');
+    await page.waitForFunction(() => document.getElementById('atk1-attack').value === '10000');
+    await expectGroup(page, 'atk1', attack1);
+    await expectGroup(page, 'atk2', attack2);
+    await expectGroup(page, 'def1', defense1);
+    await expectGroup(page, 'def2', defense2);
   });
 
   test('shows error notification for invalid calculator import JSON', async ({ page }) => {

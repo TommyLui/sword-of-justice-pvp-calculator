@@ -51,7 +51,6 @@ function initAttributePlanner() {
     const notesEl = document.getElementById('planner-notes');
     const kpiEl = document.getElementById('planner-kpi');
     const kpiStripEl = document.getElementById('planner-kpi-strip');
-    const summaryEl = document.getElementById('planner-summary');
     const cardsEl = document.getElementById('planner-cards');
     const resetStepsBtn = document.getElementById('planner-reset-steps');
 
@@ -69,6 +68,17 @@ function initAttributePlanner() {
         'planner-tab-trend': { panel: 'planner-panel-trend', meta: metaTrendEl },
         'planner-tab-detail': { panel: 'planner-panel-detail', meta: metaDetailEl }
     };
+
+    // ---- level sub-tab (summary redesign) ----
+    const summarySubtabListEl = document.getElementById('planner-summary-subtabs');
+    const summaryContentEl = document.getElementById('planner-summary-content');
+    const summaryContentTitleEl = document.getElementById('planner-summary-content-title');
+    const summaryContentSubmetaEl = document.getElementById('planner-summary-content-submeta');
+    const summaryToolbarEl = document.getElementById('planner-summary-toolbar');
+    const summaryContentMetaEl = document.getElementById('planner-summary-content-meta');
+    // active summary sub-tab: 'overview' or 'lv:<N>' (1..STEP_LEVELS)
+    let activeSummarySubtab = 'overview';
+    let summarySubtabsBuilt = false;
 
     function activateTab(tabId, { focus = false } = {}) {
         const target = tabPanelMap[tabId];
@@ -93,8 +103,11 @@ function initAttributePlanner() {
     if (tabGroupEl) {
         tabButtons.forEach(btn => btn.addEventListener('click', () => activateTab(btn.id)));
         tabGroupEl.addEventListener('keydown', (event) => {
-            const idx = tabButtons.findIndex(b => b === document.activeElement);
-            const activeIdx = idx !== -1 ? idx : tabButtons.findIndex(b => b.getAttribute('aria-selected') === 'true');
+            // Only handle keyboard nav when focus is on a main tab button;
+            // ignore events from the summary level sub-tabs (they have their own handler).
+            if (event.defaultPrevented) return;
+            if (!tabButtons.includes(event.target)) return;
+            const activeIdx = tabButtons.findIndex(b => b === event.target);
             if (activeIdx === -1) return;
             let next = null;
             if (event.key === 'ArrowRight') next = (activeIdx + 1) % tabButtons.length;
@@ -298,28 +311,265 @@ function initAttributePlanner() {
     }
 
     function renderSummaryBars(result) {
-        if (!summaryEl) return;
+        if (!summaryContentEl) return;
         if (badgeSummaryEl) badgeSummaryEl.textContent = result.results.length;
+
+        // empty-state: reset to overview, hide toolbar + content-meta, show note in content
         if (result.results.length === 0) {
-            summaryEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量。</p>';
+            activeSummarySubtab = 'overview';
+            if (summaryToolbarEl) summaryToolbarEl.hidden = true;
+            if (summaryContentMetaEl) summaryContentMetaEl.hidden = true;
+            if (summarySubtabListEl) summarySubtabListEl.innerHTML = '';
+            summarySubtabsBuilt = false;
+            summaryContentEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量。</p>';
+            summaryContentEl.removeAttribute('aria-labelledby');
+            if (summaryContentTitleEl) summaryContentTitleEl.textContent = '每級邊際增益排序';
+            if (summaryContentSubmetaEl) summaryContentSubmetaEl.textContent = '';
             return;
         }
-        const rankings = getLevelRankings(result);
-        summaryEl.innerHTML = rankings.map(levelRanking => `
-            <div class="planner-level-row">
-                <div class="planner-level-label">Lv.${levelRanking.level}</div>
-                <div class="planner-level-rank-list">
-                    ${levelRanking.ranked.map((entry, index) => `
-                        <span class="planner-level-rank" style="--rank-color:${entry.attr.color}">
-                            <span class="planner-level-rank-no">#${index + 1}</span>
-                            <span class="planner-swatch" style="background:${entry.attr.color}"></span>
-                            <span class="planner-level-attr">${entry.attr.name}</span>
-                            <span class="planner-level-gain">${formatSignedPercent(entry.marginalGain)}</span>
-                        </span>
-                    `).join('')}
+
+        // ensure toolbar + content-meta visible
+        if (summaryToolbarEl) summaryToolbarEl.hidden = false;
+        if (summaryContentMetaEl) summaryContentMetaEl.hidden = false;
+
+        buildSummarySubtabs();
+        updateSummarySubtabStates();
+        renderSummaryContent(result);
+    }
+
+    // ---- level sub-tab strip (build once, then only update states) ----
+    function buildSummarySubtabs() {
+        if (!summarySubtabListEl || summarySubtabsBuilt) return;
+        const tabs = [{ id: 'overview', label: '全部總覽', badge: null }];
+        for (let lv = 1; lv <= STEP_LEVELS; lv++) {
+            tabs.push({ id: 'lv:' + lv, label: 'Lv.' + lv, badge: lv });
+        }
+        summarySubtabListEl.innerHTML = tabs.map(t => {
+            const btnId = 'planner-summary-subtab-' + (t.id === 'overview' ? 'overview' : 'lv-' + t.id.split(':')[1]);
+            return `<button class="planner-subtab-btn" role="tab" id="${btnId}" data-subtab="${t.id}" aria-selected="false" aria-controls="planner-summary-content" tabindex="-1" type="button">
+                ${t.label}${t.badge !== null ? `<span class="planner-subtab-badge">${String(t.badge).padStart(2, '0')}</span>` : ''}
+            </button>`;
+        }).join('');
+        summarySubtabListEl.querySelectorAll('.planner-subtab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeSummarySubtab = btn.dataset.subtab;
+                updateSummarySubtabStates();
+                renderSummaryContent(calculateSteppingComparison());
+                btn.focus();
+            });
+        });
+        summarySubtabsBuilt = true;
+    }
+
+    // update aria-selected / tabindex / aria-labelledby on existing buttons + panel
+    // (buttons are built once by buildSummarySubtabs; this only mutates attributes,
+    //  so horizontal scrollLeft is inherently preserved — no save/restore needed)
+    function updateSummarySubtabStates() {
+        if (!summarySubtabListEl) return;
+        const buttons = summarySubtabListEl.querySelectorAll('.planner-subtab-btn');
+        buttons.forEach(btn => {
+            const isActive = btn.dataset.subtab === activeSummarySubtab;
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            btn.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+        // point panel's aria-labelledby at the active subtab for screen readers
+        if (summaryContentEl) {
+            const activeBtn = summarySubtabListEl.querySelector(`[data-subtab="${activeSummarySubtab}"]`);
+            if (activeBtn) summaryContentEl.setAttribute('aria-labelledby', activeBtn.id);
+        }
+    }
+
+    function summarySubtabOrder() {
+        const ids = ['overview'];
+        for (let lv = 1; lv <= STEP_LEVELS; lv++) ids.push('lv:' + lv);
+        return ids;
+    }
+
+    function cycleSummarySubtab(delta) {
+        const order = summarySubtabOrder();
+        const idx = order.indexOf(activeSummarySubtab);
+        if (idx < 0) return;
+        activeSummarySubtab = order[(idx + delta + order.length) % order.length];
+        updateSummarySubtabStates();
+        renderSummaryContent(calculateSteppingComparison());
+        const btn = summarySubtabListEl.querySelector(`[data-subtab="${activeSummarySubtab}"]`);
+        if (btn) btn.focus();
+    }
+
+    function jumpSummarySubtab(target) {
+        activeSummarySubtab = target;
+        updateSummarySubtabStates();
+        renderSummaryContent(calculateSteppingComparison());
+        const btn = summarySubtabListEl.querySelector(`[data-subtab="${target}"]`);
+        if (btn) btn.focus();
+    }
+
+    if (summarySubtabListEl) {
+        summarySubtabListEl.addEventListener('keydown', (event) => {
+            // stopPropagation so the outer tab-group handler never sees sub-tab keys
+            switch (event.key) {
+                case 'ArrowRight': event.preventDefault(); event.stopPropagation(); cycleSummarySubtab(1); break;
+                case 'ArrowLeft':  event.preventDefault(); event.stopPropagation(); cycleSummarySubtab(-1); break;
+                case 'Home':       event.preventDefault(); event.stopPropagation(); jumpSummarySubtab('overview'); break;
+                case 'End':        event.preventDefault(); event.stopPropagation(); jumpSummarySubtab('lv:' + STEP_LEVELS); break;
+            }
+        });
+    }
+
+    // ---- dispatch content render based on active sub-tab ----
+    function renderSummaryContent(result) {
+        const sub = activeSummarySubtab;
+        if (sub === 'overview') {
+            if (summaryContentTitleEl) summaryContentTitleEl.textContent = '全部總覽';
+            if (summaryContentSubmetaEl) summaryContentSubmetaEl.textContent = '每條線為一個屬性，追蹤其在各等級的邊際增益排名變化';
+            renderBumpChart(result);
+        } else {
+            const lv = Number(sub.split(':')[1]);
+            renderLevelBars(result, lv);
+        }
+    }
+
+    // ---- bump chart (ranking trajectory) for 全部總覽 ----
+    function renderBumpChart(result) {
+        if (!summaryContentEl) return;
+        if (!result.results.length) {
+            summaryContentEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量，才能檢視排名軌跡。</p>';
+            return;
+        }
+
+        const rankings = getLevelRankings(result); // [{level, ranked:[{attr,...,marginalGain}], best}]
+        const N = result.results.length;
+
+        // per-attribute rank trajectories
+        const trajs = result.results.map(group => {
+            const ranks = [];
+            for (let i = 0; i < STEP_LEVELS; i++) {
+                const found = rankings[i].ranked.findIndex(e => e.attr.id === group.attr.id);
+                ranks.push(found >= 0 ? (found + 1) : N);
+            }
+            return { attr: group.attr, ranks };
+        });
+
+        // SVG layout: 760 wide; height scales with active attribute count
+        const W = 760;
+        const P_L = 40, P_R = 130, P_T = 18, P_B = 36;
+        const ROW_GAP = 38;        // px per rank step
+        const MIN_INNER_H = 60;    // min plot height (avoids collapsed look for N=1)
+        const innerH = Math.max((N - 1) * ROW_GAP, MIN_INNER_H);
+        const H = P_T + P_B + innerH;
+        const innerW = W - P_L - P_R;
+        const xForLevel = lv => P_L + ((lv - 1) / (STEP_LEVELS - 1)) * innerW;
+        const yForRank = r => P_T + ((r - 1) / Math.max(N - 1, 1)) * innerH;
+
+        let grid = '';
+        for (let r = 1; r <= N; r++) {
+            const y = yForRank(r);
+            grid += `<line class="planner-bump-grid" x1="${P_L}" y1="${y.toFixed(1)}" x2="${(P_L + innerW).toFixed(1)}" y2="${y.toFixed(1)}"/>`;
+            grid += `<text class="planner-bump-axis" x="${(P_L - 8).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end">#${r}</text>`;
+        }
+        let xlabels = '';
+        for (let lv = 1; lv <= STEP_LEVELS; lv++) {
+            const x = xForLevel(lv);
+            xlabels += `<text class="planner-bump-axis" x="${x.toFixed(1)}" y="${(P_T + innerH + 18).toFixed(1)}" text-anchor="middle">Lv.${lv}</text>`;
+        }
+        const axes = `
+            <line class="planner-bump-axis-line" x1="${P_L}" y1="${P_T}" x2="${P_L}" y2="${(P_T + innerH).toFixed(1)}"/>
+            <line class="planner-bump-axis-line" x1="${P_L}" y1="${(P_T + innerH).toFixed(1)}" x2="${(P_L + innerW).toFixed(1)}" y2="${(P_T + innerH).toFixed(1)}"/>
+        `;
+
+        let polys = '';
+        let dotsAndRanks = '';
+        const endLabelAnchors = [];
+        trajs.forEach(t => {
+            const pts = t.ranks.map((r, i) => `${xForLevel(i + 1).toFixed(1)},${yForRank(r).toFixed(1)}`);
+            const linePath = 'M' + pts.join(' L');
+            polys += `<path class="planner-bump-line" d="${linePath}" stroke="${t.attr.color}" opacity="0.92"/>`;
+
+            t.ranks.forEach((r, i) => {
+                const cx = xForLevel(i + 1);
+                const cy = yForRank(r);
+                dotsAndRanks += `<circle class="planner-bump-dot" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="${t.attr.color}"/>`;
+                dotsAndRanks += `<text class="planner-bump-rank" x="${cx.toFixed(1)}" y="${(cy - 6).toFixed(1)}" text-anchor="middle">${r}</text>`;
+            });
+
+            endLabelAnchors.push({ attr: t.attr, y: yForRank(t.ranks[STEP_LEVELS - 1]) });
+        });
+
+        // stagger end labels vertically to avoid overlap
+        endLabelAnchors.sort((a, b) => a.y - b.y);
+        const minGap = 14;
+        for (let i = 1; i < endLabelAnchors.length; i++) {
+            if (endLabelAnchors[i].y - endLabelAnchors[i - 1].y < minGap) {
+                endLabelAnchors[i].y = endLabelAnchors[i - 1].y + minGap;
+            }
+        }
+        endLabelAnchors.forEach(a => {
+            a.y = Math.max(P_T + 4, Math.min(P_T + innerH - 4, a.y));
+        });
+        let endLabels = '';
+        endLabelAnchors.forEach(a => {
+            const lx = P_L + innerW + 8;
+            const name = a.attr.name.length > 5 ? a.attr.name.slice(0, 4) + '…' : a.attr.name;
+            const txtW = name.length * 9 + 12;
+            endLabels += `<rect class="planner-bump-label-bg" x="${(lx - 4).toFixed(1)}" y="${(a.y - 8).toFixed(1)}" width="${txtW}" height="16" rx="4"/>`;
+            endLabels += `<circle cx="${(lx - 2).toFixed(1)}" cy="${a.y.toFixed(1)}" r="3.5" fill="${a.attr.color}"/>`;
+            endLabels += `<text class="planner-bump-label" x="${(lx + 10).toFixed(1)}" y="${(a.y + 3).toFixed(1)}" fill="${a.attr.color}">${name}</text>`;
+        });
+
+        const svg = `
+            <svg class="planner-bump-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="各等級邊際增益排名軌跡圖">
+                ${grid}
+                ${axes}
+                ${xlabels}
+                ${polys}
+                ${dotsAndRanks}
+                ${endLabels}
+            </svg>
+        `;
+
+        summaryContentEl.innerHTML = `
+            <p class="planner-bump-caption"><span class="planner-bump-em">bump chart</span> · 每條線為一個屬性，追蹤其在各等級的邊際增益排名變化。線往上 = 排名提升。每個圓點旁的數字為該級排名。</p>
+            <div class="planner-bump-wrap">${svg}</div>
+        `;
+    }
+
+    // ---- horizontal bar ranking for a specific level (diverging: +right / -left) ----
+    function renderLevelBars(result, lv) {
+        if (!summaryContentEl) return;
+        if (summaryContentTitleEl) summaryContentTitleEl.textContent = `Lv.${lv} 邊際增益排序`;
+        if (summaryContentSubmetaEl) summaryContentSubmetaEl.textContent = `每 +階梯量 該屬性於第 ${lv} 級的傷害邊際提升 %`;
+
+        if (!result.results.length) {
+            summaryContentEl.innerHTML = '<p class="planner-empty-note">請為至少一項屬性設定階梯增量。</p>';
+            return;
+        }
+
+        // reuse the shared ranking helper (sorted by marginalGain desc per level)
+        const ranked = getLevelRankings(result)[lv - 1].ranked
+            .map(entry => ({ attr: entry.attr, marginal: entry.marginalGain }));
+
+        const maxAbs = Math.max(...ranked.map(r => Math.abs(r.marginal)), 1e-9);
+        const tint = c => `${c}33`;
+
+        summaryContentEl.innerHTML = ranked.map((r, i) => {
+            const pct = (Math.abs(r.marginal) / maxAbs * 100).toFixed(1);
+            const isNegative = r.marginal < 0;
+            const fillStyle = `width:${pct}%;background:linear-gradient(90deg,${tint(r.attr.color)},${r.attr.color})`;
+            // negative bars anchor to the right edge and grow leftward
+            const fillClass = isNegative ? 'planner-bar-fill planner-bar-fill-negative' : 'planner-bar-fill';
+            const fill = isNegative
+                ? `<div class="${fillClass}" style="${fillStyle}"></div>`
+                : `<div class="${fillClass}" style="${fillStyle}"></div>`;
+            const pctClass = isNegative ? 'planner-bar-pct planner-bar-pct-negative' : 'planner-bar-pct';
+            return `
+                <div class="planner-bar-row ${isNegative ? 'planner-bar-row-negative' : ''}">
+                    <div class="planner-bar-name"><span class="planner-swatch" style="background:${r.attr.color}"></span>${r.attr.name}</div>
+                    <div class="planner-bar-track">${fill}</div>
+                    <div class="${pctClass}" style="color:${r.attr.color}">${formatSignedPercent(r.marginal)}</div>
+                    <div class="planner-bar-rank">#${i + 1}</div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function renderCards(result) {
@@ -383,20 +633,46 @@ function initAttributePlanner() {
         steppingResultsEl.innerHTML = '';
         notesEl.innerHTML = '';
 
-        renderKPIStrip(result);
-        renderSummaryBars(result);
-        renderCards(result);
-        if (badgeDetailEl) badgeDetailEl.textContent = result.results.length;
-
+        // baseline-damage guard: render a consistent empty state before drawing panels
         if (result.baselineDamage <= 0) {
             const empty = document.createElement('p');
             empty.textContent = '目前基準傷害為 0，請先在傷害計算器設定可造成傷害的比較情境。';
             empty.className = 'planner-empty-note';
-            steppingResultsEl.appendChild(empty);
-            if (summaryEl) summaryEl.innerHTML = '';
-            if (summaryEl) summaryEl.appendChild(empty.cloneNode(true));
-            if (cardsEl) cardsEl.innerHTML = '';
-            if (cardsEl) cardsEl.appendChild(empty.cloneNode(true));
+
+            // KPI strip: show baseline 0 + dashes for best/leader (no meaningful comparison)
+            if (kpiStripEl) {
+                kpiStripEl.innerHTML = `
+                    <div class="planner-kpi"><div class="planner-kpi-lbl">基準有效傷害</div><div class="planner-kpi-val">0</div></div>
+                    <div class="planner-kpi"><div class="planner-kpi-lbl">比較中屬性</div><div class="planner-kpi-val">—</div></div>
+                    <div class="planner-kpi"><div class="planner-kpi-lbl">第 1 級最佳 CP</div><div class="planner-kpi-val">—</div></div>
+                    <div class="planner-kpi"><div class="planner-kpi-lbl">10 級最佳次數</div><div class="planner-kpi-val">—</div></div>
+                `;
+            }
+            if (badgeSummaryEl) badgeSummaryEl.textContent = '0';
+            if (badgeTrendEl) badgeTrendEl.textContent = '0';
+            if (badgeDetailEl) badgeDetailEl.textContent = '0';
+
+            // summary: hide toolbar + content-meta, single warning in content
+            activeSummarySubtab = 'overview';
+            if (summaryToolbarEl) summaryToolbarEl.hidden = true;
+            if (summaryContentMetaEl) summaryContentMetaEl.hidden = true;
+            if (summarySubtabListEl) { summarySubtabListEl.innerHTML = ''; summarySubtabsBuilt = false; }
+            if (summaryContentTitleEl) summaryContentTitleEl.textContent = '每級邊際增益排序';
+            if (summaryContentSubmetaEl) summaryContentSubmetaEl.textContent = '';
+            if (summaryContentEl) {
+                summaryContentEl.innerHTML = '';
+                summaryContentEl.appendChild(empty.cloneNode(true));
+                summaryContentEl.removeAttribute('aria-labelledby');
+            }
+
+            // trend cards: warning
+            if (cardsEl) {
+                cardsEl.innerHTML = '';
+                cardsEl.appendChild(empty.cloneNode(true));
+            }
+
+            // detail table: warning
+            steppingResultsEl.appendChild(empty.cloneNode(true));
 
             result.notes.forEach(note => {
                 const p = document.createElement('p');
@@ -405,6 +681,11 @@ function initAttributePlanner() {
             });
             return;
         }
+
+        renderKPIStrip(result);
+        renderSummaryBars(result);
+        renderCards(result);
+        if (badgeDetailEl) badgeDetailEl.textContent = result.results.length;
 
         if (result.results.length === 0) {
             const empty = document.createElement('p');

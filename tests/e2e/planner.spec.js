@@ -26,7 +26,10 @@ test.describe('attribute planner stepping comparison', () => {
 
     await expect(page.locator('#planner-kpi-strip .planner-kpi')).toHaveCount(4);
     await expect(page.getByText('第 1 級最佳 CP')).toBeVisible();
-    await expect(page.locator('#planner-summary .planner-level-row')).toHaveCount(10);
+    // 11 sub-tab buttons: 全部總覽 + Lv.1..Lv.10
+    await expect(page.locator('#planner-summary-subtabs .planner-subtab-btn')).toHaveCount(11);
+    // default overview sub-tab renders a bump chart
+    await expect(page.locator('#planner-summary-content .planner-bump-svg')).toBeVisible();
     await expect(page.locator('#planner-cards .planner-card')).toHaveCount(1);
   });
 
@@ -44,13 +47,18 @@ test.describe('attribute planner stepping comparison', () => {
     const attackLevelGain = await firstTableRow.locator('td').nth(2).textContent();
     const critDamageLevelGain = await firstTableRow.locator('td').nth(5).textContent();
 
-    const levelOneRanking = page.locator('#planner-summary .planner-level-row').first();
-    await expect(levelOneRanking).toContainText('Lv.1');
-    await expect(levelOneRanking).toContainText(attackLevelGain.trim());
-    await expect(levelOneRanking).toContainText(critDamageLevelGain.trim());
-    const levelOneBest = levelOneRanking.locator('.planner-level-rank').first();
-    await expect(levelOneBest.locator('.planner-level-rank-no')).toHaveText('#1');
-    await expect(levelOneBest.locator('.planner-level-attr')).toHaveText('攻擊');
+    // switch back to summary tab and select the Lv.1 sub-tab
+    await page.click('#planner-tab-summary');
+    await page.click('#planner-summary-subtabs [data-subtab="lv:1"]');
+    await expect(page.locator('#planner-summary-content-title')).toHaveText('Lv.1 邊際增益排序');
+
+    const levelOneBars = page.locator('#planner-summary-content .planner-bar-row');
+    await expect(levelOneBars).toHaveCount(2);
+    const levelOneBest = levelOneBars.first();
+    await expect(levelOneBest.locator('.planner-bar-rank')).toHaveText('#1');
+    await expect(levelOneBest.locator('.planner-bar-name')).toContainText('攻擊');
+    await expect(levelOneBest.locator('.planner-bar-pct')).toHaveText(attackLevelGain.trim());
+    await expect(levelOneBars.nth(1).locator('.planner-bar-pct')).toHaveText(critDamageLevelGain.trim());
 
     const firstLevelBestKpi = page.locator('#planner-kpi-strip .planner-kpi').filter({ hasText: '第 1 級最佳 CP' });
     await expect(firstLevelBestKpi).toContainText('攻擊');
@@ -212,8 +220,8 @@ test.describe('attribute planner stepping comparison', () => {
   });
 
   test('no step sizes shows empty note on default summary tab', async ({ page }) => {
-    await expect(page.locator('#planner-summary .planner-empty-note')).toBeVisible();
-    await expect(page.locator('#planner-summary .planner-empty-note')).toHaveText('請為至少一項屬性設定階梯增量。');
+    await expect(page.locator('#planner-summary-content .planner-empty-note')).toBeVisible();
+    await expect(page.locator('#planner-summary-content .planner-empty-note')).toHaveText('請為至少一項屬性設定階梯增量。');
   });
 
   test('badges update to active attribute count after setting a step', async ({ page }) => {
@@ -273,5 +281,200 @@ test.describe('attribute planner stepping comparison', () => {
     await expect(page.locator('#planner-panel-summary .planner-empty-note')).toContainText('目前基準傷害為 0');
     await expect(page.locator('#planner-panel-trend .planner-empty-note')).toContainText('目前基準傷害為 0');
     await expect(page.locator('#planner-panel-detail .planner-empty-note')).toContainText('目前基準傷害為 0');
+  });
+
+  test('summary subtab keyboard arrows switch levels without switching main tab', async ({ page }) => {
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+
+    // focus the overview sub-tab
+    const overviewSubtab = page.locator('#planner-summary-subtabs [data-subtab="overview"]');
+    await overviewSubtab.focus();
+
+    // ArrowRight should move to Lv.1 sub-tab, NOT switch the main tab
+    await overviewSubtab.press('ArrowRight');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:1"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:1"]')).toBeFocused();
+    // main tab must remain summary
+    await expect(page.locator('#planner-tab-summary')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-tab-trend')).toHaveAttribute('aria-selected', 'false');
+
+    // ArrowRight again -> Lv.2
+    await page.locator('#planner-summary-subtabs [data-subtab="lv:1"]').press('ArrowRight');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:2"]')).toHaveAttribute('aria-selected', 'true');
+
+    // ArrowLeft back to Lv.1
+    await page.locator('#planner-summary-subtabs [data-subtab="lv:2"]').press('ArrowLeft');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:1"]')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  test('summary subtab Home and End jump to overview and last level', async ({ page }) => {
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+
+    const lv1 = page.locator('#planner-summary-subtabs [data-subtab="lv:1"]');
+    await lv1.focus();
+    await lv1.press('End');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:10"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:10"]')).toBeFocused();
+
+    await page.locator('#planner-summary-subtabs [data-subtab="lv:10"]').press('Home');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="overview"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="overview"]')).toBeFocused();
+  });
+
+  test('active summary subtab survives step input rerender', async ({ page }) => {
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+
+    // select Lv.3 sub-tab
+    await page.click('#planner-summary-subtabs [data-subtab="lv:3"]');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:3"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-content-title')).toHaveText('Lv.3 邊際增益排序');
+
+    // change a step value -> debounced rerender; active sub-tab should remain Lv.3
+    await page.fill('#planner-step-attack', '500');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+    // wait for debounced rerender to settle
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:3"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-content-title')).toHaveText('Lv.3 邊際增益排序');
+  });
+
+  test('clearing all steps resets summary subtab to overview', async ({ page }) => {
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+    await page.click('#planner-summary-subtabs [data-subtab="lv:5"]');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:5"]')).toHaveAttribute('aria-selected', 'true');
+
+    // reset all steps -> empty state should reset to overview and hide toolbar
+    await page.click('#planner-reset-steps');
+    await expect(page.locator('#planner-summary-content .planner-empty-note')).toBeVisible();
+    // re-add a step; should start from overview (not Lv.5)
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="overview"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#planner-summary-content .planner-bump-svg')).toBeVisible();
+  });
+
+  test('negative marginal gain renders as right-anchored diverging bar', async ({ page }) => {
+    // This test is about rendering negative marginal rows, not about whether any real
+    // combat attribute should now be negative. Inject a deterministic combat function
+    // before planner init so increasing crit lowers expected damage in this isolated UI case.
+    await page.goto('/#/calculator');
+    await page.fill('#atk1-attack', '20000');
+    await page.dispatchEvent('#atk1-attack', 'input');
+    await page.fill('#def1-defense', '15000');
+    await page.dispatchEvent('#def1-defense', 'input');
+    await page.fill('#atk1-crit', '100');
+    await page.dispatchEvent('#atk1-crit', 'input');
+    await page.evaluate(() => {
+      window.__plannerNegativeBarTest = true;
+      if (!window.pvpCombat?.calculateCombatStats) return;
+      const original = window.pvpCombat.calculateCombatStats.bind(window.pvpCombat);
+      window.pvpCombat.calculateCombatStats = (stats) => {
+        const result = original(stats);
+        if (stats && Number(stats.attack) >= 20000 && Number(stats.crit) >= 0) {
+          const crit = Number(stats.crit) || 0;
+          const attack = Number(stats.attack) || 0;
+          const attackGain = Math.max(0, attack - 20000) * 2;
+          return { ...result, finalDamage: 100000 + attackGain - crit * 4, expectedDamage: 100000 + attackGain - crit * 4 };
+        }
+        return result;
+      };
+    });
+
+    await page.goto('/#/attribute-planner');
+    await page.waitForSelector('#planner-app:not([hidden])');
+    // baseline damage must be positive so the summary sub-tabs render
+    await expect(page.locator('#planner-kpi')).not.toHaveText('0');
+    const kpiText = await page.locator('#planner-kpi').textContent();
+    const kpiNum = parseInt(String(kpiText).replace(/,/g, ''), 10);
+    expect(kpiNum).toBeGreaterThan(0);
+
+    await page.fill('#planner-step-crit', '5000');
+    await page.dispatchEvent('#planner-step-crit', 'input');
+    await page.fill('#planner-step-attack', '100');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+
+    await expect(page.locator('#planner-summary-subtabs [data-subtab="lv:1"]')).toBeVisible();
+    await expect(page.locator('#planner-badge-summary')).toHaveText('2');
+    await page.click('#planner-summary-subtabs [data-subtab="lv:1"]');
+    await expect(page.locator('#planner-summary-content-title')).toHaveText('Lv.1 邊際增益排序');
+
+    const critRow = page.locator('#planner-summary-content .planner-bar-row', { hasText: '會心' });
+    await expect(critRow).toBeVisible();
+    const critPct = parseFloat(await critRow.locator('.planner-bar-pct').textContent());
+
+    // The scenario is designed to make crit marginal negative; verify it actually is.
+    // If formula changes make this scenario non-negative, the test should fail loudly
+    // rather than silently passing, so we assert the sign.
+    expect(critPct).toBeLessThan(0);
+
+    // negative row must carry the negative class
+    await expect(critRow).toHaveClass(/planner-bar-row-negative/);
+    const negFill = critRow.locator('.planner-bar-fill');
+    await expect(negFill).toHaveClass(/planner-bar-fill-negative/);
+
+    // width must be a valid 0..100 percentage (never negative / empty)
+    const fillStyle = await negFill.evaluate(el => el.getAttribute('style') || '');
+    expect(fillStyle).toMatch(/width:\d+(\.\d+)?%/);
+    const widthPct = parseFloat(fillStyle.match(/width:(\d+(\.\d+)?)%/)[1]);
+    expect(widthPct).toBeGreaterThan(0);
+    expect(widthPct).toBeLessThanOrEqual(100);
+
+    // right-anchor: the negative fill's right edge must align with the track's right edge.
+    // When the negative bar is the largest-abs value it may fill the whole track (width=100),
+    // in which case left edge ≈ track left too — so only assert the right-edge alignment,
+    // which is the defining property of the diverging (right-anchored) negative bar.
+    const boxes = await critRow.evaluate(row => {
+      const track = row.querySelector('.planner-bar-track');
+      const fill = row.querySelector('.planner-bar-fill');
+      const t = track.getBoundingClientRect();
+      const f = fill.getBoundingClientRect();
+      return {
+        trackRight: t.right,
+        fillRight: f.right,
+        trackLeft: t.left,
+        fillLeft: f.left
+      };
+    });
+    // fill should hug the right edge (within 1px tolerance for sub-pixel rounding)
+    expect(Math.abs(boxes.fillRight - boxes.trackRight)).toBeLessThan(1);
+
+    // attack (positive) bar must NOT carry the negative class
+    const attackRow = page.locator('#planner-summary-content .planner-bar-row', { hasText: '攻擊' });
+    await expect(attackRow).not.toHaveClass(/planner-bar-row-negative/);
+    const attackPct = parseFloat(await attackRow.locator('.planner-bar-pct').textContent());
+    expect(attackPct).toBeGreaterThan(0);
+  });
+
+  test('baseline damage of zero hides summary toolbar and shows warning in content', async ({ page }) => {
+    await page.goto('/#/calculator');
+    await page.fill('#atk1-attack', '0');
+    await page.dispatchEvent('#atk1-attack', 'input');
+    await page.fill('#def1-defense', '999999');
+    await page.dispatchEvent('#def1-defense', 'input');
+
+    await page.goto('/#/attribute-planner');
+    await page.waitForSelector('#planner-app:not([hidden])');
+
+    // toolbar + content-meta should be hidden; warning lives inside summary content
+    await expect(page.locator('#planner-summary-toolbar')).toBeHidden();
+    await expect(page.locator('#planner-summary-content-meta')).toBeHidden();
+    await expect(page.locator('#planner-summary-content .planner-empty-note')).toContainText('目前基準傷害為 0');
+  });
+
+  test('summary overview keeps page width within mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.fill('#planner-step-attack', '200');
+    await page.dispatchEvent('#planner-step-attack', 'input');
+
+    await expect(page.locator('#planner-summary-content .planner-bump-svg')).toBeVisible();
+
+    const width = await page.evaluate(() => ({
+      viewport: window.innerWidth,
+      documentWidth: document.documentElement.scrollWidth
+    }));
+    expect(width.documentWidth).toBeLessThanOrEqual(width.viewport);
   });
 });

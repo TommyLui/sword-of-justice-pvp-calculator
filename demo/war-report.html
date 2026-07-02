@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<!--
+  傷害計算機重設計 demo（沿用網站現有藍色 claymorphism 風格）
+  本次重設計：完全比照「屬性規劃」的雙欄 + planner-tab-group 版面模式——左欄為精簡判決面板
+  （永遠可見、隨頁面捲動），右欄為 planner 風格頁籤群組（透明按鈕、底部漸層底線、--panel-2 容器、
+  fade 動畫）。整個版面回到一般文件流，不再以 overflow:hidden 鎖死視窗；頁籤群組只是正常流的面板，
+  內容過高時頁面自然捲動。1920×1080 是螢幕尺寸，不是頁籤群組尺寸。
+-->
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-version" content="S2.2">
+<title>傷害計算機重設計 · 逆水寒 PVP 工具箱</title>
+<link rel="icon" type="image/jpeg" href="../icon.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- 完全對齊 index.html dark-mode 變數 ---- */
+    --bg:#050b18; --bg-2:#0a1428; --panel:#0f1d38; --panel-2:#142849;
+    --text:#e0eaf5; --muted:#8aa4c8; --dim:#4a6088;
+    --accent:#4a9eff; --accent-2:#6bb5ff; --accent-dark:#6bb5ff;
+    --blue:var(--accent); --blue-light:#6bb5ff; --blue-bright:#8acaff;
+    --blue-dark:#2d7ad9; --blue-deep:#1a5aa8;
+    --cyan:#3dd4e8; --cyan-light:#7ee8f5; --cyan-dark:#1ba8bc;
+    --indigo:#6b7eff; --indigo-light:#94a5ff; --indigo-dark:#4858d4;
+    --teal:#2ec9b8; --teal-light:#5fdcc9; --teal-dark:#1ba8bc;
+    --amber:#f5a623; --amber-light:#ffc05a;
+    --rose:#f4567a; --rose-light:#f77894;
+    --ink:#e0eaf5; --on-accent:#ffffff;
+    --border:rgba(74,158,255,.22); --border-strong:rgba(74,158,255,.28);
+    --shadow:0 18px 46px rgba(0,0,0,.62),0 0 26px rgba(74,158,255,.08);
+    --clay:#142849; --clay-light:#1c3560; --clay-dark:#071123;
+    --surface-soft:rgba(74,158,255,.08); --surface-strong:rgba(138,202,255,.13);
+    --field-bg:rgba(7,17,35,.72); --field-bg-strong:rgba(10,28,56,.8);
+    --accent-soft:rgba(74,158,255,.18); --accent-glow:rgba(74,158,255,.34);
+    --accent-border:rgba(107,181,255,.38);
+    --row-bg:rgba(138,202,255,.045); --row-bg-alt:rgba(0,0,0,.18);
+    --clay-shadow:0 16px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(138,202,255,.06);
+    --clay-shadow-sm:0 12px 28px rgba(0,0,0,.42),inset 0 1px 0 rgba(138,202,255,.05);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.65); --shadow-glow:0 0 32px rgba(74,158,255,.16);
+    --blue-grad:linear-gradient(135deg,#6bb5ff 0%,#4a9eff 100%);
+    --cyan-grad:linear-gradient(135deg,#7ee8f5 0%,#3dd4e8 100%);
+    --indigo-grad:linear-gradient(135deg,#94a5ff 0%,#6b7eff 100%);
+    --teal-grad:linear-gradient(135deg,#5fdcc9 0%,#2ec9b8 100%);
+    --font-head:'Manrope','Plus Jakarta Sans',sans-serif;
+    --font-body:'Inter',-apple-system,'Segoe UI',sans-serif;
+    --font-num:'JetBrains Mono','Nunito',monospace;
+    --font-mono:'JetBrains Mono',monospace;
+    --text-soft:#c4d4ec;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:var(--font-body); color:var(--text);
+    background:
+      radial-gradient(80% 60% at 100% 0%,rgba(74,158,255,.1),transparent 60%),
+      radial-gradient(70% 50% at 0% 100%,rgba(61,212,232,.07),transparent 60%),
+      radial-gradient(60% 40% at 50% 50%,rgba(107,126,255,.05),transparent 70%),
+      var(--bg);
+    -webkit-font-smoothing:antialiased; position:relative;
+    /* 不再鎖死 overflow，頁面自然捲動 */
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      linear-gradient(rgba(74,158,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(74,158,255,.035) 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(120% 90% at 50% 30%,#000 0%,transparent 80%);
+    -webkit-mask-image:radial-gradient(120% 90% at 50% 30%,#000 0%,transparent 80%);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(140% 100% at 50% 0%,transparent 40%,rgba(0,0,0,.48) 100%);
+  }
+  /* app 殼：sidebar + main，一般文件流，不鎖視窗高度 */
+  .app{display:flex; position:relative; z-index:1; min-height:100vh}
+
+  /* ---- 側欄：對齊現有 .sidebar ---- */
+  .sidebar{
+    width:280px; flex-shrink:0; background:linear-gradient(180deg,rgba(74,158,255,.06),transparent 28%),var(--bg-2);
+    border-right:1px solid var(--border); padding:26px 18px 22px;
+    min-height:100vh; display:flex; flex-direction:column;
+    box-shadow:8px 0 30px rgba(0,0,0,.38),inset -1px 0 0 rgba(138,202,255,.04);
+    position:sticky; top:0; align-self:flex-start;
+  }
+  .brand{display:flex; gap:13px; align-items:center; margin-bottom:30px; padding-bottom:22px; border-bottom:1px solid var(--border)}
+  .logo-mark{
+    width:42px; height:42px; display:grid; place-items:center; border-radius:12px;
+    background:var(--blue-grad); box-shadow:0 6px 18px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.25);
+    position:relative; flex-shrink:0;
+  }
+  .logo-mark::after{content:''; position:absolute; inset:0; border-radius:inherit; background:linear-gradient(135deg,rgba(255,255,255,.2),transparent 50%)}
+  .logo-mark svg{width:22px; height:22px; color:#fff; position:relative; z-index:1}
+  .brand h1{margin:0; font-family:var(--font-head); font-weight:700; font-size:16px; line-height:1.2; color:var(--ink); letter-spacing:-.01em}
+  .brand p{margin:4px 0 0; font-family:var(--font-mono); font-size:10px; font-weight:500; letter-spacing:.22em; color:var(--blue-light); text-transform:uppercase}
+  .nav-label{font-family:var(--font-mono); font-size:10px; letter-spacing:.32em; color:var(--dim); text-transform:uppercase; margin:0 0 14px; display:flex; align-items:center; gap:8px}
+  .nav-label::before{content:''; width:14px; height:1px; background:var(--blue); opacity:.5}
+  .nav{display:flex; flex-direction:column; gap:4px; margin-bottom:auto}
+  .nav a{
+    display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:10px;
+    color:var(--muted); text-decoration:none; font-size:14px; font-weight:500;
+    transition:background .2s,color .2s,transform .2s;
+  }
+  .nav a:hover{background:var(--surface-soft); color:var(--text)}
+  .nav a.active{background:var(--surface-strong); color:var(--ink); box-shadow:inset 0 0 0 1px var(--border-strong)}
+  .nav-ico{width:20px; text-align:center; font-size:15px}
+  .sidebar-footer{margin-top:18px; padding-top:16px; border-top:1px solid var(--border)}
+  .status-row{display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:10px; letter-spacing:.18em; color:var(--muted); text-transform:uppercase}
+  .status-dot{width:7px; height:7px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal)}
+
+  /* ---- 主區：一般文件流，padding 32px 36px（對齊屬性規劃 .main） ---- */
+  .main{
+    flex:1; min-width:0;
+    padding:32px 36px;
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .demo-banner{
+    padding:8px 14px; border-radius:9px; flex-shrink:0;
+    background:var(--accent-soft); border:1px solid var(--border-strong);
+    color:var(--blue-bright); font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+  }
+  .calc-toolbar{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; flex-shrink:0}
+
+  /* ============================================================
+     雙欄版面（比照屬性規劃 .planner-grid：340px 1fr、gap 28px、一般流）
+     ============================================================ */
+  .planner-grid{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  /* 左欄：精簡判決面板（比照 .planner-panel） */
+  .planner-panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:24px;
+    box-shadow:var(--clay-shadow);
+    display:flex; flex-direction:column; gap:18px;
+  }
+  /* 精簡判決標題（非巨型 hero，僅約 38px） */
+  .vp-eyebrow{font-family:var(--font-mono); font-size:10px; letter-spacing:.22em; color:var(--blue-light); text-transform:uppercase; margin:0}
+  .vp-number{
+    font-family:var(--font-head); font-weight:800; font-size:38px; line-height:1;
+    color:#fff; text-shadow:0 0 22px var(--accent-glow); letter-spacing:-.02em; margin:4px 0 0;
+  }
+  .vp-number .unit{font-size:.34em; font-weight:600; color:var(--blue-light); margin-left:8px; letter-spacing:0}
+  .vp-sub{display:flex; gap:12px; flex-wrap:wrap; font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-top:4px}
+  .vp-sub b{color:var(--text); font-weight:700}
+  .vp-sub .pos{color:var(--teal-light); text-shadow:0 0 8px rgba(95,220,201,.3)}
+  /* 4 組對陣 mini-tile 垂直堆疊 */
+  .vp-tiles{display:flex; flex-direction:column; gap:8px}
+  .vtile{
+    padding:9px 12px; border-radius:10px; background:var(--field-bg);
+    border:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px;
+  }
+  .vtile.win{border-color:var(--teal-dark); background:linear-gradient(135deg,rgba(46,201,184,.12),var(--field-bg))}
+  .vtile.lose{border-color:rgba(245,166,35,.42); background:linear-gradient(135deg,rgba(245,166,35,.10),var(--field-bg))}
+  .vtile.best{border-color:var(--accent-border); background:linear-gradient(135deg,rgba(74,158,255,.16),var(--field-bg)); box-shadow:0 0 16px rgba(74,158,255,.18)}
+  .vtile .vt-label{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .vtile .vt-val{font-family:var(--font-head); font-weight:800; font-size:17px; color:#fff; text-shadow:0 0 12px var(--accent-glow); line-height:1.1; white-space:nowrap}
+  .vtile.win .vt-val{color:var(--teal-light); text-shadow:0 0 10px rgba(95,220,201,.35)}
+  .vtile.lose .vt-val{color:var(--amber-light); text-shadow:0 0 10px rgba(245,166,35,.35)}
+  .vtile.best .vt-val{color:#fff}
+  /* 進攻 vs 防禦 小型狀態列 */
+  .vp-status{
+    padding:10px 12px; border-radius:10px; background:var(--bg-2); border:1px solid var(--border);
+    font-family:var(--font-mono); font-size:11px; color:var(--muted); display:flex; flex-direction:column; gap:5px;
+  }
+  .vp-status .srow{display:flex; align-items:center; gap:8px}
+  .vp-status .sdot{width:7px; height:7px; border-radius:50%; flex-shrink:0}
+  .vp-status .sdot.atk{background:var(--accent); box-shadow:0 0 8px var(--accent)}
+  .vp-status .sdot.def{background:var(--teal); box-shadow:0 0 8px var(--teal)}
+  .vp-status b{color:var(--text); font-weight:700}
+
+  /* ============================================================
+     右欄：planner-tab-group（完全照搬屬性規劃頁籤樣式）
+     ============================================================ */
+  .planner-tab-group{
+    background:var(--panel-2);
+    border:1px solid var(--border);
+    border-radius:16px;
+    box-shadow:var(--shadow-glow);
+    overflow:hidden;
+    margin-bottom:0;
+  }
+  .planner-tab-list{
+    display:flex;
+    gap:4px;
+    padding:8px 8px 0;
+    background:linear-gradient(180deg,rgba(74,158,255,.06),transparent);
+    border-bottom:1px solid var(--border);
+    flex-wrap:wrap;
+  }
+  .planner-tab-btn{
+    appearance:none; border:none; background:transparent;
+    color:var(--muted);
+    font-family:var(--font-head); font-size:14px; font-weight:600;
+    padding:12px 16px; cursor:pointer;
+    border-radius:10px 10px 0 0; position:relative;
+    transition:color .15s,background .15s;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .planner-tab-btn:hover{color:var(--text-soft); background:rgba(74,158,255,.05)}
+  .planner-tab-btn[aria-selected="true"]{color:var(--text); background:rgba(74,158,255,.10)}
+  .planner-tab-btn[aria-selected="true"]::after{
+    content:''; position:absolute; left:12px; right:12px; bottom:-1px;
+    height:2px; background:linear-gradient(90deg,#6bb5ff,#3dd4e8); border-radius:2px;
+  }
+  .planner-tab-ico{font-size:16px; line-height:1}
+  .planner-tab-badge{
+    font-family:var(--font-mono); font-size:10px; font-weight:700;
+    padding:2px 7px; border-radius:999px;
+    background:rgba(74,158,255,.12); color:var(--text-soft); border:1px solid var(--border);
+  }
+  .planner-tab-meta{display:flex; align-items:baseline; justify-content:space-between; padding:18px 24px 4px; min-height:44px; gap:12px; flex-wrap:wrap}
+  .planner-tab-meta h2{font-family:var(--font-head); font-size:18px; font-weight:700; margin:0; color:var(--ink); letter-spacing:-.01em; display:flex; align-items:center; gap:10px}
+  .planner-tab-meta h2::before{content:''; width:8px; height:8px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px var(--blue); flex-shrink:0}
+  .planner-section-meta{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase}
+  .planner-tab-panel{padding:4px 24px 24px; display:none}
+  .planner-tab-panel[aria-hidden="false"]{display:block; animation:planner-tab-fade .25s ease}
+  @keyframes planner-tab-fade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)}}
+
+  /* ---- 通用文字 ---- */
+  h3,h4{margin:0; color:var(--text); letter-spacing:-.01em}
+  h3{font-family:var(--font-head); font-weight:700; font-size:16px; color:var(--blue-bright); margin-bottom:12px; text-align:center; text-shadow:0 0 14px var(--accent-glow); padding-bottom:10px; border-bottom:1px solid var(--border); position:relative}
+  h3::after{content:''; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%); width:48px; height:1px; background:var(--blue); box-shadow:0 0 8px var(--blue)}
+  h4{font-family:var(--font-mono); font-size:11px; margin:8px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:.12em}
+  .lead{color:var(--muted); font-size:13px; margin:6px 0 14px; max-width:70ch; line-height:1.45}
+
+  /* ---- toolbar buttons ---- */
+  button{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; margin:0;
+    padding:9px 15px; color:var(--on-accent); background:var(--blue-grad);
+    border:1px solid var(--accent-border); border-radius:10px; cursor:pointer;
+    font-family:var(--font-head); font-weight:600; font-size:13px;
+    box-shadow:0 8px 20px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.2);
+    transition:transform .2s,filter .2s,box-shadow .2s;
+  }
+  button:hover{transform:translateY(-1px); filter:brightness(1.04); box-shadow:0 14px 26px rgba(74,158,255,.22)}
+  button:active{transform:translateY(0)}
+  .btn-ghost{background:var(--accent-soft); color:var(--blue-light); border:1px solid var(--border-strong); box-shadow:none}
+  .btn-sm{padding:7px 13px; font-size:12px; min-height:32px}
+
+  /* ============================================================
+     面板① 對陣矩陣 Matchup Matrix
+     ============================================================ */
+  .matrix-grid{
+    display:grid; grid-template-columns:110px 1fr 1fr; gap:12px; margin-top:6px; align-items:stretch;
+  }
+  .mcell{padding:16px 18px; border-radius:12px; border:1px solid var(--border); background:var(--field-bg); display:flex; flex-direction:column; gap:6px; justify-content:center}
+  .mcell.mh{background:var(--bg-2); border-color:var(--border-strong); justify-content:center; font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan-light)}
+  .mcell.mv{background:var(--bg-2); border-color:var(--border-strong); align-items:center; justify-content:center; font-family:var(--font-head); font-weight:700; font-size:16px; color:var(--blue-bright)}
+  .mcell.mwin{border-color:var(--teal-dark); background:linear-gradient(135deg,rgba(46,201,184,.12),var(--field-bg))}
+  .mcell.mlose{border-color:rgba(245,166,35,.42); background:linear-gradient(135deg,rgba(245,166,35,.10),var(--field-bg))}
+  .mcell .ml{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+  .mcell .mv-dmg{font-family:var(--font-head); font-weight:800; font-size:30px; color:#fff; text-shadow:0 0 14px var(--accent-glow); line-height:1}
+  .mcell.mwin .mv-dmg{color:var(--teal-light); text-shadow:0 0 12px rgba(95,220,201,.35)}
+  .mcell.mlose .mv-dmg{color:var(--amber-light); text-shadow:0 0 12px rgba(245,166,35,.35)}
+  .mcell .mv-delta{font-family:var(--font-mono); font-size:13px; font-weight:700}
+  .mcell.mwin .mv-delta{color:var(--teal-light)} .mcell.mlose .mv-delta{color:var(--amber-light)}
+
+  /* ============================================================
+     面板② 防禦削減瀑布 Mitigation Cascade
+     ============================================================ */
+  .cascade-stack{display:flex; flex-direction:column; gap:9px; margin-top:10px}
+  .cstep{display:grid; grid-template-columns:150px 1fr 120px; align-items:center; gap:14px}
+  .cstep .clabel{font-family:var(--font-mono); font-size:12px; color:var(--muted); letter-spacing:.06em}
+  .cstep .cval{font-family:var(--font-mono); font-size:14px; font-weight:700; color:var(--text); text-align:right}
+  .cstep .cval .pct{color:var(--blue-light); font-size:11px; margin-left:4px}
+  .cbar{height:18px; border-radius:9px; background:var(--row-bg-alt); border:1px solid var(--border); overflow:hidden; position:relative}
+  .cbar > span{display:block; height:100%; border-radius:inherit; background:var(--blue-grad); box-shadow:inset 0 1px 0 rgba(255,255,255,.18); transition:width .4s ease}
+  .cstep.s1 .cbar > span{background:var(--blue-grad)}
+  .cstep.s2 .cbar > span{background:linear-gradient(135deg,var(--cyan-light),var(--cyan))}
+  .cstep.s3 .cbar > span{background:var(--indigo-grad)}
+  .cstep.s4 .cbar > span{background:linear-gradient(135deg,var(--indigo-light),var(--indigo))}
+  .cstep.s5 .cbar > span{background:var(--teal-grad)}
+  .cstep.s6 .cbar > span{background:linear-gradient(135deg,var(--teal-light),var(--teal))}
+  .cfoot{margin-top:14px; padding:10px 16px; border-radius:10px; background:var(--accent-soft); border:1px solid var(--border-strong); font-family:var(--font-mono); font-size:12px; color:var(--blue-bright); letter-spacing:.06em}
+  .cfoot b{font-family:var(--font-head); font-size:18px; color:#fff; text-shadow:0 0 12px var(--accent-glow)}
+
+  /* ============================================================
+     面板③ 傷害貢獻堆疊條
+     ============================================================ */
+  .contrib-body{display:flex; flex-direction:column; gap:14px; margin-top:6px}
+  .contrib-card{padding:16px 18px; border-radius:12px; background:var(--field-bg); border:1px solid var(--border)}
+  .contrib-card .cc-title{font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan-light); margin-bottom:14px; text-shadow:0 0 8px rgba(61,212,232,.2)}
+  .contrib-bar{display:flex; height:34px; border-radius:8px; overflow:hidden; border:1px solid var(--border); background:var(--row-bg-alt)}
+  .contrib-bar > i{display:block; height:100%; position:relative}
+  .contrib-bar > i::after{content:attr(data-pct); position:absolute; right:6px; top:50%; transform:translateY(-50%); font-family:var(--font-mono); font-size:11px; font-weight:700; color:rgba(255,255,255,.92); text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .seg-atk{background:var(--blue-grad)}
+  .seg-elem{background:var(--cyan-grad)}
+  .seg-pvp{background:var(--indigo-grad)}
+  .seg-crit{background:var(--teal-grad)}
+  .contrib-legend{display:flex; gap:18px; margin-top:4px; flex-wrap:wrap; font-family:var(--font-mono); font-size:12px; color:var(--muted); justify-content:center}
+  .contrib-legend .lg{display:inline-flex; align-items:center; gap:7px}
+  .contrib-legend .lg i{width:12px; height:12px; border-radius:3px; display:inline-block}
+  .lg-atk i{background:var(--blue-grad)} .lg-elem i{background:var(--cyan-grad)}
+  .lg-pvp i{background:var(--indigo-grad)} .lg-crit i{background:var(--teal-grad)}
+  .contrib-pct-list{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px}
+  .contrib-pct-list .pl{padding:8px 12px; border-radius:8px; background:var(--row-bg); border:1px solid var(--border); display:flex; flex-direction:column; gap:2px}
+  .contrib-pct-list .pl .pk{font-family:var(--font-mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted)}
+  .contrib-pct-list .pl .pv{font-family:var(--font-head); font-weight:800; font-size:20px; color:#fff}
+
+  /* ============================================================
+     面板④ 雙進攻×雙防禦 輸入區 + 交叉匯流
+     ============================================================ */
+  .duel-stage{display:grid; grid-template-columns:1fr 76px 1fr; gap:14px; align-items:stretch; margin-top:6px}
+  .duel-side{display:flex; flex-direction:column; gap:10px}
+  .duel-col{
+    background:var(--field-bg-strong); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--clay-shadow-sm); padding:12px 14px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .duel-col.atk{border-top:3px solid var(--accent)}
+  .duel-col.def{border-top:3px solid var(--teal)}
+  .duel-col .dchead{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border)}
+  .duel-col .dchead h2{font-size:14px; margin:0; font-family:var(--font-head); font-weight:700; color:var(--ink); display:flex; align-items:center; gap:8px}
+  .duel-col .dchead h2::before{content:''; width:7px; height:7px; border-radius:50%; background:var(--blue); box-shadow:0 0 8px var(--blue); flex-shrink:0}
+  .duel-col .dchead .badge{font-family:var(--font-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; padding:3px 8px; border-radius:6px; white-space:nowrap}
+  .duel-col.atk .badge{background:var(--accent-soft); color:var(--blue-light); border:1px solid var(--border-strong)}
+  .duel-col.def .badge{background:rgba(46,201,184,.14); color:var(--teal-light); border:1px solid rgba(46,201,184,.32)}
+  .dcbuts{display:flex; flex-wrap:wrap; gap:5px; margin-bottom:8px}
+  .dcbuts .btn-sm,.dcbuts .btn-ghost{padding:4px 9px; font-size:11px; min-height:24px; box-shadow:none}
+  .field-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:5px 12px; align-content:start}
+  .field-row{display:flex; justify-content:space-between; align-items:center; gap:6px; margin:0}
+  .field-row label{display:inline-block; width:auto; min-width:62px; margin-right:2px; color:var(--muted); font-size:11px; white-space:nowrap}
+  .field-row input{
+    width:100%; min-width:0; margin:0; padding:5px 8px; color:var(--text); background:var(--field-bg);
+    border:1px solid var(--border); border-radius:6px; outline:none;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+    transition:border-color .2s,box-shadow .2s,transform .2s;
+    font-family:var(--font-mono); font-size:12px;
+  }
+  .field-row input:hover{border-color:rgba(74,158,255,.36)}
+  .field-row input:focus{border-color:rgba(74,158,255,.7); box-shadow:0 0 0 3px rgba(74,158,255,.14); transform:translateY(-1px)}
+
+  /* ---- 中央交叉匯流 ---- */
+  .cross{position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:8px 2px}
+  .cross .xbadge{
+    font-family:var(--font-head); font-weight:800; font-size:13px; letter-spacing:.04em;
+    color:#fff; padding:6px 10px; border-radius:8px;
+    background:var(--blue-grad); border:1px solid var(--accent-border);
+    box-shadow:0 8px 22px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.25);
+    text-shadow:0 0 14px var(--accent-glow); white-space:nowrap;
+  }
+  .cross .xsum{font-family:var(--font-mono); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan-light); text-align:center; line-height:1.7}
+  .cross .xsum b{display:block; font-family:var(--font-head); font-size:20px; font-weight:800; color:#fff; text-shadow:0 0 12px var(--accent-glow); letter-spacing:0; margin-top:2px}
+  .cross-svg{width:100%; height:auto; max-height:140px; overflow:visible}
+  .cross-svg .lnk{fill:none; stroke:var(--blue); stroke-width:1.4; opacity:.5; stroke-dasharray:4 4}
+  .cross-svg .dot{fill:var(--blue); filter:drop-shadow(0 0 4px var(--accent-glow))}
+  .cross-svg .dot.t{fill:var(--teal)}
+
+  /* ============================================================
+     對陣 pill 切換器（瀑布/貢獻面板內專用，切換「對陣」）
+     ============================================================ */
+  .mx-select{display:flex; gap:6px; flex-wrap:wrap}
+  .mx-pill{
+    padding:6px 11px; border-radius:8px; background:var(--accent-soft); border:1px solid var(--border-strong);
+    color:var(--blue-light); font-family:var(--font-mono); font-size:11px; letter-spacing:.05em; cursor:pointer;
+    transition:background .2s,color .2s,box-shadow .2s;
+  }
+  .mx-pill.active{background:var(--blue-grad); color:var(--on-accent); border-color:var(--accent-border); box-shadow:0 6px 16px var(--accent-glow)}
+  .mx-pill .pill-dmg{font-family:var(--font-head); font-weight:700; margin-left:5px}
+  .panel-inline-head{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:8px; flex-wrap:wrap}
+
+  /* ============================================================
+     面板⑤ 完整明細 strip
+     ============================================================ */
+  .detail-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:6px}
+  .dcard{padding:14px 16px; border-radius:12px; background:var(--field-bg-strong); border:1px solid var(--border); box-shadow:var(--clay-shadow-sm); display:flex; flex-direction:column}
+  .dcard h4{font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan-light); margin:0 0 10px; text-shadow:0 0 8px rgba(61,212,232,.25); text-align:center; padding-bottom:8px; border-bottom:1px solid var(--border)}
+  .drow{display:flex; justify-content:space-between; padding:6px 8px; border-radius:6px; font-size:13px}
+  .drow:nth-child(odd){background:var(--row-bg)}
+  .drow .k{color:var(--muted)} .drow .v{font-family:var(--font-mono); font-weight:600; color:var(--text)}
+  .drow.basic .v{color:var(--amber); text-shadow:0 0 10px rgba(245,166,35,.3); font-weight:700}
+  .drow.crit .v{color:var(--teal-light); text-shadow:0 0 10px rgba(95,220,201,.3); font-weight:700}
+
+  /* ============================================================
+     響應式：≤1100px 雙欄堆疊；≤860px 側欄→橫向；≤620px 單欄
+     ============================================================ */
+  @media (max-width:1100px){
+    .planner-grid{grid-template-columns:1fr; gap:20px}
+    .duel-stage{grid-template-columns:1fr; gap:10px}
+    .cross{flex-direction:row; flex-wrap:wrap; padding:8px}
+    .cross-svg{display:none}
+    .detail-grid{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:860px){
+    .app{flex-direction:column}
+    .sidebar{width:100%; min-height:auto; flex-direction:row; flex-wrap:wrap; align-items:center; gap:14px; padding:14px 16px; position:static}
+    .sidebar .brand{margin-bottom:0; padding-bottom:0; border-bottom:0}
+    .sidebar .nav-label,.sidebar-footer{display:none}
+    .sidebar .nav{flex-direction:row; flex-wrap:wrap; margin-bottom:0}
+    .sidebar .nav a{padding:8px 11px; font-size:13px}
+    .matrix-grid{grid-template-columns:70px 1fr 1fr}
+    .field-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:620px){
+    .main{padding:18px 14px 24px}
+    .cstep{grid-template-columns:1fr; gap:6px}
+    .cstep .cval{text-align:left}
+    .matrix-grid{grid-template-columns:1fr 1fr; gap:8px}
+    .mcell.mv{grid-column:span 2}
+    .detail-grid{grid-template-columns:1fr}
+    .contrib-pct-list{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important; animation:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== 側欄（對齊現有 sidebar 結構） ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 L4 7 L4 17 L12 22 L20 17 L20 7 Z"/>
+          <path d="M12 2 L12 22 M4 7 L20 17 M20 7 L4 17"/>
+        </svg>
+      </div>
+      <div>
+        <h1>逆水寒 PVP<br>工具箱</h1>
+        <p>S2.2版本</p>
+      </div>
+    </div>
+    <p class="nav-label">NAVIGATION</p>
+    <nav class="nav">
+      <a href="#"><span class="nav-ico">🏠</span>首頁</a>
+      <a class="active" href="#"><span class="nav-ico">⚔️</span>傷害計算器</a>
+      <a href="#"><span class="nav-ico">📈</span>屬性規劃</a>
+      <a href="#"><span class="nav-ico">🗂️</span>打造資料庫</a>
+      <a href="#"><span class="nav-ico">📊</span>聯賽數據分析</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-row"><span class="status-dot"></span>SYSTEM ONLINE</div>
+    </div>
+  </aside>
+
+  <!-- ===== 主區：雙欄 planner-grid（一般文件流） ===== -->
+  <main class="main">
+    <div class="demo-banner">// DEMO · 傷害計算機重設計（比照屬性規劃雙欄 + planner-tab-group，一般文件流、頁面自然捲動）</div>
+
+    <div class="calc-toolbar">
+      <button class="btn-ghost btn-sm">🗑️ 重置資料</button>
+      <button class="btn-ghost btn-sm">📥 匯入</button>
+      <button class="btn-sm">📤 匯出</button>
+    </div>
+
+    <div class="planner-grid">
+
+      <!-- ===== 左欄：精簡判決面板（永遠可見、隨頁面捲動） ===== -->
+      <aside class="planner-panel" aria-label="判決摘要">
+        <div>
+          <p class="vp-eyebrow">判決 · VERDICT</p>
+          <div class="vp-number">20,144<span class="unit">預期傷害</span></div>
+          <div class="vp-sub">
+            <span>命中率 <b>93%</b></span>
+            <span>會心率 <b>48%</b></span>
+            <span>較次佳 <b class="pos">+6.4%</b></span>
+          </div>
+        </div>
+
+        <div class="vp-tiles">
+          <div class="vtile win best"><span class="vt-label">進攻2 vs 防禦1</span><span class="vt-val">20,144</span></div>
+          <div class="vtile win"><span class="vt-label">進攻1 vs 防禦1</span><span class="vt-val">18,932</span></div>
+          <div class="vtile lose"><span class="vt-label">進攻2 vs 防禦2</span><span class="vt-val">18,210</span></div>
+          <div class="vtile lose"><span class="vt-label">進攻1 vs 防禦2</span><span class="vt-val">17,058</span></div>
+        </div>
+
+        <div class="vp-status">
+          <div class="srow"><span class="sdot atk"></span>進攻 <b>數值 2</b> 為最佳進攻</div>
+          <div class="srow"><span class="sdot def"></span>防禦 <b>數值 1</b> 為較弱目標</div>
+        </div>
+      </aside>
+
+      <!-- ===== 右欄：planner-tab-group（5 個區段頁籤） ===== -->
+      <section class="planner-tab-group" aria-label="計算機區段">
+
+        <!-- 頁籤列 -->
+        <div class="planner-tab-list" role="tablist" aria-label="計算機區段">
+          <button class="planner-tab-btn" role="tab" id="tab-matrix"  aria-selected="true"  aria-controls="panel-matrix"  tabindex="0" data-tab="matrix">
+            <span class="planner-tab-ico">⊞</span>對陣矩陣<span class="planner-tab-badge">4</span>
+          </button>
+          <button class="planner-tab-btn" role="tab" id="tab-contrib" aria-selected="false" aria-controls="panel-contrib" tabindex="-1" data-tab="contrib">
+            <span class="planner-tab-ico">▤</span>傷害貢獻分解<span class="planner-tab-badge">4</span>
+          </button>
+          <button class="planner-tab-btn" role="tab" id="tab-cascade" aria-selected="false" aria-controls="panel-cascade" tabindex="-1" data-tab="cascade">
+            <span class="planner-tab-ico">↘</span>防禦削減瀑布<span class="planner-tab-badge">6</span>
+          </button>
+          <button class="planner-tab-btn" role="tab" id="tab-inputs"  aria-selected="false" aria-controls="panel-inputs"  tabindex="-1" data-tab="inputs">
+            <span class="planner-tab-ico">✎</span>輸入編輯<span class="planner-tab-badge">2×2</span>
+          </button>
+          <button class="planner-tab-btn" role="tab" id="tab-detail"  aria-selected="false" aria-controls="panel-detail"  tabindex="-1" data-tab="detail">
+            <span class="planner-tab-ico">≡</span>完整明細<span class="planner-tab-badge">4</span>
+          </button>
+        </div>
+
+        <!-- 標題列（隨作用中頁籤更新） -->
+        <div class="planner-tab-meta">
+          <h2 id="planner-meta-title">對陣矩陣</h2>
+          <span class="planner-section-meta" id="planner-meta-sub">2×2 一覽四組對陣結果</span>
+        </div>
+
+        <!-- 面板：對陣矩陣 -->
+        <div class="planner-tab-panel" id="panel-matrix" role="tabpanel" aria-labelledby="tab-matrix" aria-hidden="false">
+          <p class="lead">勝方標青、亞方標琥珀，內嵌差距。最佳對陣為進攻2 vs 防禦1。</p>
+          <div class="matrix-grid">
+            <div class="mcell mh"></div>
+            <div class="mcell mh">vs 防禦數值 1</div>
+            <div class="mcell mh">vs 防禦數值 2</div>
+
+            <div class="mcell mv">進攻數值 1</div>
+            <div class="mcell mwin">
+              <span class="ml">防禦1</span>
+              <span class="mv-dmg">18,932</span>
+              <span class="mv-delta">+1,212 (+6.8%)</span>
+            </div>
+            <div class="mcell mlose">
+              <span class="ml">防禦2</span>
+              <span class="mv-dmg">17,058</span>
+              <span class="mv-delta">−1,152 (−6.3%)</span>
+            </div>
+
+            <div class="mcell mv">進攻數值 2</div>
+            <div class="mcell mwin">
+              <span class="ml">防禦1</span>
+              <span class="mv-dmg">20,144</span>
+              <span class="mv-delta">+1,832 (+6.4%)</span>
+            </div>
+            <div class="mcell mlose">
+              <span class="ml">防禦2</span>
+              <span class="mv-dmg">18,210</span>
+              <span class="mv-delta">−1,152 (−6.0%)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 面板：防禦削減瀑布 -->
+        <div class="planner-tab-panel" id="panel-cascade" role="tabpanel" aria-labelledby="tab-cascade" aria-hidden="true">
+          <div class="panel-inline-head">
+            <p class="lead" style="margin:0">追蹤原始傷害如何被防禦層層削減，看見傷害在哪一層流失。</p>
+            <div class="mx-select" id="cascade-select" role="tablist" aria-label="選擇對陣">
+              <button class="mx-pill" data-mx="11">進攻1 vs 防禦1 <span class="pill-dmg">18,932</span></button>
+              <button class="mx-pill" data-mx="12">進攻1 vs 防禦2 <span class="pill-dmg">17,058</span></button>
+              <button class="mx-pill active" data-mx="21">進攻2 vs 防禦1 <span class="pill-dmg">20,144</span></button>
+              <button class="mx-pill" data-mx="22">進攻2 vs 防禦2 <span class="pill-dmg">18,210</span></button>
+            </div>
+          </div>
+          <div class="cascade-stack" id="cascade-stack"><!-- 由 JS 依選擇對陣填入 --></div>
+          <div class="cfoot" id="cascade-foot">最終預期傷害（含命中會心） <b>20,144</b> · 較原始流失約 <b>23.1%</b></div>
+        </div>
+
+        <!-- 面板：傷害貢獻分解 -->
+        <div class="planner-tab-panel" id="panel-contrib" role="tabpanel" aria-labelledby="tab-contrib" aria-hidden="true">
+          <div class="panel-inline-head">
+            <p class="lead" style="margin:0">拆解最終傷害由哪些來源構成，找出主要輸出引擎。</p>
+            <div class="mx-select" id="contrib-select" role="tablist" aria-label="選擇對陣">
+              <button class="mx-pill" data-mx="11">進攻1 vs 防禦1</button>
+              <button class="mx-pill" data-mx="12">進攻1 vs 防禦2</button>
+              <button class="mx-pill active" data-mx="21">進攻2 vs 防禦1</button>
+              <button class="mx-pill" data-mx="22">進攻2 vs 防禦2</button>
+            </div>
+          </div>
+          <div class="contrib-body">
+            <div class="contrib-card">
+              <div class="cc-title" id="contrib-title">進攻2 vs 防禦1 · 20,144</div>
+              <div class="contrib-bar" id="contrib-bar">
+                <i class="seg-atk" style="width:56%" data-pct="56%"></i>
+                <i class="seg-elem" style="width:16%" data-pct="16%"></i>
+                <i class="seg-pvp" style="width:10%" data-pct="10%"></i>
+                <i class="seg-crit" style="width:18%" data-pct="18%"></i>
+              </div>
+              <div class="contrib-pct-list" id="contrib-pct-list">
+                <div class="pl"><span class="pk">攻擊</span><span class="pv">56%</span></div>
+                <div class="pl"><span class="pk">元素攻擊</span><span class="pv">16%</span></div>
+                <div class="pl"><span class="pk">流派克制</span><span class="pv">10%</span></div>
+                <div class="pl"><span class="pk">會心</span><span class="pv">18%</span></div>
+              </div>
+            </div>
+            <div class="contrib-legend">
+              <span class="lg lg-atk"><i></i>攻擊</span>
+              <span class="lg lg-elem"><i></i>元素攻擊</span>
+              <span class="lg lg-pvp"><i></i>流派克制</span>
+              <span class="lg lg-crit"><i></i>會心</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 面板：輸入編輯（4 組 + 中央交叉匯流） -->
+        <div class="planner-tab-panel" id="panel-inputs" role="tabpanel" aria-labelledby="tab-inputs" aria-hidden="true">
+          <p class="lead">兩組進攻與兩組防禦同畫面並列，中央交叉匯流 → 產生 2×2 = 4 組對打結果。</p>
+          <div class="duel-stage">
+            <!-- 左：兩個進攻欄並列 -->
+            <div class="duel-side">
+              <div class="duel-col atk">
+                <div class="dchead">
+                  <h2>進攻數值 1</h2>
+                  <span class="badge">ATK · 1</span>
+                </div>
+                <div class="dcbuts">
+                  <button class="btn-sm">從圖片讀取</button>
+                  <button class="btn-ghost btn-sm">貼上</button>
+                  <button class="btn-ghost btn-sm">從進攻2複製</button>
+                </div>
+                <div class="field-grid">
+                  <div class="field-row"><label for="atk1-attack">攻擊:</label><input type="number" id="atk1-attack" value="48200"></div>
+                  <div class="field-row"><label for="atk1-defenseBreak">破防:</label><input type="number" id="atk1-defenseBreak" value="12500"></div>
+                  <div class="field-row"><label for="atk1-shieldBreak">破盾:</label><input type="number" id="atk1-shieldBreak" value="6800"></div>
+                  <div class="field-row"><label for="atk1-elementalAttack">元素攻擊:</label><input type="number" id="atk1-elementalAttack" value="9200"></div>
+                  <div class="field-row"><label for="atk1-pvpAttack">流派克制:</label><input type="number" id="atk1-pvpAttack" value="3400"></div>
+                  <div class="field-row"><label for="atk1-accuracy">命中:</label><input type="number" id="atk1-accuracy" value="11800"></div>
+                  <div class="field-row"><label for="atk1-crit">會心:</label><input type="number" id="atk1-crit" value="8600"></div>
+                  <div class="field-row"><label for="atk1-critDamage">會傷-100%:</label><input type="number" id="atk1-critDamage" value="220"></div>
+                  <div class="field-row"><label for="atk1-extraCritRate">額外會心率:</label><input type="number" id="atk1-extraCritRate" value="0"></div>
+                  <div class="field-row"><label for="atk1-pvpAttackRate">克制百分比:</label><input type="number" id="atk1-pvpAttackRate" value="12"></div>
+                  <div class="field-row"><label for="atk1-elementalBreak">忽視元抗:</label><input type="number" id="atk1-elementalBreak" value="2100"></div>
+                  <div class="field-row"><label for="atk1-skillAttack">技能增強:</label><input type="number" id="atk1-skillAttack" value="8"></div>
+                </div>
+              </div>
+              <div class="duel-col atk">
+                <div class="dchead">
+                  <h2>進攻數值 2</h2>
+                  <span class="badge">ATK · 2</span>
+                </div>
+                <div class="dcbuts">
+                  <button class="btn-sm">從圖片讀取</button>
+                  <button class="btn-ghost btn-sm">貼上</button>
+                  <button class="btn-ghost btn-sm">從進攻1複製</button>
+                </div>
+                <div class="field-grid">
+                  <div class="field-row"><label for="atk2-attack">攻擊:</label><input type="number" id="atk2-attack" value="51000"></div>
+                  <div class="field-row"><label for="atk2-defenseBreak">破防:</label><input type="number" id="atk2-defenseBreak" value="13800"></div>
+                  <div class="field-row"><label for="atk2-shieldBreak">破盾:</label><input type="number" id="atk2-shieldBreak" value="7200"></div>
+                  <div class="field-row"><label for="atk2-elementalAttack">元素攻擊:</label><input type="number" id="atk2-elementalAttack" value="8800"></div>
+                  <div class="field-row"><label for="atk2-pvpAttack">流派克制:</label><input type="number" id="atk2-pvpAttack" value="3100"></div>
+                  <div class="field-row"><label for="atk2-accuracy">命中:</label><input type="number" id="atk2-accuracy" value="11200"></div>
+                  <div class="field-row"><label for="atk2-crit">會心:</label><input type="number" id="atk2-crit" value="7900"></div>
+                  <div class="field-row"><label for="atk2-critDamage">會傷-100%:</label><input type="number" id="atk2-critDamage" value="205"></div>
+                  <div class="field-row"><label for="atk2-extraCritRate">額外會心率:</label><input type="number" id="atk2-extraCritRate" value="0"></div>
+                  <div class="field-row"><label for="atk2-pvpAttackRate">克制百分比:</label><input type="number" id="atk2-pvpAttackRate" value="10"></div>
+                  <div class="field-row"><label for="atk2-elementalBreak">忽視元抗:</label><input type="number" id="atk2-elementalBreak" value="1900"></div>
+                  <div class="field-row"><label for="atk2-skillAttack">技能增強:</label><input type="number" id="atk2-skillAttack" value="6"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 中央：交叉匯流視覺 -->
+            <div class="cross" aria-hidden="true">
+              <span class="xbadge">2×2 交叉</span>
+              <svg class="cross-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path class="lnk" d="M2 25 Q50 50 98 25"/>
+                <path class="lnk" d="M2 25 Q50 50 98 75"/>
+                <path class="lnk" d="M2 75 Q50 50 98 25"/>
+                <path class="lnk" d="M2 75 Q50 50 98 75"/>
+                <circle class="dot" cx="2" cy="25" r="3"/>
+                <circle class="dot" cx="2" cy="75" r="3"/>
+                <circle class="dot t" cx="98" cy="25" r="3"/>
+                <circle class="dot t" cx="98" cy="75" r="3"/>
+              </svg>
+              <div class="xsum">產生對陣<b>4 組</b></div>
+            </div>
+
+            <!-- 右：兩個防禦欄並列 -->
+            <div class="duel-side">
+              <div class="duel-col def">
+                <div class="dchead">
+                  <h2>防禦數值 1</h2>
+                  <span class="badge">DEF · 1</span>
+                </div>
+                <div class="dcbuts">
+                  <button class="btn-sm">從圖片讀取</button>
+                  <button class="btn-ghost btn-sm">貼上</button>
+                  <button class="btn-ghost btn-sm">從防禦2複製</button>
+                </div>
+                <div class="field-grid">
+                  <div class="field-row"><label for="def1-defense">防禦:</label><input type="number" id="def1-defense" value="24500"></div>
+                  <div class="field-row"><label for="def1-airShield">氣盾:</label><input type="number" id="def1-airShield" value="4200"></div>
+                  <div class="field-row"><label for="def1-elementalResistance">元素抗性:</label><input type="number" id="def1-elementalResistance" value="3800"></div>
+                  <div class="field-row"><label for="def1-pvpResistance">流派抵禦:</label><input type="number" id="def1-pvpResistance" value="2200"></div>
+                  <div class="field-row"><label for="def1-blockResistance">格擋:</label><input type="number" id="def1-blockResistance" value="1800"></div>
+                  <div class="field-row"><label for="def1-skillResistance">技能抵禦:</label><input type="number" id="def1-skillResistance" value="950"></div>
+                  <div class="field-row"><label for="def1-criticalDefense">會心防禦:</label><input type="number" id="def1-criticalDefense" value="2600"></div>
+                  <div class="field-row"><label for="def1-criticalResistance">會心抵抗:</label><input type="number" id="def1-criticalResistance" value="1400"></div>
+                </div>
+              </div>
+              <div class="duel-col def">
+                <div class="dchead">
+                  <h2>防禦數值 2</h2>
+                  <span class="badge">DEF · 2</span>
+                </div>
+                <div class="dcbuts">
+                  <button class="btn-sm">從圖片讀取</button>
+                  <button class="btn-ghost btn-sm">貼上</button>
+                  <button class="btn-ghost btn-sm">從防禦1複製</button>
+                </div>
+                <div class="field-grid">
+                  <div class="field-row"><label for="def2-defense">防禦:</label><input type="number" id="def2-defense" value="26800"></div>
+                  <div class="field-row"><label for="def2-airShield">氣盾:</label><input type="number" id="def2-airShield" value="4500"></div>
+                  <div class="field-row"><label for="def2-elementalResistance">元素抗性:</label><input type="number" id="def2-elementalResistance" value="4100"></div>
+                  <div class="field-row"><label for="def2-pvpResistance">流派抵禦:</label><input type="number" id="def2-pvpResistance" value="2400"></div>
+                  <div class="field-row"><label for="def2-blockResistance">格擋:</label><input type="number" id="def2-blockResistance" value="1950"></div>
+                  <div class="field-row"><label for="def2-skillResistance">技能抵禦:</label><input type="number" id="def2-skillResistance" value="1020"></div>
+                  <div class="field-row"><label for="def2-criticalDefense">會心防禦:</label><input type="number" id="def2-criticalDefense" value="2750"></div>
+                  <div class="field-row"><label for="def2-criticalResistance">會心抵抗:</label><input type="number" id="def2-criticalResistance" value="1520"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 面板：完整明細 -->
+        <div class="planner-tab-panel" id="panel-detail" role="tabpanel" aria-labelledby="tab-detail" aria-hidden="true">
+          <p class="lead">四組對陣的完整 8 欄結果，琥珀為未會心傷害、青為含會心傷害。</p>
+          <div class="detail-grid">
+            <div class="dcard">
+              <h4>進攻1 vs 防禦1</h4>
+              <div class="drow"><span class="k">剩餘防禦</span><span class="v">8,420</span></div>
+              <div class="drow"><span class="k">防禦減免率</span><span class="v">38%</span></div>
+              <div class="drow"><span class="k">剩餘氣盾</span><span class="v">1,250</span></div>
+              <div class="drow"><span class="k">元抗減免率</span><span class="v">22%</span></div>
+              <div class="drow"><span class="k">實際命中率</span><span class="v">96%</span></div>
+              <div class="drow"><span class="k">實際會心率</span><span class="v">54%</span></div>
+              <div class="drow basic"><span class="k">傷害(未會心)</span><span class="v">12,480</span></div>
+              <div class="drow crit"><span class="k">傷害(含會心)</span><span class="v">18,932</span></div>
+            </div>
+            <div class="dcard">
+              <h4>進攻1 vs 防禦2</h4>
+              <div class="drow"><span class="k">剩餘防禦</span><span class="v">9,180</span></div>
+              <div class="drow"><span class="k">防禦減免率</span><span class="v">41%</span></div>
+              <div class="drow"><span class="k">剩餘氣盾</span><span class="v">1,360</span></div>
+              <div class="drow"><span class="k">元抗減免率</span><span class="v">25%</span></div>
+              <div class="drow"><span class="k">實際命中率</span><span class="v">94%</span></div>
+              <div class="drow"><span class="k">實際會心率</span><span class="v">51%</span></div>
+              <div class="drow basic"><span class="k">傷害(未會心)</span><span class="v">11,260</span></div>
+              <div class="drow crit"><span class="k">傷害(含會心)</span><span class="v">17,058</span></div>
+            </div>
+            <div class="dcard">
+              <h4>進攻2 vs 防禦1</h4>
+              <div class="drow"><span class="k">剩餘防禦</span><span class="v">7,910</span></div>
+              <div class="drow"><span class="k">防禦減免率</span><span class="v">35%</span></div>
+              <div class="drow"><span class="k">剩餘氣盾</span><span class="v">1,180</span></div>
+              <div class="drow"><span class="k">元抗減免率</span><span class="v">19%</span></div>
+              <div class="drow"><span class="k">實際命中率</span><span class="v">93%</span></div>
+              <div class="drow"><span class="k">實際會心率</span><span class="v">48%</span></div>
+              <div class="drow basic"><span class="k">傷害(未會心)</span><span class="v">13,602</span></div>
+              <div class="drow crit"><span class="k">傷害(含會心)</span><span class="v">20,144</span></div>
+            </div>
+            <div class="dcard">
+              <h4>進攻2 vs 防禦2</h4>
+              <div class="drow"><span class="k">剩餘防禦</span><span class="v">8,650</span></div>
+              <div class="drow"><span class="k">防禦減免率</span><span class="v">39%</span></div>
+              <div class="drow"><span class="k">剩餘氣盾</span><span class="v">1,290</span></div>
+              <div class="drow"><span class="k">元抗減免率</span><span class="v">22%</span></div>
+              <div class="drow"><span class="k">實際命中率</span><span class="v">91%</span></div>
+              <div class="drow"><span class="k">實際會心率</span><span class="v">45%</span></div>
+              <div class="drow basic"><span class="k">傷害(未會心)</span><span class="v">12,340</span></div>
+              <div class="drow crit"><span class="k">傷害(含會心)</span><span class="v">18,210</span></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  /* ---- 4 組對陣的削減瀑布樣本資料（原始→防禦→氣盾→元抗→格擋→會心抵抗後）---- */
+  const CASCADE = {
+    '11': { label:'進攻1 vs 防禦1', rows:[
+      {l:'原始傷害',       v:24800, p:100, s:'s1'},
+      {l:'防禦減免',        v:15344, p:62,  s:'s2', d:'-38%'},
+      {l:'氣盾吸收',        v:14094, p:57,  s:'s3', d:'-5%'},
+      {l:'元抗減免',         v:10993, p:44,  s:'s4', d:'-22%'},
+      {l:'格擋抵消',         v:10663, p:43,  s:'s5', d:'-1%'},
+      {l:'會心抵抗後',       v:18932, p:76,  s:'s6', d:'含會心'},
+    ], final:18932, loss:'23.7%'},
+    '12': { label:'進攻1 vs 防禦2', rows:[
+      {l:'原始傷害',       v:24800, p:100, s:'s1'},
+      {l:'防禦減免',        v:14632, p:59,  s:'s2', d:'-41%'},
+      {l:'氣盾吸收',        v:13272, p:54,  s:'s3', d:'-6%'},
+      {l:'元抗減免',         v:10087, p:41,  s:'s4', d:'-24%'},
+      {l:'格擋抵消',         v:9892,  p:40,  s:'s5', d:'-1%'},
+      {l:'會心抵抗後',       v:17058, p:69,  s:'s6', d:'含會心'},
+    ], final:17058, loss:'31.2%'},
+    '21': { label:'進攻2 vs 防禦1', rows:[
+      {l:'原始傷害',       v:26200, p:100, s:'s1'},
+      {l:'防禦減免',        v:17030, p:65,  s:'s2', d:'-35%'},
+      {l:'氣盾吸收',        v:15850, p:58,  s:'s3', d:'-7%'},
+      {l:'元抗減免',         v:12838, p:47,  s:'s4', d:'-19%'},
+      {l:'格擋抵消',         v:12453, p:44,  s:'s5', d:'-3%'},
+      {l:'會心抵抗後',       v:20144, p:42,  s:'s6', d:'含會心'},
+    ], final:20144, loss:'23.1%'},
+    '22': { label:'進攻2 vs 防禦2', rows:[
+      {l:'原始傷害',       v:26200, p:100, s:'s1'},
+      {l:'防禦減免',        v:15982, p:61,  s:'s2', d:'-39%'},
+      {l:'氣盾吸收',        v:14692, p:56,  s:'s3', d:'-5%'},
+      {l:'元抗減免',         v:11460, p:44,  s:'s4', d:'-22%'},
+      {l:'格擋抵消',         v:11336, p:43,  s:'s5', d:'-1%'},
+      {l:'會心抵抗後',       v:18210, p:70,  s:'s6', d:'含會心'},
+    ], final:18210, loss:'30.5%'},
+  };
+
+  /* ---- 4 組對陣的傷害貢獻比例（攻擊/元素/流派克制/會心）---- */
+  const CONTRIB = {
+    '11': { label:'進攻1 vs 防禦1 · 18,932', segs:[['atk',52],['elem',18],['pvp',12],['crit',18]] },
+    '12': { label:'進攻1 vs 防禦2 · 17,058', segs:[['atk',50],['elem',17],['pvp',11],['crit',22]] },
+    '21': { label:'進攻2 vs 防禦1 · 20,144', segs:[['atk',56],['elem',16],['pvp',10],['crit',18]] },
+    '22': { label:'進攻2 vs 防禦2 · 18,210', segs:[['atk',54],['elem',15],['pvp',9],['crit',22]] },
+  };
+  const CONTRIB_NAMES = { atk:'攻擊', elem:'元素攻擊', pvp:'流派克制', crit:'會心' };
+
+  const stack = document.getElementById('cascade-stack');
+  const foot  = document.getElementById('cascade-foot');
+  const csel  = document.getElementById('cascade-select');
+  function renderCascade(mx){
+    const d = CASCADE[mx]; if(!d) return;
+    stack.innerHTML = d.rows.map(r =>
+      `<div class="cstep ${r.s}"><span class="clabel">${r.l}</span><div class="cbar"><span style="width:${r.p}%"></span></div><span class="cval">${r.v.toLocaleString()}${r.d?`<span class="pct">${r.d}</span>`:''}</span></div>`
+    ).join('');
+    foot.innerHTML = `最終預期傷害（含命中會心） <b>${d.final.toLocaleString()}</b> · 較原始流失約 <b>${d.loss}</b>`;
+  }
+
+  const cbar   = document.getElementById('contrib-bar');
+  const ctitle = document.getElementById('contrib-title');
+  const consel = document.getElementById('contrib-select');
+  const cpctlist = document.getElementById('contrib-pct-list');
+  function renderContrib(mx){
+    const d = CONTRIB[mx]; if(!d) return;
+    ctitle.textContent = d.label;
+    cbar.innerHTML = d.segs.map(([seg,pct]) =>
+      `<i class="seg-${seg}" style="width:${pct}%" data-pct="${pct}%"></i>`
+    ).join('');
+    cpctlist.innerHTML = d.segs.map(([seg,pct]) =>
+      `<div class="pl"><span class="pk">${CONTRIB_NAMES[seg]||seg}</span><span class="pv">${pct}%</span></div>`
+    ).join('');
+  }
+
+  /* 兩組 pill selector 共用切換（切換「對陣」，仍在同一頁籤區段內） */
+  function bindPills(container, render){
+    container.querySelectorAll('.mx-pill').forEach(p=>{
+      p.addEventListener('click',()=>{
+        container.querySelectorAll('.mx-pill').forEach(x=>x.classList.toggle('active', x===p));
+        render(p.dataset.mx);
+      });
+    });
+  }
+  bindPills(csel,  renderCascade);
+  bindPills(consel, renderContrib);
+  renderCascade('21');
+  renderContrib('21');
+
+  /* ============================================================
+     planner-tab-group 切換（區段之間），保留 pill 切換（對陣之間）
+     ============================================================ */
+  const META = {
+    matrix:  { t:'對陣矩陣',     s:'2×2 一覽四組對陣結果' },
+    cascade: { t:'防禦削減瀑布', s:'6 層削減追蹤 · 含會心後' },
+    contrib: { t:'傷害貢獻分解', s:'攻擊 / 元素 / 克制 / 會心' },
+    inputs:  { t:'輸入編輯',     s:'2 進攻 × 2 防禦 → 4 對陣' },
+    detail:  { t:'完整明細',     s:'四組對陣完整 8 欄' },
+  };
+  const metaTitle = document.getElementById('planner-meta-title');
+  const metaSub   = document.getElementById('planner-meta-sub');
+
+  const tabBtns = Array.from(document.querySelectorAll('.planner-tab-btn'));
+  const panels  = Array.from(document.querySelectorAll('.planner-tab-panel'));
+  function activateTab(target){
+    tabBtns.forEach(b=>{
+      const on = b.dataset.tab === target;
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+    });
+    panels.forEach(p=>{
+      const on = p.id === ('panel-' + target);
+      p.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    const m = META[target]; if(m){ metaTitle.textContent = m.t; metaSub.textContent = m.s; }
+  }
+  tabBtns.forEach(b => b.addEventListener('click', () => activateTab(b.dataset.tab)));
+
+  /* 鍵盤方向鍵巡訪頁籤（無障礙） */
+  document.querySelector('.planner-tab-list').addEventListener('keydown', (e) => {
+    const i = tabBtns.findIndex(b => b === document.activeElement);
+    if(i === -1) return;
+    let n = i;
+    if(e.key === 'ArrowRight') n = (i + 1) % tabBtns.length;
+    else if(e.key === 'ArrowLeft') n = (i - 1 + tabBtns.length) % tabBtns.length;
+    else if(e.key === 'Home') n = 0;
+    else if(e.key === 'End') n = tabBtns.length - 1;
+    else return;
+    e.preventDefault();
+    tabBtns[n].focus();
+    activateTab(tabBtns[n].dataset.tab);
+  });
+
+  /* 預設顯示矩陣頁籤 */
+  activateTab('matrix');
+</script>
+</body>
+</html>

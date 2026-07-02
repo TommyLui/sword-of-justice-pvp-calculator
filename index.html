@@ -152,7 +152,204 @@
         }
         .app { min-height: 100vh; display: flex; position: relative; z-index: 1; }
         .view[hidden] { display: none !important; }
-    </style>
+
+        /* ===== Calculator planner-grid additions (scoped to #view-calculator) ===== */
+        #view-calculator > .calc-toolbar {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        #view-calculator .calc-verdict-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--clay-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        #view-calculator .vp-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: .22em;
+            color: var(--blue-light);
+            text-transform: uppercase;
+            margin: 0;
+        }
+        #view-calculator .vp-number {
+            font-family: var(--font-head);
+            font-weight: 800;
+            font-size: 38px;
+            line-height: 1;
+            color: #fff;
+            text-shadow: 0 0 22px var(--accent-glow);
+            letter-spacing: -.02em;
+            margin: 4px 0 0;
+        }
+        #view-calculator .vp-number .unit {
+            font-size: .34em;
+            font-weight: 600;
+            color: var(--blue-light);
+            margin-left: 8px;
+            letter-spacing: 0;
+        }
+        #view-calculator .vp-sub {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        #view-calculator .vp-sub b { color: var(--text); font-weight: 700; }
+        #view-calculator .vp-sub .pos { color: var(--teal-light); text-shadow: 0 0 8px rgba(95,220,201,.3); }
+        #view-calculator .vp-tiles { display: flex; flex-direction: column; gap: 8px; }
+        #view-calculator .vtile {
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: var(--field-bg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        #view-calculator .vtile.win { border-color: var(--teal-dark); background: linear-gradient(135deg, rgba(46,201,184,.12), var(--field-bg)); }
+        #view-calculator .vtile.lose { border-color: rgba(245,166,35,.42); background: linear-gradient(135deg, rgba(245,166,35,.10), var(--field-bg)); }
+        #view-calculator .vtile.best { border-color: var(--accent-border); background: linear-gradient(135deg, rgba(74,158,255,.16), var(--field-bg)); box-shadow: 0 0 16px rgba(74,158,255,.18); }
+        #view-calculator .vtile .vt-label {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #view-calculator .vtile .vt-val {
+            font-family: var(--font-head);
+            font-weight: 800;
+            font-size: 17px;
+            color: #fff;
+            text-shadow: 0 0 12px var(--accent-glow);
+            line-height: 1.1;
+            white-space: nowrap;
+        }
+        #view-calculator .vtile.win .vt-val { color: var(--teal-light); text-shadow: 0 0 10px rgba(95,220,201,.35); }
+        #view-calculator .vtile.lose .vt-val { color: var(--amber-light); text-shadow: 0 0 10px rgba(245,166,35,.35); }
+        #view-calculator .vtile.best .vt-val { color: #fff; }
+        #view-calculator .duel-stage { display: grid; grid-template-columns: 1fr 76px 1fr; gap: 14px; align-items: stretch; margin-top: 6px; }
+        #view-calculator .duel-side { display: flex; flex-direction: column; gap: 10px; }
+        #view-calculator .duel-col {
+            background: var(--field-bg-strong);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--clay-shadow-sm);
+            padding: 12px 14px;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        #view-calculator .duel-col.atk { border-top: 3px solid var(--accent); }
+        #view-calculator .duel-col.def { border-top: 3px solid var(--teal); }
+        #view-calculator .duel-col .dchead {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+        #view-calculator .duel-col .dchead h2 {
+            font-size: 14px;
+            margin: 0;
+            font-family: var(--font-head);
+            font-weight: 700;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #view-calculator .duel-col .dchead h2::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue); flex-shrink: 0; }
+        #view-calculator .duel-col .dchead .badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: .16em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        #view-calculator .duel-col.atk .badge { background: var(--accent-soft); color: var(--blue-light); border: 1px solid var(--border-strong); }
+        #view-calculator .duel-col.def .badge { background: rgba(46,201,184,.14); color: var(--teal-light); border: 1px solid rgba(46,201,184,.32); }
+        #view-calculator .dcbuts { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+        #view-calculator .dcbuts .btn-sm, #view-calculator .dcbuts .btn-ghost { padding: 4px 9px; font-size: 11px; min-height: 24px; box-shadow: none; }
+        #view-calculator .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px 12px; align-content: start; }
+        #view-calculator .field-row { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: 0; }
+        #view-calculator .field-row label { display: inline-block; width: auto; min-width: 62px; margin-right: 2px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+        #view-calculator .field-row input {
+            width: 100%;
+            min-width: 0;
+            margin: 0;
+            padding: 5px 8px;
+            color: var(--text);
+            background: var(--field-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+        #view-calculator .field-row input:hover { border-color: rgba(74,158,255,.36); }
+        #view-calculator .field-row input:focus { border-color: rgba(74,158,255,.7); box-shadow: 0 0 0 3px rgba(74,158,255,.14); transform: translateY(-1px); }
+        #view-calculator .cross { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 8px 2px; }
+        #view-calculator .cross .xbadge {
+            font-family: var(--font-head);
+            font-weight: 800;
+            font-size: 13px;
+            letter-spacing: .04em;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: var(--blue-grad);
+            border: 1px solid var(--accent-border);
+            box-shadow: 0 8px 22px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.25);
+            text-shadow: 0 0 14px var(--accent-glow);
+            white-space: nowrap;
+        }
+        #view-calculator .cross .xsum {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--cyan-light);
+            text-align: center;
+            line-height: 1.7;
+        }
+        #view-calculator .cross .xsum b { display: block; font-family: var(--font-head); font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 0 12px var(--accent-glow); letter-spacing: 0; margin-top: 2px; }
+        #view-calculator .cross-svg { width: 100%; height: auto; max-height: 140px; overflow: visible; }
+        #view-calculator .cross-svg .lnk { fill: none; stroke: var(--blue); stroke-width: 1.4; opacity: .5; stroke-dasharray: 4 4; }
+        #view-calculator .cross-svg .dot { fill: var(--blue); filter: drop-shadow(0 0 4px var(--accent-glow)); }
+        #view-calculator .cross-svg .dot.t { fill: var(--teal); }
+        @media (max-width: 1100px) {
+            #view-calculator .calc-grid { grid-template-columns: 1fr; gap: 20px; }
+            #view-calculator .duel-stage { grid-template-columns: 1fr; gap: 10px; }
+            #view-calculator .cross { flex-direction: row; flex-wrap: wrap; padding: 8px; }
+            #view-calculator .cross-svg { display: none; }
+            #view-calculator .calc-matrix-grid { grid-template-columns: 70px 1fr 1fr; }
+        }
+        @media (max-width: 860px) {
+            #view-calculator .field-grid { grid-template-columns: 1fr; }
+        }    </style>
 </head>
 <body>
     <div class="app">
@@ -242,37 +439,241 @@
                 </div>
             </div>
             <div id="view-calculator" class="view" hidden>
-                <div class="calc-toolbar" style="display: flex; gap: 10px; margin-bottom: 14px; justify-content: flex-end;">
-                    <button id="reset-data-btn">🗑️ 重置資料</button>
-                    <button id="import-btn">📥 匯入</button>
-                    <button id="export-btn">📤 匯出</button>
-                    <input type="file" id="import-file" accept=".txt" style="display: none;">
-                    <input type="file" id="calculator-ocr-file" accept="image/*" style="display: none;">
-                </div>
-                <div id="calculator-reset-dialog" class="calc-dialog" hidden>
-                    <div class="calc-dialog-backdrop" data-close-dialog="true"></div>
-                    <div class="calc-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="calc-dialog-title" aria-describedby="calc-dialog-desc">
-                        <h3 id="calc-dialog-title">確認重置資料</h3>
-                        <p id="calc-dialog-desc">此操作會清空目前輸入與結果，且無法復原。要繼續嗎？</p>
-                        <div class="calc-dialog-actions">
-                            <button id="calculator-reset-cancel" type="button">取消</button>
-                            <button id="calculator-reset-confirm" type="button">確認重置</button>
-                        </div>
+    <div id="calculator-reset-dialog" class="calc-dialog" hidden>
+        <div class="calc-dialog-backdrop" data-close-dialog="true"></div>
+        <div class="calc-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="calc-dialog-title" aria-describedby="calc-dialog-desc">
+            <h3 id="calc-dialog-title">確認重置資料</h3>
+            <p id="calc-dialog-desc">此操作會清空目前輸入與結果，且無法復原。要繼續嗎？</p>
+            <div class="calc-dialog-actions">
+                <button id="calculator-reset-cancel" type="button">取消</button>
+                <button id="calculator-reset-confirm" type="button">確認重置</button>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="import-file" accept=".txt" style="display: none;">
+    <input type="file" id="calculator-ocr-file" accept="image/*" style="display: none;">
+    <div class="calc-toolbar">
+        <button id="reset-data-btn">🗑️ 重置資料</button>
+        <button id="import-btn">📥 匯入</button>
+        <button id="export-btn">📤 匯出</button>
+    </div>
+    <div class="calc-grid">
+        <aside class="calc-verdict-panel" aria-label="判決摘要">
+            <p class="vp-eyebrow">判決 · VERDICT</p>
+            <div class="vp-number"><span id="vp-best-number">0</span><span class="unit">期望傷害</span></div>
+            <div class="vp-sub">
+                <span>命中率 <b id="vp-best-accuracy">—</b></span>
+                <span>會心率 <b id="vp-best-crit">—</b></span>
+                <span>較次佳 <b id="vp-gap" class="pos">—</b></span>
+            </div>
+            <div class="vp-tiles">
+                <div class="vtile" id="vp-tile-21"><span class="vt-label">進攻2 vs 防禦1</span><span class="vt-val" id="vp-val-21">0</span></div>
+                <div class="vtile" id="vp-tile-11"><span class="vt-label">進攻1 vs 防禦1</span><span class="vt-val" id="vp-val-11">0</span></div>
+                <div class="vtile" id="vp-tile-22"><span class="vt-label">進攻2 vs 防禦2</span><span class="vt-val" id="vp-val-22">0</span></div>
+                <div class="vtile" id="vp-tile-12"><span class="vt-label">進攻1 vs 防禦2</span><span class="vt-val" id="vp-val-12">0</span></div>
+            </div>
+        </aside>
+        <section id="results" class="calc-tab-group" aria-label="傷害計算機檢視">
+            <div class="calc-tab-list" role="tablist" aria-label="計算機區段">
+                <button class="calc-tab-btn" role="tab" id="calc-tab-inputs" aria-selected="true" aria-controls="calc-panel-inputs" tabindex="0" type="button">
+                    <span class="calc-tab-ico">✎</span>輸入編輯<span class="calc-tab-badge">2×2</span>
+                </button>
+                <button class="calc-tab-btn" role="tab" id="calc-tab-detail" aria-selected="false" aria-controls="calc-panel-detail" tabindex="-1" type="button">
+                    <span class="calc-tab-ico">≡</span>完整明細<span class="calc-tab-badge">2</span>
+                </button>
+                <button class="calc-tab-btn" role="tab" id="calc-tab-breakdown" aria-selected="false" aria-controls="calc-panel-breakdown" tabindex="-1" type="button">
+                    <span class="calc-tab-ico">▤</span>傷害貢獻分解<span class="calc-tab-badge">4</span>
+                </button>
+                <button class="calc-tab-btn" role="tab" id="calc-tab-cascade" aria-selected="false" aria-controls="calc-panel-cascade" tabindex="-1" type="button">
+                    <span class="calc-tab-ico">↘</span>防禦削減瀑布<span class="calc-tab-badge">4</span>
+                </button>
+            </div>
+            <div class="calc-tab-meta">
+                <h2 id="calc-meta-title">輸入編輯</h2>
+                <span class="calc-section-meta" id="calc-meta-sub">進攻與防禦數值輸入</span>
+            </div>
+            <div class="calc-tab-panel" id="calc-panel-inputs" role="tabpanel" aria-labelledby="calc-tab-inputs" aria-hidden="false">
+                <p class="calc-lead">兩組進攻與兩組防禦同畫面並列，中央交叉匯流 → 產生 2×2 = 4 組對打結果。</p>
+                <div class="duel-stage">
+                    <div class="duel-side">
+          <section id="attacking-item-1" class="duel-col atk">
+            <div class="dchead"><h2>進攻數值1</h2><span class="badge">ATK · 1</span></div>
+            <div class="header-buttons dcbuts">
+              <button id="atk1-ocr-btn" type="button" class="btn-sm">從圖片讀取</button>
+              <button id="atk1-ocr-paste-btn" type="button" class="ocr-paste-btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button id="copy-right-atk-btn" type="button" class="btn-ghost btn-sm">從進攻數值2複製</button>
+            </div>
+            <div class="field-grid">
+                <div class="field-row"><label for="atk1-attack">攻擊:</label><input type="number" id="atk1-attack" value="0"></div>
+                <div class="field-row"><label for="atk1-defenseBreak">破防:</label><input type="number" id="atk1-defenseBreak" value="0"></div>
+                <div class="field-row"><label for="atk1-shieldBreak">破盾:</label><input type="number" id="atk1-shieldBreak" value="0"></div>
+                <div class="field-row"><label for="atk1-elementalAttack">元素攻擊:</label><input type="number" id="atk1-elementalAttack" value="0"></div>
+                <div class="field-row"><label for="atk1-pvpAttack">流派克制:</label><input type="number" id="atk1-pvpAttack" value="0"></div>
+                <div class="field-row"><label for="atk1-accuracy">命中:</label><input type="number" id="atk1-accuracy" value="0"></div>
+                <div class="field-row"><label for="atk1-crit">會心:</label><input type="number" id="atk1-crit" value="0"></div>
+                <div class="field-row"><label for="atk1-critDamage">會傷-100%:</label><input type="number" id="atk1-critDamage" value="0"></div>
+                <div class="field-row"><label for="atk1-extraCritRate">額外會心率:</label><input type="number" id="atk1-extraCritRate" value="0"></div>
+                <div class="field-row"><label for="atk1-pvpAttackRate">克制百分比:</label><input type="number" id="atk1-pvpAttackRate" value="0"></div>
+                <div class="field-row"><label for="atk1-elementalBreak">忽視元抗:</label><input type="number" id="atk1-elementalBreak" value="0"></div>
+                <div class="field-row"><label for="atk1-skillAttack">技能增強:</label><input type="number" id="atk1-skillAttack" value="0"></div>
+            </div>
+          </section>
+          <section id="attacking-item-2" class="duel-col atk">
+            <div class="dchead"><h2>進攻數值2</h2><span class="badge">ATK · 2</span></div>
+            <div class="header-buttons dcbuts">
+              <button id="atk2-ocr-btn" type="button" class="btn-sm">從圖片讀取</button>
+              <button id="atk2-ocr-paste-btn" type="button" class="ocr-paste-btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button id="copy-left-atk-btn" type="button" class="btn-ghost btn-sm">從進攻數值1複製</button>
+            </div>
+            <div class="field-grid">
+                <div class="field-row"><label for="atk2-attack">攻擊:</label><input type="number" id="atk2-attack" value="0"></div>
+                <div class="field-row"><label for="atk2-defenseBreak">破防:</label><input type="number" id="atk2-defenseBreak" value="0"></div>
+                <div class="field-row"><label for="atk2-shieldBreak">破盾:</label><input type="number" id="atk2-shieldBreak" value="0"></div>
+                <div class="field-row"><label for="atk2-elementalAttack">元素攻擊:</label><input type="number" id="atk2-elementalAttack" value="0"></div>
+                <div class="field-row"><label for="atk2-pvpAttack">流派克制:</label><input type="number" id="atk2-pvpAttack" value="0"></div>
+                <div class="field-row"><label for="atk2-accuracy">命中:</label><input type="number" id="atk2-accuracy" value="0"></div>
+                <div class="field-row"><label for="atk2-crit">會心:</label><input type="number" id="atk2-crit" value="0"></div>
+                <div class="field-row"><label for="atk2-critDamage">會傷-100%:</label><input type="number" id="atk2-critDamage" value="0"></div>
+                <div class="field-row"><label for="atk2-extraCritRate">額外會心率:</label><input type="number" id="atk2-extraCritRate" value="0"></div>
+                <div class="field-row"><label for="atk2-pvpAttackRate">克制百分比:</label><input type="number" id="atk2-pvpAttackRate" value="0"></div>
+                <div class="field-row"><label for="atk2-elementalBreak">忽視元抗:</label><input type="number" id="atk2-elementalBreak" value="0"></div>
+                <div class="field-row"><label for="atk2-skillAttack">技能增強:</label><input type="number" id="atk2-skillAttack" value="0"></div>
+            </div>
+          </section>
                     </div>
-                </div>
-                <section id="results">
-                    <div class="results-row">
-                        <div id="part1"><h3>防禦數值 1</h3><div id="part1-sub1"><table><tr><td colspan="2">vs 進攻數值 1</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense1_1">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate1_1">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield1_1">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate1_1">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate1_1">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate1_1">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage1_1">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage1_1">0</span></td></tr></table><table><tr><td colspan="2">vs 進攻數值 2</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense1_2">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate1_2">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield1_2">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate1_2">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate1_2">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate1_2">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage1_2">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage1_2">0</span></td></tr></table><div class="compare-box"><label>傷害差距:</label><span id="critCompare1" class="compare-value">0%</span></div></div></div>
-                        <div id="part2"><h3>防禦數值 2</h3><div id="part2-sub1"><table><tr><td colspan="2">vs 進攻數值 1</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense2_1">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate2_1">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield2_1">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate2_1">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate2_1">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate2_1">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage2_1">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage2_1">0</span></td></tr></table><table><tr><td colspan="2">vs 進攻數值 2</td></tr><tr><td>剩餘防禦</td><td><span id="remainDefense2_2">0</span></td></tr><tr><td>防禦減免率</td><td><span id="defenseRate2_2">0%</span></td></tr><tr><td>剩餘氣盾</td><td><span id="remainShield2_2">0</span></td></tr><tr><td>元抗減免率</td><td><span id="elementalResisRate2_2">0%</span></td></tr><tr><td>實際命中率</td><td><span id="actualAccuracyRate2_2">0%</span></td></tr><tr><td>實際會心率</td><td><span id="actualCritRate2_2">0%</span></td></tr><tr class="basic-damage"><td>傷害(未會心)</td><td><span id="damage2_2">0</span></td></tr><tr class="crit-damage"><td>傷害(包含命中會心)</td><td><span id="critDamage2_2">0</span></td></tr></table><div class="compare-box"><label>傷害差距:</label><span id="critCompare2" class="compare-value">0%</span></div></div></div>
+                    <div class="cross" aria-hidden="true">
+                        <span class="xbadge">2×2 交叉</span>
+                        <svg class="cross-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path class="lnk" d="M2 25 Q50 50 98 25"/>
+                            <path class="lnk" d="M2 25 Q50 50 98 75"/>
+                            <path class="lnk" d="M2 75 Q50 50 98 25"/>
+                            <path class="lnk" d="M2 75 Q50 50 98 75"/>
+                            <circle class="dot" cx="2" cy="25" r="3"/>
+                            <circle class="dot" cx="2" cy="75" r="3"/>
+                            <circle class="dot t" cx="98" cy="25" r="3"/>
+                            <circle class="dot t" cx="98" cy="75" r="3"/>
+                        </svg>
+                        <div class="xsum">產生對陣<b>4 組</b></div>
                     </div>
-                </section>
-                <div class="input-container">
-                    <section id="attacking-item-1"><div class="section-header"><h2>進攻數值1</h2><div class="header-buttons"><button id="atk1-ocr-btn" type="button">從圖片讀取</button><button id="atk1-ocr-paste-btn" type="button" class="ocr-paste-btn">貼上剪貼簿</button><button id="copy-right-atk-btn" type="button">從進攻數值2複製</button></div></div><div class="input-row"><label for="atk1-attack">攻擊:</label><input type="number" id="atk1-attack" value="0"><label for="atk1-defenseBreak">破防:</label><input type="number" id="atk1-defenseBreak" value="0"></div><div class="input-row"><label for="atk1-shieldBreak">破盾:</label><input type="number" id="atk1-shieldBreak" value="0"><label for="atk1-elementalAttack">元素攻擊:</label><input type="number" id="atk1-elementalAttack" value="0"></div><div class="input-row"><label for="atk1-pvpAttack">流派克制:</label><input type="number" id="atk1-pvpAttack" value="0"><label for="atk1-accuracy">命中:</label><input type="number" id="atk1-accuracy" value="0"></div><div class="input-row"><label for="atk1-crit">會心:</label><input type="number" id="atk1-crit" value="0"><label for="atk1-critDamage">會傷-100%:</label><input type="number" id="atk1-critDamage" value="0"></div><div class="input-row"><label for="atk1-extraCritRate">額外會心率:</label><input type="number" id="atk1-extraCritRate" value="0"><label for="atk1-pvpAttackRate">克制百分比:</label><input type="number" id="atk1-pvpAttackRate" value="0"></div><div class="input-row"><label for="atk1-elementalBreak">忽視元抗:</label><input type="number" id="atk1-elementalBreak" value="0"><label for="atk1-skillAttack">技能增強:</label><input type="number" id="atk1-skillAttack" value="0"></div></section>
-                    <section id="attacking-item-2"><div class="section-header"><h2>進攻數值2</h2><div class="header-buttons"><button id="atk2-ocr-btn" type="button">從圖片讀取</button><button id="atk2-ocr-paste-btn" type="button" class="ocr-paste-btn">貼上剪貼簿</button><button id="copy-left-atk-btn" type="button">從進攻數值1複製</button></div></div><div class="input-row"><label for="atk2-attack">攻擊:</label><input type="number" id="atk2-attack" value="0"><label for="atk2-defenseBreak">破防:</label><input type="number" id="atk2-defenseBreak" value="0"></div><div class="input-row"><label for="atk2-shieldBreak">破盾:</label><input type="number" id="atk2-shieldBreak" value="0"><label for="atk2-elementalAttack">元素攻擊:</label><input type="number" id="atk2-elementalAttack" value="0"></div><div class="input-row"><label for="atk2-pvpAttack">流派克制:</label><input type="number" id="atk2-pvpAttack" value="0"><label for="atk2-accuracy">命中:</label><input type="number" id="atk2-accuracy" value="0"></div><div class="input-row"><label for="atk2-crit">會心:</label><input type="number" id="atk2-crit" value="0"><label for="atk2-critDamage">會傷-100%:</label><input type="number" id="atk2-critDamage" value="0"></div><div class="input-row"><label for="atk2-extraCritRate">額外會心率:</label><input type="number" id="atk2-extraCritRate" value="0"><label for="atk2-pvpAttackRate">克制百分比:</label><input type="number" id="atk2-pvpAttackRate" value="0"></div><div class="input-row"><label for="atk2-elementalBreak">忽視元抗:</label><input type="number" id="atk2-elementalBreak" value="0"><label for="atk2-skillAttack">技能增強:</label><input type="number" id="atk2-skillAttack" value="0"></div></section>
-                    <section id="defending-item-1"><div class="section-header"><h2>防禦數值1</h2><div class="header-buttons"><button id="def1-ocr-btn" type="button">從圖片讀取</button><button id="def1-ocr-paste-btn" type="button" class="ocr-paste-btn">貼上剪貼簿</button><button id="copy-right-def-btn" type="button">從防禦數值2複製</button></div></div><div class="input-row"><label for="def1-defense">防禦:</label><input type="number" id="def1-defense" value="0"><label for="def1-airShield">氣盾:</label><input type="number" id="def1-airShield" value="0"></div><div class="input-row"><label for="def1-elementalResistance">元素抗性:</label><input type="number" id="def1-elementalResistance" value="0"><label for="def1-pvpResistance">流派抵禦:</label><input type="number" id="def1-pvpResistance" value="0"></div><div class="input-row"><label for="def1-blockResistance">格擋:</label><input type="number" id="def1-blockResistance" value="0"><label for="def1-skillResistance">技能抵禦:</label><input type="number" id="def1-skillResistance" value="0"></div><div class="input-row"><label for="def1-criticalDefense">會心防禦:</label><input type="number" id="def1-criticalDefense" value="0"><label for="def1-criticalResistance">會心抵抗:</label><input type="number" id="def1-criticalResistance" value="0"></div></section>
-                    <section id="defending-item-2"><div class="section-header"><h2>防禦數值2</h2><div class="header-buttons"><button id="def2-ocr-btn" type="button">從圖片讀取</button><button id="def2-ocr-paste-btn" type="button" class="ocr-paste-btn">貼上剪貼簿</button><button id="copy-left-def-btn" type="button">從防禦數值1複製</button></div></div><div class="input-row"><label for="def2-defense">防禦:</label><input type="number" id="def2-defense" value="0"><label for="def2-airShield">氣盾:</label><input type="number" id="def2-airShield" value="0"></div><div class="input-row"><label for="def2-elementalResistance">元素抗性:</label><input type="number" id="def2-elementalResistance" value="0"><label for="def2-pvpResistance">流派抵禦:</label><input type="number" id="def2-pvpResistance" value="0"></div><div class="input-row"><label for="def2-blockResistance">格擋:</label><input type="number" id="def2-blockResistance" value="0"><label for="def2-skillResistance">技能抵禦:</label><input type="number" id="def2-skillResistance" value="0"></div><div class="input-row"><label for="def2-criticalDefense">會心防禦:</label><input type="number" id="def2-criticalDefense" value="0"><label for="def2-criticalResistance">會心抵抗:</label><input type="number" id="def2-criticalResistance" value="0"></div></section>
+                    <div class="duel-side">
+          <section id="defending-item-1" class="duel-col def">
+            <div class="dchead"><h2>防禦數值1</h2><span class="badge">DEF · 1</span></div>
+            <div class="header-buttons dcbuts">
+              <button id="def1-ocr-btn" type="button" class="btn-sm">從圖片讀取</button>
+              <button id="def1-ocr-paste-btn" type="button" class="ocr-paste-btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button id="copy-right-def-btn" type="button" class="btn-ghost btn-sm">從防禦數值2複製</button>
+            </div>
+            <div class="field-grid">
+                <div class="field-row"><label for="def1-defense">防禦:</label><input type="number" id="def1-defense" value="0"></div>
+                <div class="field-row"><label for="def1-airShield">氣盾:</label><input type="number" id="def1-airShield" value="0"></div>
+                <div class="field-row"><label for="def1-elementalResistance">元素抗性:</label><input type="number" id="def1-elementalResistance" value="0"></div>
+                <div class="field-row"><label for="def1-pvpResistance">流派抵禦:</label><input type="number" id="def1-pvpResistance" value="0"></div>
+                <div class="field-row"><label for="def1-blockResistance">格擋:</label><input type="number" id="def1-blockResistance" value="0"></div>
+                <div class="field-row"><label for="def1-skillResistance">技能抵禦:</label><input type="number" id="def1-skillResistance" value="0"></div>
+                <div class="field-row"><label for="def1-criticalDefense">會心防禦:</label><input type="number" id="def1-criticalDefense" value="0"></div>
+                <div class="field-row"><label for="def1-criticalResistance">會心抵抗:</label><input type="number" id="def1-criticalResistance" value="0"></div>
+            </div>
+          </section>
+          <section id="defending-item-2" class="duel-col def">
+            <div class="dchead"><h2>防禦數值2</h2><span class="badge">DEF · 2</span></div>
+            <div class="header-buttons dcbuts">
+              <button id="def2-ocr-btn" type="button" class="btn-sm">從圖片讀取</button>
+              <button id="def2-ocr-paste-btn" type="button" class="ocr-paste-btn btn-ghost btn-sm">貼上剪貼簿</button>
+              <button id="copy-left-def-btn" type="button" class="btn-ghost btn-sm">從防禦數值1複製</button>
+            </div>
+            <div class="field-grid">
+                <div class="field-row"><label for="def2-defense">防禦:</label><input type="number" id="def2-defense" value="0"></div>
+                <div class="field-row"><label for="def2-airShield">氣盾:</label><input type="number" id="def2-airShield" value="0"></div>
+                <div class="field-row"><label for="def2-elementalResistance">元素抗性:</label><input type="number" id="def2-elementalResistance" value="0"></div>
+                <div class="field-row"><label for="def2-pvpResistance">流派抵禦:</label><input type="number" id="def2-pvpResistance" value="0"></div>
+                <div class="field-row"><label for="def2-blockResistance">格擋:</label><input type="number" id="def2-blockResistance" value="0"></div>
+                <div class="field-row"><label for="def2-skillResistance">技能抵禦:</label><input type="number" id="def2-skillResistance" value="0"></div>
+                <div class="field-row"><label for="def2-criticalDefense">會心防禦:</label><input type="number" id="def2-criticalDefense" value="0"></div>
+                <div class="field-row"><label for="def2-criticalResistance">會心抵抗:</label><input type="number" id="def2-criticalResistance" value="0"></div>
+            </div>
+          </section>
+                    </div>
                 </div>
             </div>
+            <div class="calc-tab-panel" id="calc-panel-cascade" role="tabpanel" aria-labelledby="calc-tab-cascade" aria-hidden="true">
+                <p class="calc-lead">追蹤原始傷害如何被防禦層層削減至最終傷害，再看命中/會心修正為期望值。</p>
+                <div class="calc-mx-select" id="calc-cascade-select" role="tablist" aria-label="選擇對陣">
+                    <button class="calc-mx-pill" data-mx="11">進攻1 vs 防禦1</button>
+                    <button class="calc-mx-pill" data-mx="12">進攻1 vs 防禦2</button>
+                    <button class="calc-mx-pill active" data-mx="21">進攻2 vs 防禦1</button>
+                    <button class="calc-mx-pill" data-mx="22">進攻2 vs 防禦2</button>
+                </div>
+                <div class="calc-cascade-stack" id="calc-cascade-stack"></div>
+                <div class="calc-cascade-foot" id="calc-cascade-foot"></div>
+            </div>
+            <div class="calc-tab-panel" id="calc-panel-breakdown" role="tabpanel" aria-labelledby="calc-tab-breakdown" aria-hidden="true">
+                <p class="calc-lead">拆解傷害由哪些來源構成、哪些減免吃掉傷害、命中/會心如何修正期望值。正項為來源、負項為扣減。</p>
+                <div class="calc-mx-select" id="calc-breakdown-select" role="tablist" aria-label="選擇對陣">
+                    <button class="calc-mx-pill" data-mx="11">進攻1 vs 防禦1</button>
+                    <button class="calc-mx-pill" data-mx="12">進攻1 vs 防禦2</button>
+                    <button class="calc-mx-pill active" data-mx="21">進攻2 vs 防禦1</button>
+                    <button class="calc-mx-pill" data-mx="22">進攻2 vs 防禦2</button>
+                </div>
+                <div id="calc-breakdown-body"></div>
+            </div>
+            <div class="calc-tab-panel" id="calc-panel-detail" role="tabpanel" aria-labelledby="calc-tab-detail" aria-hidden="true">
+                <p class="calc-lead">四組對陣完整 8 欄結果，琥珀為確定傷害、青為含命中/會心的期望傷害。</p>
+                <div class="results-row">
+                    <div id="part1"><h3>防禦數值 1</h3><div id="part1-sub1">
+                        <table>
+                            <tr><td colspan="2">vs 進攻數值 1</td></tr>
+              <tr><td>剩餘防禦</td><td><span id="remainDefense1_1">0</span></td></tr>
+              <tr><td>防禦減免率</td><td><span id="defenseRate1_1">0%</span></td></tr>
+              <tr><td>剩餘氣盾</td><td><span id="remainShield1_1">0</span></td></tr>
+              <tr><td>元抗減免率</td><td><span id="elementalResisRate1_1">0%</span></td></tr>
+              <tr><td>實際命中率</td><td><span id="actualAccuracyRate1_1">0%</span></td></tr>
+              <tr><td>實際會心率</td><td><span id="actualCritRate1_1">0%</span></td></tr>
+              <tr><td>確定傷害</td><td><span id="damage1_1">0</span></td></tr>
+              <tr><td>期望傷害(含命中/會心)</td><td><span id="critDamage1_1">0</span></td></tr>
+                        </table>
+                        <table>
+                            <tr><td colspan="2">vs 進攻數值 2</td></tr>
+              <tr><td>剩餘防禦</td><td><span id="remainDefense1_2">0</span></td></tr>
+              <tr><td>防禦減免率</td><td><span id="defenseRate1_2">0%</span></td></tr>
+              <tr><td>剩餘氣盾</td><td><span id="remainShield1_2">0</span></td></tr>
+              <tr><td>元抗減免率</td><td><span id="elementalResisRate1_2">0%</span></td></tr>
+              <tr><td>實際命中率</td><td><span id="actualAccuracyRate1_2">0%</span></td></tr>
+              <tr><td>實際會心率</td><td><span id="actualCritRate1_2">0%</span></td></tr>
+              <tr><td>確定傷害</td><td><span id="damage1_2">0</span></td></tr>
+              <tr><td>期望傷害(含命中/會心)</td><td><span id="critDamage1_2">0</span></td></tr>
+                        </table>
+                        <div class="compare-box"><label>傷害差距:</label><span id="critCompare1" class="compare-value">0%</span></div>
+                    </div></div>
+                    <div id="part2"><h3>防禦數值 2</h3><div id="part2-sub1">
+                        <table>
+                            <tr><td colspan="2">vs 進攻數值 1</td></tr>
+              <tr><td>剩餘防禦</td><td><span id="remainDefense2_1">0</span></td></tr>
+              <tr><td>防禦減免率</td><td><span id="defenseRate2_1">0%</span></td></tr>
+              <tr><td>剩餘氣盾</td><td><span id="remainShield2_1">0</span></td></tr>
+              <tr><td>元抗減免率</td><td><span id="elementalResisRate2_1">0%</span></td></tr>
+              <tr><td>實際命中率</td><td><span id="actualAccuracyRate2_1">0%</span></td></tr>
+              <tr><td>實際會心率</td><td><span id="actualCritRate2_1">0%</span></td></tr>
+              <tr><td>確定傷害</td><td><span id="damage2_1">0</span></td></tr>
+              <tr><td>期望傷害(含命中/會心)</td><td><span id="critDamage2_1">0</span></td></tr>
+                        </table>
+                        <table>
+                            <tr><td colspan="2">vs 進攻數值 2</td></tr>
+              <tr><td>剩餘防禦</td><td><span id="remainDefense2_2">0</span></td></tr>
+              <tr><td>防禦減免率</td><td><span id="defenseRate2_2">0%</span></td></tr>
+              <tr><td>剩餘氣盾</td><td><span id="remainShield2_2">0</span></td></tr>
+              <tr><td>元抗減免率</td><td><span id="elementalResisRate2_2">0%</span></td></tr>
+              <tr><td>實際命中率</td><td><span id="actualAccuracyRate2_2">0%</span></td></tr>
+              <tr><td>實際會心率</td><td><span id="actualCritRate2_2">0%</span></td></tr>
+              <tr><td>確定傷害</td><td><span id="damage2_2">0</span></td></tr>
+              <tr><td>期望傷害(含命中/會心)</td><td><span id="critDamage2_2">0</span></td></tr>
+                        </table>
+                        <div class="compare-box"><label>傷害差距:</label><span id="critCompare2" class="compare-value">0%</span></div>
+                    </div></div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
             <div id="view-league" class="view" hidden>
                 <div id="league-upload-section">
                     <div class="league-upload-box">
@@ -413,7 +814,15 @@
                                     <span class="planner-section-meta">每級邊際 / 累積提升</span>
                                 </div>
                                 <div class="planner-tab-panel" role="tabpanel" id="planner-panel-summary" aria-labelledby="planner-tab-summary" aria-hidden="false">
-                                    <div id="planner-summary" class="planner-summary" aria-label="每級邊際增益排序"></div>
+                                    <div class="planner-summary-toolbar" id="planner-summary-toolbar">
+                                        <div class="planner-subtab-helper">切換等級查看該級排序；「全部總覽」以排名軌跡圖一次看清 10 級變化。</div>
+                                        <div class="planner-subtab-list" role="tablist" id="planner-summary-subtabs" aria-label="等級子分頁"></div>
+                                    </div>
+                                    <div class="planner-content-meta" id="planner-summary-content-meta">
+                                        <h2 id="planner-summary-content-title">全部總覽</h2>
+                                        <span class="planner-content-submeta" id="planner-summary-content-submeta">每條線為一個屬性，追蹤其在各等級的邊際增益排名變化</span>
+                                    </div>
+                                    <div id="planner-summary-content" class="planner-summary-content" role="tabpanel" tabindex="0"></div>
                                 </div>
                                 <div class="planner-tab-panel" role="tabpanel" id="planner-panel-trend" aria-labelledby="planner-tab-trend" aria-hidden="true">
                                     <div id="planner-cards" class="planner-cards" aria-label="邊際提升趨勢"></div>
@@ -449,7 +858,7 @@
             document.querySelectorAll('.view').forEach(v => v.hidden = true);
             document.getElementById(viewId).hidden = false;
             document.querySelectorAll('.nav a, .bottom-nav a').forEach(a => a.classList.toggle('active', a.dataset.route === route));
-            if (route === 'calculator' || route === 'attribute-planner') {
+            if (route === 'attribute-planner') {
                 initCalculator();
             }
             document.dispatchEvent(new CustomEvent('pvp:routechange', {
@@ -506,6 +915,230 @@
             });
         });
         navigate(location.hash);
+
+        // ===== 計算機結果 tab + 對陣矩陣鏡射（純 UI，不碰公式） =====
+        (function initCalcTabsAndMirror() {
+            const tabGroup = document.getElementById('results');
+            if (!tabGroup || tabGroup.dataset.tabInit === '1') return;
+            tabGroup.dataset.tabInit = '1';
+
+            const tabBtns = Array.from(tabGroup.querySelectorAll('.calc-tab-btn'));
+                        const panelMap = {
+                'calc-tab-inputs': { panel: 'calc-panel-inputs', title: '輸入編輯', sub: '進攻與防禦數值輸入' },
+                'calc-tab-cascade': { panel: 'calc-panel-cascade', title: '防禦削減瀑布', sub: '逐層削減至最終與期望傷害' },
+                'calc-tab-breakdown': { panel: 'calc-panel-breakdown', title: '傷害貢獻分解', sub: '來源/減免/期望可稽核總和' },
+                'calc-tab-detail': { panel: 'calc-panel-detail', title: '完整明細', sub: '四組對陣完整 8 欄結果' }
+            };
+
+            function activateCalcTab(tabId, { focus = false } = {}) {
+                const target = panelMap[tabId];
+                if (!target) return;
+                tabBtns.forEach(btn => {
+                    const isActive = btn.id === tabId;
+                    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                    btn.setAttribute('tabindex', isActive ? '0' : '-1');
+                    const panelId = panelMap[btn.id]?.panel;
+                    const panelEl = panelId ? document.getElementById(panelId) : null;
+                    if (panelEl) panelEl.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                });
+                const titleEl = document.getElementById('calc-meta-title');
+                const subEl = document.getElementById('calc-meta-sub');
+                if (titleEl) titleEl.textContent = target.title;
+                if (subEl) subEl.textContent = target.sub;
+                if (focus) {
+                    const btn = document.getElementById(tabId);
+                    if (btn) btn.focus();
+                }
+            }
+
+            tabBtns.forEach(btn => btn.addEventListener('click', () => activateCalcTab(btn.id)));
+            tabGroup.addEventListener('keydown', (event) => {
+                if (!tabBtns.includes(event.target)) return;
+                const activeIdx = tabBtns.findIndex(b => b === event.target);
+                if (activeIdx === -1) return;
+                let next = null;
+                if (event.key === 'ArrowRight') next = (activeIdx + 1) % tabBtns.length;
+                else if (event.key === 'ArrowLeft') next = (activeIdx - 1 + tabBtns.length) % tabBtns.length;
+                else if (event.key === 'Home') next = 0;
+                else if (event.key === 'End') next = tabBtns.length - 1;
+                if (next !== null) {
+                    event.preventDefault();
+                    activateCalcTab(tabBtns[next].id, { focus: true });
+                }
+            });
+
+            // 對陣矩陣：鏡射現有 result span 的 textContent（不重算公式，僅讀取顯示值）
+            const mirrorDmgEls = Array.from(document.querySelectorAll('[data-mirror]'));
+            const fmtInt = (s) => {
+                const n = parseInt(String(s).replace(/[^0-9-]/g, ''), 10);
+                return Number.isFinite(n) ? n.toLocaleString('zh-TW') : '0';
+            };
+            function syncMirror() {
+                if (syncMirror._busy) return;
+                syncMirror._busy = true;
+                try {
+                    mirrorDmgEls.forEach(el => {
+                        const src = document.getElementById(el.dataset.mirror);
+                        if (src) el.textContent = fmtInt(src.textContent);
+                    });
+                    // ---- 判決面板：從現有 result span 鏡射，不重算公式 ----
+                    // mx = 'XY' 表示 進攻X vs 防禦Y；span id 慣例 = critDamage{Y}_{X}（def在前、atk在後）
+                    const mxIds = {
+                        '21': { dmg: 'critDamage1_2', acc: 'actualAccuracyRate1_2', crit: 'actualCritRate1_2' },
+                        '11': { dmg: 'critDamage1_1', acc: 'actualAccuracyRate1_1', crit: 'actualCritRate1_1' },
+                        '22': { dmg: 'critDamage2_2', acc: 'actualAccuracyRate2_2', crit: 'actualCritRate2_2' },
+                        '12': { dmg: 'critDamage2_1', acc: 'actualAccuracyRate2_1', crit: 'actualCritRate2_1' }
+                    };
+                    const num = (id) => parseInt(String(document.getElementById(id)?.textContent || '0').replace(/[^0-9-]/g, ''), 10) || 0;
+                    const pct = (id) => {
+                        const t = document.getElementById(id)?.textContent || '0%';
+                        const v = parseFloat(t.replace(/[^0-9.\-]/g, ''));
+                        return Number.isFinite(v) ? v.toFixed(1) + '%' : '—';
+                    };
+                    const entries = Object.entries(mxIds).map(([mx, ids]) => ({ mx, dmg: num(ids.dmg), acc: pct(ids.acc), crit: pct(ids.crit) }));
+                    entries.forEach(e => {
+                        const valEl = document.getElementById('vp-val-' + e.mx);
+                        if (valEl) valEl.textContent = fmtInt(String(e.dmg));
+                    });
+                    const sorted = [...entries].sort((a, b) => b.dmg - a.dmg);
+                    const best = sorted[0];
+                    const second = sorted[1];
+                    const hasDamage = entries.some(e => e.dmg !== 0);
+                    const bestNumEl = document.getElementById('vp-best-number');
+                    if (bestNumEl) bestNumEl.textContent = hasDamage ? fmtInt(String(best.dmg)) : '0';
+                    const accEl = document.getElementById('vp-best-accuracy');
+                    if (accEl) accEl.textContent = hasDamage ? best.acc : '—';
+                    const critEl = document.getElementById('vp-best-crit');
+                    if (critEl) critEl.textContent = hasDamage ? best.crit : '—';
+                    const gapEl = document.getElementById('vp-gap');
+                    if (gapEl) {
+                        const gapPct = (hasDamage && second.dmg !== 0) ? ((best.dmg - second.dmg) / Math.abs(second.dmg) * 100) : 0;
+                        const gapTxt = Number.isFinite(gapPct) ? (gapPct >= 0 ? '+' : '') + gapPct.toFixed(1) + '%' : '—';
+                        gapEl.textContent = gapTxt;
+                        gapEl.classList.toggle('pos', Number.isFinite(gapPct) && gapPct >= 0);
+                    }
+                    // tile 標記：僅標記全場最佳單一格為 best（其餘不標）；無傷害則全不標
+                    entries.forEach(e => {
+                        const tile = document.getElementById('vp-tile-' + e.mx);
+                        if (!tile) return;
+                        tile.classList.toggle('best', hasDamage && e.mx === best.mx);
+                        tile.classList.remove('win', 'lose');
+                    });
+                } finally {
+                    syncMirror._busy = false;
+                }
+            }
+
+            // ===== 防禦削減瀑布 / 傷害貢獻分解：由 decomposeDamage 驅動（不碰 calculateResults 公式鏈） =====
+            const ATTACK_FIELDS = window.pvpConfig?.ATTACK_FIELDS || [];
+            const DEFENSE_FIELDS = window.pvpConfig?.DEFENSE_FIELDS || [];
+            const MX_LABELS = { '11': '進攻1 vs 防禦1', '12': '進攻1 vs 防禦2', '21': '進攻2 vs 防禦1', '22': '進攻2 vs 防禦2' };
+            let activeCascadeMx = '21', activeBreakdownMx = '21';
+
+            function readInputInt(id) {
+                const el = document.getElementById(id);
+                return el ? parseInt(el.value, 10) || 0 : 0;
+            }
+            function buildStatsForMx(mx) {
+                const atk = mx[0] === '1' ? 'atk1' : 'atk2';
+                const def = mx[1] === '1' ? 'def1' : 'def2';
+                const stats = {};
+                ATTACK_FIELDS.forEach(f => stats[f] = readInputInt(`${atk}-${f}`));
+                DEFENSE_FIELDS.forEach(f => stats[f] = readInputInt(`${def}-${f}`));
+                return stats;
+            }
+            function fmtNum(n) { const v = Number(n); return Number.isFinite(v) ? Math.round(v).toLocaleString('zh-TW') : '0'; }
+            function fmtPct(n) { const v = Number(n); return Number.isFinite(v) ? v.toFixed(2) + '%' : '—'; }
+
+            function renderCascade(mx) {
+                const stack = document.getElementById('calc-cascade-stack');
+                const foot = document.getElementById('calc-cascade-foot');
+                if (!stack || !foot) return;
+                const combat = window.pvpCombat;
+                if (!combat?.decomposeDamage) return;
+                const d = combat.decomposeDamage(buildStatsForMx(mx));
+                const gl = d.cascade.grossLayers;
+                const maxV = Math.max(1, gl[0]?.value || 1);
+                const colors = ['s1','s2','s3','s4','s5','s6','s7','s8'];
+                stack.innerHTML = gl.map((l, i) => {
+                    const pct = Math.max(0, Math.min(100, (l.value / maxV) * 100));
+                    const red = l.reductionRate > 0 ? ` <span class="cc-pct">-${l.reductionRate.toFixed(1)}%</span>` : '';
+                    return `<div class="cc-step ${colors[i % colors.length]}"><span class="cc-label">${l.label}</span><div class="cc-bar"><span style="width:${pct}%"></span></div><span class="cc-val">${fmtNum(l.value)}${red}</span></div>`;
+                }).join('');
+                // 期望段
+                const el = d.cascade.expectLayers;
+                stack.insertAdjacentHTML('beforeend', `<div class="cc-step cc-exp"><span class="cc-label">${el[1].label}</span><div class="cc-bar"><span style="width:${Math.max(0,Math.min(100,(el[1].value/maxV)*100))}%"></span></div><span class="cc-val">${fmtNum(el[1].value)}</span></div>`);
+                const signedNote = d.cascade.signed && d.cascade.note ? `<span class="cc-note">${d.cascade.note}</span>` : '';
+                const lossText = d.cascade.signed ? '已切換為負向分解模式' : `較原始流失約 <b>${d.cascade.grossLossRate.toFixed(1)}%</b>`;
+                foot.innerHTML = `最終確定傷害 <b>${fmtNum(d.finalDamage)}</b> · 期望傷害 <b>${fmtNum(d.expectedDamage)}</b> · ${lossText}${signedNote}`;
+            }
+
+            function renderBreakdown(mx) {
+                const body = document.getElementById('calc-breakdown-body');
+                if (!body) return;
+                const combat = window.pvpCombat;
+                if (!combat?.decomposeDamage) return;
+                const d = combat.decomposeDamage(buildStatsForMx(mx));
+                const bd = d.breakdown;
+                const row = (c) => `<div class="cb-row ${c.amount < 0 ? 'cb-neg' : 'cb-pos'}"><span class="cb-label">${c.label}</span><span class="cb-val">${c.amount >= 0 ? '+' : ''}${fmtNum(c.amount)}</span></div>`;
+                body.innerHTML = `
+                    <div class="cb-section">
+                        <h4>來源（總和 = 防禦前 ${fmtNum(bd.gross)}）</h4>
+                        ${bd.sources.map(row).join('')}
+                        <div class="cb-sum">小計 ${fmtNum(bd.sourcesSum)}</div>
+                    </div>
+                    <div class="cb-section">
+                        <h4>減免（總和 = ${fmtNum(bd.reductionsSum)}）</h4>
+                        ${bd.reductions.map(row).join('')}
+                        <div class="cb-sum">小計 ${fmtNum(bd.reductionsSum)} → 未保護傷害 ${fmtNum(bd.baseDamage)}</div>
+                    </div>
+                    <div class="cb-section">
+                        <h4>下限保護（${fmtNum(bd.baseDamage)} → ${fmtNum(bd.finalDamage)}）</h4>
+                        ${bd.adjustments.map(row).join('')}
+                        <div class="cb-sum">小計 ${fmtNum(bd.adjustmentsSum)}</div>
+                    </div>
+                    <div class="cb-section">
+                        <h4>期望修正（${fmtNum(bd.finalDamage)} → ${fmtNum(d.expectedDamage)}）</h4>
+                        ${bd.expectation.map(row).join('')}
+                        <div class="cb-sum">小計 ${fmtNum(bd.expectationSum)}</div>
+                    </div>
+                `;
+            }
+
+            function bindMxSelect(containerId, setActive, render) {
+                const c = document.getElementById(containerId);
+                if (!c) return;
+                c.querySelectorAll('.calc-mx-pill').forEach(p => {
+                    p.addEventListener('click', () => {
+                        c.querySelectorAll('.calc-mx-pill').forEach(x => x.classList.toggle('active', x === p));
+                        setActive(p.dataset.mx);
+                        render(p.dataset.mx);
+                    });
+                });
+            }
+            bindMxSelect('calc-cascade-select', v => activeCascadeMx = v, renderCascade);
+            bindMxSelect('calc-breakdown-select', v => activeBreakdownMx = v, renderBreakdown);
+
+            function renderDecomposePanels() {
+                renderCascade(activeCascadeMx);
+                renderBreakdown(activeBreakdownMx);
+            }
+
+            // 觀察「完整明細」面板內的來源 span（calculator.js 寫入的那批），不是整個 #results
+            // 避免觀察到鏡射 span 自身造成循環。
+            const detailPanel = document.getElementById('calc-panel-detail');
+            if (detailPanel && 'MutationObserver' in window) {
+                const obs = new MutationObserver(() => { syncMirror(); renderDecomposePanels(); });
+                obs.observe(detailPanel, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+            }
+            document.addEventListener('pvp:routechange', (e) => {
+                if (e?.detail?.route === 'calculator') {
+                    setTimeout(() => { syncMirror(); renderDecomposePanels(); }, 0);
+                }
+            });
+            // 初始同步一次（若計算器已可見）
+            if (!document.getElementById('view-calculator').hidden) { syncMirror(); renderDecomposePanels(); }
+        })();
 
         window.showNotification = function(options) {
             const { type = 'success', title, message, duration = 3000 } = options;
