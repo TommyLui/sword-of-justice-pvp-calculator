@@ -459,7 +459,7 @@
     </div>
     <div class="calc-grid">
         <aside class="calc-verdict-panel" aria-label="判決摘要">
-            <p class="vp-eyebrow">判決 · VERDICT</p>
+            <p class="vp-eyebrow">結果 · RESULT</p>
             <div class="vp-number"><span id="vp-best-number">0</span><span class="unit">期望傷害</span></div>
             <div class="vp-sub">
                 <span>命中率 <b id="vp-best-accuracy">—</b></span>
@@ -493,7 +493,7 @@
                 <span class="calc-section-meta" id="calc-meta-sub">進攻與防禦數值輸入</span>
             </div>
             <div class="calc-tab-panel" id="calc-panel-inputs" role="tabpanel" aria-labelledby="calc-tab-inputs" aria-hidden="false">
-                <p class="calc-lead">兩組進攻與兩組防禦同畫面並列，中央交叉匯流 → 產生 2×2 = 4 組對打結果。</p>
+                <p class="calc-lead">兩組進攻VS兩組防禦 → 產生 2×2 = 4 組對打結果。</p>
                 <div class="duel-stage">
                     <div class="duel-side">
           <section id="attacking-item-1" class="duel-col atk">
@@ -596,7 +596,7 @@
                 </div>
             </div>
             <div class="calc-tab-panel" id="calc-panel-cascade" role="tabpanel" aria-labelledby="calc-tab-cascade" aria-hidden="true">
-                <p class="calc-lead">追蹤原始傷害如何被防禦層層削減至最終傷害，再看命中/會心修正為期望值。</p>
+                <p class="calc-lead">追蹤原始傷害如何被防禦層層削減至最終傷害</p>
                 <div class="calc-mx-select" id="calc-cascade-select" role="tablist" aria-label="選擇對陣">
                     <button class="calc-mx-pill" data-mx="11">進攻1 vs 防禦1</button>
                     <button class="calc-mx-pill" data-mx="12">進攻1 vs 防禦2</button>
@@ -607,7 +607,8 @@
                 <div class="calc-cascade-foot" id="calc-cascade-foot"></div>
             </div>
             <div class="calc-tab-panel" id="calc-panel-breakdown" role="tabpanel" aria-labelledby="calc-tab-breakdown" aria-hidden="true">
-                <p class="calc-lead">拆解傷害由哪些來源構成、哪些減免吃掉傷害、命中/會心如何修正期望值。正項為來源、負項為扣減。</p>
+                <p class="calc-lead">拆解傷害來源、傷害減免、命中/會心修正期望值。</p>
+                <p class="calc-lead">正項為來源、負項為扣減。</p>
                 <div class="calc-mx-select" id="calc-breakdown-select" role="tablist" aria-label="選擇對陣">
                     <button class="calc-mx-pill" data-mx="11">進攻1 vs 防禦1</button>
                     <button class="calc-mx-pill" data-mx="12">進攻1 vs 防禦2</button>
@@ -617,7 +618,7 @@
                 <div id="calc-breakdown-body"></div>
             </div>
             <div class="calc-tab-panel" id="calc-panel-detail" role="tabpanel" aria-labelledby="calc-tab-detail" aria-hidden="true">
-                <p class="calc-lead">四組對陣完整 8 欄結果，琥珀為確定傷害、青為含命中/會心的期望傷害。</p>
+                <p class="calc-lead">四組對陣完整結果，確定傷害、含命中/會心的期望傷害。</p>
                 <div class="results-row">
                     <div id="part1"><h3>防禦數值 1</h3><div id="part1-sub1">
                         <table>
